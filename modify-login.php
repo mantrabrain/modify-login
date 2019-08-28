@@ -13,7 +13,7 @@
 
 define('MODIFY_LOGIN_FILE', __FILE__);
 
-// Include the main Mantrabrain Starter Sites class.
+// Include the Core file
 if (!class_exists('Modify_Login')) {
     include_once dirname(__FILE__) . '/includes/class-modify-login.php';
 }
