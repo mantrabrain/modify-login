@@ -16,7 +16,7 @@ This plugin help you to modify your login url so that your website will be more 
 
 It doesn't modify your core WordPress file to modify login url.
 
-After installing this plugin you cann't login your website with /wp-admin or /wp-login.php, you need to add endpoint at the end of your login url as follows.
+After installing this plugin you cann't login your website with /wp-admin or /wp-login.php, you need to add endpoint at the end of your login url as follow:
 
 Default Login URL :  `http://example.com?setup`
 
