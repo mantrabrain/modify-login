@@ -18,7 +18,7 @@ It doesn't modify your core WordPress file to modify login url.
 
 After installing this plugin you cann't login your website with /wp-admin or /wp-login.php, you need to add endpoint at the end of your login url as follow:
 
-Default Login URL :  `http://example.com?setup`
+Default Login URL :  `http://yourdomain.com?setup`
 
 You can easily modify this endpoint from
 
@@ -45,7 +45,7 @@ You can easily modify this endpoint from
 = What is default login endpoint? =
 
 Your default endpoint is `setup`
-Demo : `http://example.com?setup`
+Demo : `http://yourdomain.com?setup`
 
 = How to add endpoint of login url ? =
 
