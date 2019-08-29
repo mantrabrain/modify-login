@@ -21,7 +21,7 @@ final class Modify_Login
      *
      * @var string
      */
-    public $version = '1.0.0';
+    public $version = '1.0.1';
 
     /**
      * The single instance of the class.
@@ -165,7 +165,7 @@ final class Modify_Login
                     <tr>
                         <th scope="row"><label
                                     for="blogname"><?php echo __('Like this plugin ? ', 'modify-login'); ?></label></th>
-                        <td><label><a href="https://wordpress.org/plugins/modify-login/" target="_blank"><?php echo __('Give it a 5
+                        <td><label><a href="https://wordpress.org/support/plugin/modify-login/reviews?rate=5#new-post" target="_blank"><?php echo __('Give it a 5
                                     star rating', 'modify-login'); ?></a></label></td>
                     </tr>
 

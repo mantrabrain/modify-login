@@ -1,10 +1,10 @@
-=== Modify Login ===
+=== Modify Login - Change default WordPress admin login URL ===
 Contributors: mantrabrain
 Donate link: https://mantrabrain.com
 Tags: hide login, wp-login.php,modify login, hide, security, wordpress hide, wp-hide,hide my wp,custom login URL, login, rename, wp-login, wp-login.php
 Requires at least: 4.5
 Tested up to: 5.2.2
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2
 
 Modify WordPress admin login technique. This plugin will modify your login url so that your website will be more secure.
@@ -12,7 +12,7 @@ Modify WordPress admin login technique. This plugin will modify your login url s
 
 == Description ==
 
-This plugin help you to modify your login url so that your website will be more secure and safe.
+This plugin helps you to modify your login url so that your website will be more secure and safe.
 
 It doesn't modify your core WordPress file to modify login url.
 
@@ -22,7 +22,7 @@ Default Login URL :  `http://yourdomain.com?setup`
 
 You can easily modify this endpoint from
 
-`Settings > Modify Login `  and change the login endpoint as per your requirement.
+Settings > Modify Login  and change the login endpoint as per your requirement.
 
 
 = Features =
@@ -33,6 +33,15 @@ You can easily modify this endpoint from
 * Light weight plugin
 * Easy to setup and modify endpoint
 
+
+= Modify Login Video Tutorial: =
+
+[youtube https://www.youtube.com/watch?v=KlWkYHYH8Y0]
+
+
+
+== Screenshots ==
+1. Backend setting page
 
 == Installation ==
 
@@ -50,3 +59,8 @@ Demo : `http://yourdomain.com?setup`
 = How to add endpoint of login url ? =
 
 Go to `Settings > Modify Login` and update the login endpoint
+
+== Changelog ==
+
+= 1.0.1 - 29/08/2019 =
+- Initial Version released
