@@ -3,8 +3,8 @@ Contributors: mantrabrain
 Donate link: https://mantrabrain.com
 Tags: hide login, wp-login.php,modify login, hide, security, wordpress hide, wp-hide,hide my wp,custom login URL, login, rename, wp-login, wp-login.php
 Requires at least: 4.5
-Tested up to: 5.6
-Stable tag: 1.0.2
+Tested up to: 5.7
+Stable tag: 1.0.3
 License: GPLv2
 
 Modify WordPress admin login technique. This plugin will modify your login url so that your website will be more secure.
@@ -66,4 +66,7 @@ Go to `Settings > Modify Login` and update the login endpoint
 - Initial Version released
 
 = 1.0.2 - 01/09/2020 =
+- Version compatibility tested
+
+= 1.0.3 - 03/08/2021 =
 - Version compatibility tested
