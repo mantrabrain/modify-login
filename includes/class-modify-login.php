@@ -21,7 +21,7 @@ final class Modify_Login
      *
      * @var string
      */
-    public $version = '1.0.3';
+    public $version = '1.0.4';
 
     /**
      * The single instance of the class.
