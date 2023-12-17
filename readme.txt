@@ -1,5 +1,5 @@
 === Hide WordPress Login, Modify WordPress Login, WordPress Login Page Modify - Modify Login ===
-Contributors: mantrabrain
+Contributors: MantraBrain
 Donate link: https://mantrabrain.com
 Tags: wp-login.php, hide, hide login, security, safe login
 Requires at least: 5.6
