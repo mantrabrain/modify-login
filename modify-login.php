@@ -1,7 +1,7 @@
 <?php
 /**
  *  Plugin Name:     Modify Login
- *  Version:         1.0.5
+ *  Version:         1.0.6
  *  Plugin URI:      https://wordpress.org/plugins/modify-login
  *  Description:     Modify WordPress admin login technique. This plugin will modify your login url so that your website will be more secure.
  *  Author:          Mantrabrain

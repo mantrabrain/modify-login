@@ -21,7 +21,7 @@ final class Modify_Login
      *
      * @var string
      */
-    public $version = '1.0.5';
+    public $version = '1.0.6';
 
     /**
      * The single instance of the class.
@@ -36,10 +36,10 @@ final class Modify_Login
      *
      * Ensures only one instance of Modify_Login is loaded or can be loaded.
      *
+     * @return Modify_Login - Main instance.
+     * @see sikshya()
      * @since 1.0.0
      * @static
-     * @see sikshya()
-     * @return Modify_Login - Main instance.
      */
     public static function instance()
     {
@@ -121,6 +121,13 @@ final class Modify_Login
 
     }
 
+    private function use_trailing_slashes()
+    {
+
+        return ('/' === substr(get_option('permalink_structure'), -1, 1));
+
+    }
+
     function options()
     {
         if (!current_user_can('manage_options')) {
@@ -133,6 +140,13 @@ final class Modify_Login
 
             $this->update_login_endpoint($login_endpoint);
         }
+        if (isset($_POST['redirect_url'])) {
+
+            $redirect_url = sanitize_text_field($_POST['redirect_url']);
+
+            $this->update_redirect_url($redirect_url);
+        }
+
 
         $nonce = wp_create_nonce('modify-login');
         ?>
@@ -150,7 +164,13 @@ final class Modify_Login
                         <th scope="row"><label
                                     for="blogname"><?php echo __('Login endpoint', 'modify-login'); ?></label>
                         </th>
-                        <td><input name="login_endpoint" type="text" id="login_endpoint"
+                        <td>
+
+                            <?php
+                            echo '<code>' . trailingslashit(home_url()) . '?</code>';
+
+                            ?>
+                            <input name="login_endpoint" type="text" id="login_endpoint"
                                    value="<?php echo esc_attr($this->get_login_endpoint()); ?>" class="regular-text">
                         </td>
                     </tr>
@@ -158,14 +178,26 @@ final class Modify_Login
                         <th scope="row"><label for="blogname"><?php echo __('Login URL', 'modify-login'); ?></label>
                         </th>
                         <td>
-                            <label><?php echo esc_url(home_url()) . '?' . esc_html($this->get_login_endpoint()) ?></label>
+                            <code><?php echo esc_url(home_url()) . '?' . esc_html($this->get_login_endpoint()) ?></code>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row"><label
+                                    for="blogname"><?php echo __('Redirect URL', 'modify-login'); ?></label>
+                        </th>
+                        <td>
+
+                            <input name="redirect_url" type="text" id="redirect_url"
+                                   value="<?php echo esc_attr($this->get_redirect_url()); ?>" class="regular-text">
                         </td>
                     </tr>
 
                     <tr>
                         <th scope="row"><label
                                     for="blogname"><?php echo __('Like this plugin ? ', 'modify-login'); ?></label></th>
-                        <td><label><a href="https://wordpress.org/support/plugin/modify-login/reviews?rate=5#new-post" target="_blank"><?php echo __('Give it a 5
+                        <td><label><a href="https://wordpress.org/support/plugin/modify-login/reviews?rate=5#new-post"
+                                      target="_blank"><?php echo __('Give it a 5
                                     star rating', 'modify-login'); ?></a></label></td>
                     </tr>
 
@@ -200,9 +232,15 @@ final class Modify_Login
     private function get_login_endpoint()
     {
 
-        $endpoint = get_option('mb_login_endpoint');
+        return get_option('mb_login_endpoint', 'setup');
 
-        return $endpoint;
+
+    }
+
+    private function get_redirect_url()
+    {
+
+        return get_option('mb_redirect_url', home_url('404'));
 
 
     }
@@ -213,6 +251,15 @@ final class Modify_Login
         if (!empty($value)) {
 
             update_option('mb_login_endpoint', $value);
+        }
+    }
+
+    private function update_redirect_url($value)
+    {
+
+        if (!empty($value)) {
+
+            update_option('mb_redirect_url', $value);
         }
     }
 
@@ -246,9 +293,7 @@ final class Modify_Login
 
         if (strpos($_SERVER['REQUEST_URI'], 'action=logout') !== false) {
             check_admin_referer('log-out');
-
             $user = wp_get_current_user();
-
             wp_logout();
             wp_safe_redirect(home_url(), 302);
             die;
@@ -259,7 +304,7 @@ final class Modify_Login
             (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false)) {
 
 
-            wp_safe_redirect(home_url('404'), 302);
+            wp_safe_redirect($this->get_redirect_url(), 302);
             exit();
 
         }
