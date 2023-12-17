@@ -172,6 +172,7 @@ final class Modify_Login
                             ?>
                             <input name="login_endpoint" type="text" id="login_endpoint"
                                    value="<?php echo esc_attr($this->get_login_endpoint()); ?>" class="regular-text">
+                            <p><?php echo __('Secure your website by altering the login URL and restricting entry to the wp-login.php page and wp-admin directory for non-authenticated users!', 'modify-login'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -190,6 +191,7 @@ final class Modify_Login
 
                             <input name="redirect_url" type="text" id="redirect_url"
                                    value="<?php echo esc_attr($this->get_redirect_url()); ?>" class="regular-text">
+                            <p><?php echo __('Redirect the URL for unauthorized attempts to access the wp-login.php page and the wp-admin directory!', 'modify-login') ?></p>
                         </td>
                     </tr>
 
