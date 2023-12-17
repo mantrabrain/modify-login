@@ -4,7 +4,7 @@
  *  Version:         1.1
  *  Plugin URI:      https://wordpress.org/plugins/modify-login
  *  Description:     Modify WordPress admin login technique. This plugin will modify your login url so that your website will be more secure.
- *  Author:          Mantrabrain
+ *  Author:          MantraBrain
  *  Author URI:      https://mantrabrain.com
  *  Text Domain:     modify-login
  *  Domain Path:     /languages/
