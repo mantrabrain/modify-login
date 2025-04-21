@@ -44,6 +44,9 @@ spl_autoload_register(function ($class) {
 // Include required files
 require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login.php';
 require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login-loader.php';
+// Include admin class
+require_once MODIFY_LOGIN_PATH . 'includes/admin/class-modify-login-admin.php';
+require_once MODIFY_LOGIN_PATH . 'includes/admin/admin-ajax.php';
 
 // Initialize the plugin
 function modify_login() {

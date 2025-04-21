@@ -47,6 +47,9 @@ class Modify_Login_Admin {
         
         // Add color picker support
         add_action('admin_enqueue_scripts', array($this, 'enqueue_color_picker'));
+
+        // Initialize AJAX handler
+        new Modify_Login_Admin_Ajax();
     }
 
     /**
@@ -194,6 +197,12 @@ class Modify_Login_Admin {
         // Enqueue builder scripts and styles
         wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array(), MODIFY_LOGIN_VERSION);
         wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery'), MODIFY_LOGIN_VERSION, true);
+
+        // Localize the builder script
+        wp_localize_script('modify-login-builder', 'modifyLoginBuilder', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('modify_login_builder_nonce')
+        ));
 
         // Get current settings
         $settings = array(
