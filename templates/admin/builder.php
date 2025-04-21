@@ -20,8 +20,10 @@ if (!defined('ABSPATH')) {
                 </div>
                 <div class="form-group">
                     <label for="background_image"><?php _e('Background Image', 'modify-login'); ?></label>
-                    <input type="text" id="background_image" name="background_image" value="<?php echo esc_attr($settings['background_image']); ?>">
-                    <button class="button upload-image"><?php _e('Upload', 'modify-login'); ?></button>
+                    <div class="media-upload-wrapper">
+                        <input type="text" id="background_image" name="background_image" value="<?php echo esc_attr($settings['background_image']); ?>">
+                        <button class="button upload-image"><?php _e('Upload', 'modify-login'); ?></button>
+                    </div>
                 </div>
             </div>
 
@@ -29,8 +31,10 @@ if (!defined('ABSPATH')) {
                 <h3><?php _e('Logo', 'modify-login'); ?></h3>
                 <div class="form-group">
                     <label for="logo_url"><?php _e('Logo URL', 'modify-login'); ?></label>
-                    <input type="text" id="logo_url" name="logo_url" value="<?php echo esc_attr($settings['logo_url']); ?>">
-                    <button class="button upload-logo"><?php _e('Upload', 'modify-login'); ?></button>
+                    <div class="media-upload-wrapper">
+                        <input type="text" id="logo_url" name="logo_url" value="<?php echo esc_attr($settings['logo_url']); ?>">
+                        <button class="button upload-logo"><?php _e('Upload', 'modify-login'); ?></button>
+                    </div>
                 </div>
             </div>
 

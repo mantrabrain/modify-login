@@ -61,26 +61,14 @@ class Modify_Login_Frontend {
      * Register the stylesheets for the login page.
      */
     public function enqueue_styles() {
-        wp_enqueue_style(
-            $this->plugin_name,
-            MODIFY_LOGIN_URL . 'src/css/frontend.css',
-            array(),
-            $this->version,
-            'all'
-        );
+        // Frontend CSS loading removed as requested
     }
 
     /**
      * Register the JavaScript for the login page.
      */
     public function enqueue_scripts() {
-        wp_enqueue_script(
-            $this->plugin_name,
-            MODIFY_LOGIN_URL . 'src/js/frontend.js',
-            array('jquery'),
-            $this->version,
-            false
-        );
+    
 
         // Add reCAPTCHA script if enabled
         if ('yes' === get_option('modify_login_enable_recaptcha', 'no')) {

@@ -130,7 +130,7 @@ class Modify_Login_Admin {
             __('Modify Login', 'modify-login'),
             'manage_options',
             'modify-login',
-            array($this, 'display_settings_page'),
+            array($this, 'display_admin_page'),
             'dashicons-lock',
             30
         );
@@ -141,7 +141,7 @@ class Modify_Login_Admin {
             __('Settings', 'modify-login'),
             'manage_options',
             'modify-login',
-            array($this, 'display_settings_page')
+            array($this, 'display_admin_page')
         );
 
         add_submenu_page(
@@ -192,8 +192,8 @@ class Modify_Login_Admin {
      */
     public function display_builder_page() {
         // Enqueue builder scripts and styles
-        wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/css/admin/builder.css', array(), MODIFY_LOGIN_VERSION);
-        wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/js/admin/builder.js', array('jquery'), MODIFY_LOGIN_VERSION, true);
+        wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array(), MODIFY_LOGIN_VERSION);
+        wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery'), MODIFY_LOGIN_VERSION, true);
 
         // Get current settings
         $settings = array(
