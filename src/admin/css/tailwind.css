@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .modify-login-settings {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  .modify-login-container {
+    @apply space-y-8;
+  }
+
+  .modify-login-header {
+    @apply space-y-2 mb-8;
+  }
+
+  .modify-login-header h1 {
+    @apply text-3xl font-bold text-gray-900;
+  }
+
+  .modify-login-header .description {
+    @apply text-base text-gray-500;
+  }
+
+  /* Tab Navigation */
+  .tab-link {
+    @apply flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200;
+  }
+
+  .tab-link svg {
+    @apply mr-3 h-5 w-5 transition-colors duration-200;
+  }
+
+  .tab-link.active {
+    @apply bg-gray-100 text-gray-900;
+  }
+
+  .tab-link.active svg {
+    @apply text-gray-500;
+  }
+
+  .tab-link:not(.active) {
+    @apply text-gray-600 hover:text-gray-900 hover:bg-gray-50;
+  }
+
+  .tab-link:not(.active) svg {
+    @apply text-gray-400 group-hover:text-gray-500;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply bg-white rounded-lg shadow-sm mb-8 overflow-hidden;
+  }
+
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+
+  .card-title {
+    @apply text-lg font-medium text-gray-900;
+  }
+
+  .card-body {
+    @apply p-6;
+  }
+
+  /* Form Styles */
+  .form-group {
+    @apply space-y-6;
+  }
+
+  .form-field {
+    @apply space-y-2;
+  }
+
+  .form-field label {
+    @apply block text-sm font-medium text-gray-700;
+  }
+
+  .input-group {
+    @apply flex rounded-md shadow-sm;
+  }
+
+  .input-group-text {
+    @apply inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm;
+  }
+
+  .form-control {
+    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm transition-colors duration-200;
+  }
+
+  .form-control:not(:first-child) {
+    @apply rounded-l-none;
+  }
+
+  .checkbox-group {
+    @apply flex items-center space-x-3;
+  }
+
+  .checkbox-label {
+    @apply text-sm text-gray-700;
+  }
+
+  /* Status Badges */
+  .status-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .status-success {
+    @apply bg-green-100 text-green-800;
+  }
+
+  .status-failed {
+    @apply bg-red-100 text-red-800;
+  }
+
+  .status-blocked {
+    @apply bg-yellow-100 text-yellow-800;
+  }
+
+  /* Pagination */
+  .modify-login-pagination {
+    @apply bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6;
+  }
+
+  .modify-login-pagination .page-numbers {
+    @apply relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200;
+  }
+
+  .modify-login-pagination .page-numbers.current {
+    @apply z-10 bg-blue-50 border-blue-500 text-blue-600;
+  }
+
+  /* Empty State */
+  .modify-login-empty-state {
+    @apply text-center py-12 px-6;
+  }
+
+  .empty-state-icon {
+    @apply mx-auto h-12 w-12 text-gray-400;
+  }
+
+  .modify-login-empty-state h3 {
+    @apply mt-2 text-lg font-medium text-gray-900;
+  }
+
+  .modify-login-empty-state p {
+    @apply mt-1 text-base text-gray-500;
+  }
+
+  /* Submit Button */
+  .submit-button {
+    @apply inline-flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200;
+  }
+} 
