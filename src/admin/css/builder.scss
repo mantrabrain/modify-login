@@ -10,12 +10,27 @@
     box-sizing: border-box;
   }
   
-  .card{
-    overflow: unset;
+  /* Override Tailwind overflow properties */
+  .card {
+    overflow: visible !important;
   }
+  
+  .panel-content {
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    position: relative;
+  }
+  
+  .media-dropzone, 
+  .form-group,
+  .preview-thumbnail {
+    overflow: visible !important;
+  }
+  
   /* Gutenberg Color Picker Styles */
   .gutenberg-color-picker-container {
     margin-bottom: 16px;
+    overflow: visible !important;
     
     .color-picker-main {
       display: flex;
@@ -114,6 +129,7 @@
   /* Form Control Styles */
   .form-group {
     margin-bottom: 20px;
+    position: relative;
   }
   
   /* Preview Styles */
@@ -132,9 +148,13 @@
     border-radius: 6px;
     padding: 18px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    width: 300px;
+    z-index: 9999;
+    width: 280px;
     animation: fadeIn 0.2s ease;
+    pointer-events: auto;
+    right: 0;
+    top: 40px;
+    margin-right: -10px;
     
     &.active {
       display: block;
@@ -204,6 +224,33 @@
           }
         }
       }
+    }
+    
+    /* Arrow pointing to the gear icon */
+    &:before {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: -8px;
+      width: 0;
+      height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 8px solid white;
+      z-index: 2;
+    }
+    
+    &:after {
+      content: '';
+      position: absolute;
+      right: 11px;
+      top: -10px;
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 9px solid #ddd;
+      z-index: 1;
     }
   }
 }

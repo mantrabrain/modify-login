@@ -156,7 +156,7 @@ jQuery(document).ready(function($) {
         });
     });
     
-    // Handle all image property toggle buttons
+    // Handle all image property toggle buttons - Keep popovers within their parent containers
     $('.toggle-image-properties').on('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -171,23 +171,12 @@ jQuery(document).ready(function($) {
         // Toggle current popover visibility
         popover.toggleClass('active');
         
-        // Position the popover correctly
+        // Make sure popover is in right position (no need to manually position since we use CSS)
         if (popover.hasClass('active')) {
-            const buttonRect = button[0].getBoundingClientRect();
-            const bodyRect = document.body.getBoundingClientRect();
-            
-            // Adjust position based on available space
-            let leftPos = buttonRect.left + window.scrollX - popover.outerWidth() + buttonRect.width;
-            if (leftPos < 0) {
-                leftPos = buttonRect.left + window.scrollX;
+            // Ensure the popover is within the #modify-login-builder container
+            if (!popover.closest('#modify-login-builder').length) {
+                $('#modify-login-builder').find(`#${targetId}`).addClass('active');
             }
-            
-            // Set the popover position
-            popover.css({
-                top: buttonRect.bottom + window.scrollY + 5,
-                left: leftPos,
-                zIndex: 100
-            });
         }
     });
     
