@@ -120,8 +120,20 @@ class Modify_Login_Admin {
     /**
      * Enqueue color picker scripts and styles
      */
-    public function enqueue_color_picker() {
-        // This method is no longer needed as we're handling color picker in enqueue_scripts
+    public function enqueue_color_picker($hook) {
+        // Only load on our plugin's builder page
+        if ($hook !== 'modify-login_page_modify-login-builder') {
+            return;
+        }
+        
+        // Enqueue the WordPress component libraries for Gutenberg color picker
+        wp_enqueue_script('wp-components');
+        wp_enqueue_script('wp-element');
+        wp_enqueue_script('wp-i18n');
+        wp_enqueue_script('wp-data');
+        
+        // Enqueue the styles for components
+        wp_enqueue_style('wp-components');
     }
 
     /**
@@ -196,12 +208,18 @@ class Modify_Login_Admin {
     public function display_builder_page() {
         // Enqueue builder scripts and styles
         wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array(), MODIFY_LOGIN_VERSION);
-        wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery'), MODIFY_LOGIN_VERSION, true);
+        wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery', 'wp-components', 'wp-element', 'wp-i18n'), MODIFY_LOGIN_VERSION, true);
 
         // Localize the builder script
         wp_localize_script('modify-login-builder', 'modifyLoginBuilder', array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('modify_login_builder_nonce')
+            'nonce' => wp_create_nonce('modify_login_builder_nonce'),
+            'colors' => array(
+                'background' => get_option('modify_login_background_color', '#ffffff'),
+                'form' => get_option('modify_login_form_background', '#ffffff'),
+                'button' => get_option('modify_login_button_color', '#0073aa'),
+                'buttonText' => get_option('modify_login_button_text_color', '#ffffff'),
+            )
         ));
 
         // Get current settings

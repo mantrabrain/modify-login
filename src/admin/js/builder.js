@@ -1,43 +1,166 @@
 jQuery(document).ready(function($) {
-    // Initialize color pickers
-    $('input[type="color"]').wpColorPicker();
+    // Set up WordPress Gutenberg Color Picker
+    const { Component, render, createElement } = wp.element;
+    const { ColorPicker, BaseControl } = wp.components;
+    
+    // Initialize each color picker input
+    $('.color-picker').each(function() {
+        const input = $(this);
+        const inputId = input.attr('id');
+        const defaultColor = input.data('default-color') || '#ffffff';
+        const currentColor = input.val() || defaultColor;
+        const container = $('<div class="gutenberg-color-picker-container"></div>');
+        
+        // Replace the input with a container
+        input.after(container);
+        
+        // Create a hidden input to store the value
+        const hiddenInput = $(`<input type="hidden" id="${inputId}" name="${inputId}" value="${currentColor}">`);
+        input.replaceWith(hiddenInput);
+        
+        // Create color picker component
+        class ColorPickerComponent extends Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    color: props.initialColor,
+                    isOpen: false
+                };
+            }
+            
+            render() {
+                return createElement(
+                    BaseControl,
+                    { id: this.props.inputId },
+                    createElement('div', { className: 'color-picker-main' },
+                        createElement('button', {
+                            type: 'button',
+                            className: 'color-picker-button',
+                            onClick: () => this.setState({ isOpen: !this.state.isOpen }),
+                            style: {
+                                backgroundColor: this.state.color,
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                cursor: 'pointer',
+                                boxShadow: '0 1px 0 #ccc'
+                            }
+                        }),
+                        createElement('span', {
+                            className: 'color-picker-value',
+                            style: {
+                                marginLeft: '8px',
+                                lineHeight: '32px',
+                                verticalAlign: 'top'
+                            }
+                        }, this.state.color)
+                    ),
+                    this.state.isOpen && createElement(
+                        'div',
+                        { className: 'color-picker-popover' },
+                        createElement(
+                            ColorPicker,
+                            {
+                                color: this.state.color,
+                                onChangeComplete: (colorObject) => {
+                                    const newColor = colorObject.hex;
+                                    this.setState({ color: newColor });
+                                    this.props.onChange(newColor);
+                                }
+                            }
+                        )
+                    )
+                );
+            }
+        }
+        
+        // Render the component
+        render(
+            createElement(ColorPickerComponent, {
+                inputId: inputId,
+                initialColor: currentColor,
+                onChange: (newColor) => {
+                    hiddenInput.val(newColor).trigger('change');
+                    updatePreview();
+                }
+            }),
+            container[0]
+        );
+    });
 
-    // Handle image uploads
-    $('.upload-button').on('click', function(e) {
-        e.preventDefault();
-        const button = $(this);
-        const input = button.prev('input[type="text"]');
-        const target = input.attr('id');
-
-        const frame = wp.media({
-            title: 'Select Image',
-            button: {
-                text: 'Use this image'
-            },
-            multiple: false
+    // Initialize media dropzones
+    $('.media-dropzone').each(function() {
+        const dropzone = $(this);
+        const dropzoneArea = dropzone.find('.dropzone-area');
+        const input = dropzone.find('input[type="hidden"]');
+        const imagePreview = dropzone.find('.image-preview');
+        const previewImg = imagePreview.find('img');
+        const targetField = dropzone.data('target');
+        
+        // Show existing image preview if available
+        if (input.val()) {
+            previewImg.attr('src', input.val());
+            imagePreview.removeClass('hidden');
+            dropzoneArea.addClass('hidden');
+            
+            // Try to get the filename from the URL
+            const url = new URL(input.val());
+            const filename = url.pathname.split('/').pop();
+            imagePreview.find('.filename').text(filename);
+            
+            // Create a temporary image to get dimensions
+            const tempImg = new Image();
+            tempImg.onload = function() {
+                imagePreview.find('.dimensions').text(`${this.width} × ${this.height}`);
+            };
+            tempImg.src = input.val();
+        }
+        
+        // Setup click handler on dropzone area to open media library
+        dropzoneArea.on('click', function(e) {
+            e.preventDefault();
+            openMediaLibrary(input, imagePreview, dropzoneArea);
         });
-
-        frame.on('select', function() {
-            const attachment = frame.state().get('selection').first().toJSON();
-            input.val(attachment.url);
+        
+        // Handle drag and drop events
+        dropzoneArea.on('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).addClass('dragover');
+        });
+        
+        dropzoneArea.on('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+        });
+        
+        dropzoneArea.on('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $(this).removeClass('dragover');
+            
+            // Open the media library instead of direct handling
+            // WordPress media library can handle the dropped files
+            openMediaLibrary(input, imagePreview, dropzoneArea);
+        });
+        
+        // Handle remove image button
+        dropzone.find('.remove-image-button').on('click', function(e) {
+            e.preventDefault();
+            input.val('').trigger('change');
+            imagePreview.addClass('hidden');
+            dropzoneArea.removeClass('hidden');
             updatePreview();
         });
-
-        frame.open();
     });
-
-    // Handle remove image buttons
-    $('.remove-button').on('click', function(e) {
-        e.preventDefault();
-        const button = $(this);
-        const input = button.prev().prev('input[type="text"]');
-        input.val('');
-        updatePreview();
-    });
-
-    // Handle popover toggles
+    
+    // Handle all image property toggle buttons
     $('.toggle-image-properties').on('click', function(e) {
         e.preventDefault();
+        e.stopPropagation();
+        
         const button = $(this);
         const targetId = button.data('target');
         const popover = $(`#${targetId}`);
@@ -45,22 +168,64 @@ jQuery(document).ready(function($) {
         // Close any other open popovers
         $('.image-properties.active').not(popover).removeClass('active');
         
-        // Toggle current popover
+        // Toggle current popover visibility
         popover.toggleClass('active');
         
-        // Position the popover
+        // Position the popover correctly
         if (popover.hasClass('active')) {
             const buttonRect = button[0].getBoundingClientRect();
+            const bodyRect = document.body.getBoundingClientRect();
+            
+            // Adjust position based on available space
+            let leftPos = buttonRect.left + window.scrollX - popover.outerWidth() + buttonRect.width;
+            if (leftPos < 0) {
+                leftPos = buttonRect.left + window.scrollX;
+            }
+            
+            // Set the popover position
             popover.css({
                 top: buttonRect.bottom + window.scrollY + 5,
-                left: buttonRect.left + window.scrollX - popover.width() + buttonRect.width
+                left: leftPos,
+                zIndex: 100
             });
         }
     });
     
+    // Function to open the media library
+    function openMediaLibrary(input, imagePreview, dropzoneArea) {
+        const frame = wp.media({
+            title: 'Select Image',
+            button: {
+                text: 'Use this image'
+            },
+            multiple: false,
+            library: {
+                type: 'image'
+            }
+        });
+
+        frame.on('select', function() {
+            const attachment = frame.state().get('selection').first().toJSON();
+            input.val(attachment.url).trigger('change');
+            
+            // Update preview
+            imagePreview.find('img').attr('src', attachment.url);
+            imagePreview.find('.filename').text(attachment.filename);
+            imagePreview.find('.dimensions').text(`${attachment.width} × ${attachment.height}`);
+            
+            // Show preview, hide dropzone
+            imagePreview.removeClass('hidden');
+            dropzoneArea.addClass('hidden');
+            
+            updatePreview();
+        });
+
+        frame.open();
+    }
+    
     // Close popovers when clicking outside
     $(document).on('click', function(e) {
-        if (!$(e.target).closest('.image-properties, .toggle-image-properties').length) {
+        if (!$(e.target).closest('.image-properties, .toggle-image-properties, .color-picker-popover, .color-picker-button').length) {
             $('.image-properties.active').removeClass('active');
         }
     });
@@ -72,7 +237,7 @@ jQuery(document).ready(function($) {
     });
 
     // Handle form changes
-    $('.form-group input, .form-group textarea, .form-group select').on('change input', function() {
+    $('.form-group input:not(.color-picker), .form-group textarea, .form-group select').on('change input', function() {
         updatePreview();
     });
 
@@ -199,4 +364,4 @@ jQuery(document).ready(function($) {
     
     // Initialize preview
     updatePreview();
-}); 
+});
