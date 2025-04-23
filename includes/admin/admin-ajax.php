@@ -20,6 +20,7 @@ class Modify_Login_Admin_Ajax {
     public function __construct() {
         // Builder related AJAX handlers
         add_action('wp_ajax_modify_login_save_builder_settings', array($this, 'save_builder_settings'));
+        add_action('wp_ajax_modify_login_reset_builder_settings', array($this, 'reset_builder_settings'));
         add_action('wp_ajax_modify_login_upload_media', array($this, 'handle_media_upload'));
         
         // Settings related AJAX handlers
@@ -202,5 +203,49 @@ class Modify_Login_Admin_Ajax {
         $wpdb->query("TRUNCATE TABLE {$table_name}");
 
         wp_send_json_success('Logs cleared successfully');
+    }
+
+    /**
+     * Reset all builder settings to default values
+     */
+    public function reset_builder_settings() {
+        // Verify nonce
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'modify_login_builder_nonce')) {
+            wp_send_json_error('Invalid nonce');
+        }
+
+        // Check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Insufficient permissions');
+        }
+
+        // Default settings
+        $defaults = array(
+            'background_color' => '#ffffff',
+            'background_image' => '',
+            'background_size' => 'cover',
+            'background_position' => 'center center',
+            'background_repeat' => 'no-repeat',
+            'logo_url' => '',
+            'logo_width' => '84px',
+            'logo_height' => '84px',
+            'logo_position' => 'center',
+            'form_background' => '#ffffff',
+            'form_border_radius' => '4px',
+            'form_padding' => '20px',
+            'button_color' => '#0073aa',
+            'button_text_color' => '#ffffff',
+            'custom_css' => '',
+        );
+
+        // Delete and reset all builder settings
+        foreach ($defaults as $key => $value) {
+            delete_option('modify_login_' . $key);
+            if (!empty($value)) {
+                update_option('modify_login_' . $key, $value);
+            }
+        }
+
+        wp_send_json_success('Settings reset successfully');
     }
 } 

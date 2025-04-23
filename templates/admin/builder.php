@@ -10,10 +10,16 @@ if (!defined('ABSPATH')) {
         <div class="w-96 min-w-96 bg-white shadow-md flex flex-col">
             <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between bg-white">
                 <h2 class="text-lg font-semibold text-gray-900 m-0"><?php _e('Login Page Builder', 'modify-login'); ?></h2>
-                <button class="save-button flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white border-none rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-emerald-600 hover:-translate-y-0.5 active:translate-y-0">
-                    <span class="dashicons dashicons-saved text-base w-4 h-4"></span>
-                    <?php _e('Save Changes', 'modify-login'); ?>
-                </button>
+                <div class="flex gap-3">
+                    <button class="save-button flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white border-none rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-emerald-600 hover:-translate-y-0.5 active:translate-y-0">
+                        <span class="dashicons dashicons-saved text-base w-4 h-4"></span>
+                        <?php _e('Save Changes', 'modify-login'); ?>
+                    </button>
+                    <button class="reset-button flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 border-none rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-gray-300 hover:-translate-y-0.5 active:translate-y-0">
+                        <span class="dashicons dashicons-image-rotate text-base w-4 h-4"></span>
+                        <?php _e('Reset All', 'modify-login'); ?>
+                    </button>
+                </div>
             </div>
             
             <div class="panel-content flex-1 overflow-y-auto p-5">

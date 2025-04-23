@@ -3,6 +3,30 @@ jQuery(document).ready(function($) {
     const { Component, render, createElement } = wp.element;
     const { ColorPicker, BaseControl } = wp.components;
     
+    // Debugging for reset button
+    console.log('Document ready - looking for reset button');
+    const resetButton = $('.reset-button');
+    console.log('Reset button found:', resetButton.length > 0);
+    
+    // Default settings for reset
+    const defaultSettings = {
+        background_color: '#ffffff',
+        background_image: '',
+        background_size: 'cover',
+        background_position: 'center center',
+        background_repeat: 'no-repeat',
+        logo_url: '',
+        logo_width: '84px',
+        logo_height: '84px',
+        logo_position: 'center',
+        form_background: '#ffffff',
+        form_border_radius: '4px',
+        form_padding: '20px',
+        button_color: '#0073aa',
+        button_text_color: '#ffffff',
+        custom_css: ''
+    };
+    
     // Initialize each color picker input
     $('.color-picker').each(function() {
         const input = $(this);
@@ -349,6 +373,133 @@ jQuery(document).ready(function($) {
                 button.prop('disabled', false);
             }
         });
+    });
+    
+    // Handle reset button
+    $('.reset-button').on('click', function(e) {
+        e.preventDefault();
+        
+        console.log('Reset button clicked');
+        
+        // Create and show notification
+        const notification = $('<div class="ml-notification"></div>')
+            .css({
+                'position': 'fixed',
+                'top': '30px',
+                'left': '50%',
+                'transform': 'translateX(-50%)',
+                'background-color': '#f44336',
+                'color': 'white',
+                'padding': '15px 25px',
+                'border-radius': '4px',
+                'z-index': '9999',
+                'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',
+                'font-weight': 'bold',
+                'font-size': '14px',
+                'display': 'flex',
+                'align-items': 'center',
+                'max-width': '90%',
+                'opacity': '0',
+                'transition': 'opacity 0.3s ease'
+            })
+            .html('<span style="margin-right:10px;">⚠️</span> WARNING: You are about to reset all login customization settings to their default values!');
+        
+        $('body').append(notification);
+        
+        // Fade in the notification
+        setTimeout(function() {
+            notification.css('opacity', '1');
+        }, 10);
+        
+        // Show confirmation dialog after 1 second
+        setTimeout(function() {
+            if (confirm('Are you sure you want to reset all settings to their default values? This cannot be undone.')) {
+                const button = resetButton;
+                
+                // Remove notification
+                notification.remove();
+                
+                // Visual feedback
+                button.prop('disabled', true).text('Resetting...');
+                
+                // Send AJAX request to reset settings on the server
+                const formData = new FormData();
+                formData.append('action', 'modify_login_reset_builder_settings');
+                formData.append('nonce', modifyLoginBuilder.nonce);
+                
+                $.ajax({
+                    url: modifyLoginBuilder.ajax_url,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                            // Reset form fields in the UI
+                            // Reset hidden inputs for color pickers
+                            $('input#background_color').val(defaultSettings.background_color).trigger('change');
+                            $('input#form_background').val(defaultSettings.form_background).trigger('change');
+                            $('input#button_color').val(defaultSettings.button_color).trigger('change');
+                            $('input#button_text_color').val(defaultSettings.button_text_color).trigger('change');
+                            
+                            // Reset image fields
+                            $('input#background_image').val('').trigger('change');
+                            $('input#logo_url').val('').trigger('change');
+                            
+                            // Reset select fields
+                            $('select#background_size').val(defaultSettings.background_size).trigger('change');
+                            $('select#background_position').val(defaultSettings.background_position).trigger('change');
+                            $('select#background_repeat').val(defaultSettings.background_repeat).trigger('change');
+                            $('select#logo_position').val(defaultSettings.logo_position).trigger('change');
+                            
+                            // Reset input text fields
+                            $('input#form_border_radius').val(defaultSettings.form_border_radius).trigger('change');
+                            $('input#form_padding').val(defaultSettings.form_padding).trigger('change');
+                            $('input#logo_width').val(defaultSettings.logo_width).trigger('change');
+                            $('input#logo_height').val(defaultSettings.logo_height).trigger('change');
+                            
+                            // Reset textarea
+                            $('textarea#custom_css').val(defaultSettings.custom_css).trigger('change');
+                            
+                            // Hide all image previews and show dropzones
+                            $('.image-preview').addClass('hidden');
+                            $('.dropzone-area').removeClass('hidden');
+                            
+                            // Force refresh color pickers UI by manually updating them
+                            $('.gutenberg-color-picker-container').each(function(){
+                                const container = $(this);
+                                const hiddenInput = container.prev('input[type="hidden"]');
+                                const id = hiddenInput.attr('id');
+                                const defaultColor = defaultSettings[id] || '#ffffff';
+                                
+                                // Update color button and text display
+                                container.find('.color-picker-button').css('background-color', defaultColor);
+                                container.find('.color-picker-value').text(defaultColor);
+                            });
+                            
+                            // Update preview
+                            updatePreview();
+                            
+                            // Update visual state
+                            button.text('Reset Complete!');
+                        } else {
+                            button.text('Error Resetting');
+                        }
+                    },
+                    error: function() {
+                        button.text('Error Resetting');
+                    },
+                    complete: function() {
+                        setTimeout(function() {
+                            button.prop('disabled', false).text('Reset All');
+                        }, 1500);
+                    }
+                });
+            } else {
+                // Remove notification if user cancels
+                notification.remove();
+            }
+        }, 1000);
     });
     
     // Initialize preview
