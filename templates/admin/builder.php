@@ -15,9 +15,8 @@ if (!defined('ABSPATH')) {
                         <span class="dashicons dashicons-saved text-base w-4 h-4"></span>
                         <?php _e('Save Changes', 'modify-login'); ?>
                     </button>
-                    <button class="reset-button flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 border-none rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-gray-300 hover:-translate-y-0.5 active:translate-y-0">
-                        <span class="dashicons dashicons-image-rotate text-base w-4 h-4"></span>
-                        <?php _e('Reset All', 'modify-login'); ?>
+                    <button class="reset-button flex items-center justify-center w-10 h-10 bg-gray-200 text-gray-700 border-none rounded-md cursor-pointer text-sm font-medium transition-all hover:bg-gray-300 hover:-translate-y-0.5 active:translate-y-0" title="<?php _e('Reset All', 'modify-login'); ?>">
+                        <span class="dashicons dashicons-image-rotate text-lg w-5 h-5"></span>
                     </button>
                 </div>
             </div>

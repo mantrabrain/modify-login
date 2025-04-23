@@ -206,9 +206,12 @@ class Modify_Login_Admin {
      * Display the builder page.
      */
     public function display_builder_page() {
+        // Force cache invalidation with current timestamp
+        $version = MODIFY_LOGIN_VERSION . '.' . time();
+        
         // Enqueue builder scripts and styles
-        wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array(), MODIFY_LOGIN_VERSION);
-        wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery', 'wp-components', 'wp-element', 'wp-i18n'), MODIFY_LOGIN_VERSION, true);
+        wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array(), $version);
+        wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery', 'wp-components', 'wp-element', 'wp-i18n'), $version, true);
 
         // Localize the builder script
         wp_localize_script('modify-login-builder', 'modifyLoginBuilder', array(

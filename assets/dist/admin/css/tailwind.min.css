@@ -977,6 +977,8 @@ select {
   min-height: 100px;
 }.min-h-screen {
   min-height: 100vh;
+}.w-10 {
+  width: 2.5rem;
 }.w-16 {
   width: 4rem;
 }.w-20 {

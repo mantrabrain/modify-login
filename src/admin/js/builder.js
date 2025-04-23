@@ -3,11 +3,6 @@ jQuery(document).ready(function($) {
     const { Component, render, createElement } = wp.element;
     const { ColorPicker, BaseControl } = wp.components;
     
-    // Debugging for reset button
-    console.log('Document ready - looking for reset button');
-    const resetButton = $('.reset-button');
-    console.log('Reset button found:', resetButton.length > 0);
-    
     // Default settings for reset
     const defaultSettings = {
         background_color: '#ffffff',
@@ -379,45 +374,51 @@ jQuery(document).ready(function($) {
     $('.reset-button').on('click', function(e) {
         e.preventDefault();
         
-        console.log('Reset button clicked');
+        // Create custom confirmation modal
+        const modalOverlay = $('<div class="custom-modal-overlay"></div>');
+        const modal = $(`
+            <div class="custom-modal">
+                <div class="custom-modal-header">
+                    <span class="custom-modal-icon">ℹ️</span>
+                    <h3 class="custom-modal-title">Reset All Settings</h3>
+                </div>
+                <div class="custom-modal-content">
+                    <p>You are about to reset all login customization settings to their default values.</p>
+                    <p>This action cannot be undone. Are you sure you want to proceed?</p>
+                </div>
+                <div class="custom-modal-actions">
+                    <button class="custom-modal-cancel">Cancel</button>
+                    <button class="custom-modal-confirm"><span class="dashicons dashicons-image-rotate"></span>Reset All</button>
+                </div>
+            </div>
+        `);
         
-        // Create and show notification
-        const notification = $('<div class="ml-notification"></div>')
-            .css({
-                'position': 'fixed',
-                'top': '30px',
-                'left': '50%',
-                'transform': 'translateX(-50%)',
-                'background-color': '#f44336',
-                'color': 'white',
-                'padding': '15px 25px',
-                'border-radius': '4px',
-                'z-index': '9999',
-                'box-shadow': '0 4px 8px rgba(0,0,0,0.2)',
-                'font-weight': 'bold',
-                'font-size': '14px',
-                'display': 'flex',
-                'align-items': 'center',
-                'max-width': '90%',
-                'opacity': '0',
-                'transition': 'opacity 0.3s ease'
-            })
-            .html('<span style="margin-right:10px;">⚠️</span> WARNING: You are about to reset all login customization settings to their default values!');
+        modalOverlay.append(modal);
+        $('body').append(modalOverlay);
         
-        $('body').append(notification);
-        
-        // Fade in the notification
+        // Fade in animation
         setTimeout(function() {
-            notification.css('opacity', '1');
+            modalOverlay.addClass('active');
         }, 10);
         
-        // Show confirmation dialog after 1 second
-        setTimeout(function() {
-            if (confirm('Are you sure you want to reset all settings to their default values? This cannot be undone.')) {
-                const button = resetButton;
+        // Handle cancel button
+        modal.find('.custom-modal-cancel').on('click', function() {
+            // Close modal with animation
+            modalOverlay.removeClass('active');
+            setTimeout(function() {
+                modalOverlay.remove();
+            }, 300);
+        });
+        
+        // Handle confirm button
+        modal.find('.custom-modal-confirm').on('click', function() {
+            // Close modal with animation
+            modalOverlay.removeClass('active');
+            setTimeout(function() {
+                modalOverlay.remove();
                 
-                // Remove notification
-                notification.remove();
+                // Get the reset button
+                const button = $('.reset-button');
                 
                 // Visual feedback
                 button.prop('disabled', true).text('Resetting...');
@@ -491,15 +492,12 @@ jQuery(document).ready(function($) {
                     },
                     complete: function() {
                         setTimeout(function() {
-                            button.prop('disabled', false).text('Reset All');
+                            button.prop('disabled', false).empty().append('<span class="dashicons dashicons-image-rotate text-lg w-5 h-5"></span>');
                         }, 1500);
                     }
                 });
-            } else {
-                // Remove notification if user cancels
-                notification.remove();
-            }
-        }, 1000);
+            }, 300);
+        });
     });
     
     // Initialize preview
