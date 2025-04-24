@@ -22,6 +22,13 @@ mkdir -p "${TMP_DIR}/${PLUGIN_NAME}"
 # Copy all files to build directory
 rsync -av --exclude-from="./.gitignore" --exclude="./build" --exclude="./.git" --exclude="./node_modules" ./ "${TMP_DIR}/${PLUGIN_NAME}/"
 
+# Ensure assets/dist is included (may have been excluded by .gitignore)
+if [ -d "./assets/dist" ]; then
+  echo "Making sure assets/dist is included..."
+  mkdir -p "${TMP_DIR}/${PLUGIN_NAME}/assets/dist"
+  rsync -av ./assets/dist/ "${TMP_DIR}/${PLUGIN_NAME}/assets/dist/"
+fi
+
 # Navigate to temporary directory
 cd "${TMP_DIR}" || exit
 

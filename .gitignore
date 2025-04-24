@@ -28,7 +28,8 @@ composer.lock
 # Build output
 /build/
 /dist/
-/assets/dist/
+# Don't exclude the production assets
+!/assets/dist/
 *.zip
 *.tar.gz
 *.log
