@@ -120,14 +120,6 @@ final class Modify_Login
         
         add_action('init', array($this, 'init'), 0);
         add_action('init', array($this, 'load_plugin_textdomain'));
-        
-        // Admin hooks
-        if (is_admin()) {
-            add_action('admin_enqueue_scripts', array($this, 'admin_scripts'));
-        }
-        
-        // Frontend hooks
-        add_action('wp_enqueue_scripts', array($this, 'frontend_scripts'));
     }
 
     /**
@@ -151,35 +143,5 @@ final class Modify_Login
     public function load_plugin_textdomain()
     {
         load_plugin_textdomain('modify-login', false, dirname(MODIFY_LOGIN_PLUGIN_BASENAME) . '/languages/');
-    }
-
-    /**
-     * Register admin scripts and styles.
-     */
-    public function admin_scripts()
-    {
-        // Register settings CSS
-        wp_register_style(
-            'modify-login-settings',
-            MODIFY_LOGIN_URL . 'src/admin/css/settings.css',
-            array(),
-            $this->version
-        );
-
-        // Register logs CSS
-        wp_register_style(
-            'modify-login-logs',
-            MODIFY_LOGIN_URL . 'src/admin/css/login-logs.css',
-            array(),
-            $this->version
-        );
-    }
-
-    /**
-     * Register frontend scripts and styles.
-     */
-    public function frontend_scripts()
-    {
-        // No frontend styles needed
     }
 }
