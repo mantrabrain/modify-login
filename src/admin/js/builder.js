@@ -51,7 +51,7 @@ jQuery(document).ready(function($) {
                 return createElement(
                     BaseControl,
                     { id: this.props.inputId },
-                    createElement('div', { className: 'color-picker-main' },
+                    createElement('div', { className: 'color-picker-main flex items-center' },
                         createElement('button', {
                             type: 'button',
                             className: 'color-picker-button',
@@ -66,14 +66,53 @@ jQuery(document).ready(function($) {
                                 boxShadow: '0 1px 0 #ccc'
                             }
                         }),
-                        createElement('span', {
-                            className: 'color-picker-value',
+                        createElement('input', {
+                            type: 'text',
+                            className: 'color-picker-input',
+                            value: this.state.color,
+                            onChange: (e) => {
+                                const newColor = e.target.value;
+                                this.setState({ color: newColor });
+                                this.props.onChange(newColor);
+                            },
                             style: {
                                 marginLeft: '8px',
-                                lineHeight: '32px',
-                                verticalAlign: 'top'
+                                width: '80px',
+                                height: '32px',
+                                padding: '0 8px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                fontFamily: 'monospace'
                             }
-                        }, this.state.color)
+                        }),
+                        createElement('button', {
+                            type: 'button',
+                            className: 'color-picker-clear',
+                            onClick: () => {
+                                this.setState({ color: '' });
+                                this.props.onChange('');
+                            },
+                            style: {
+                                marginLeft: '4px',
+                                padding: '0',
+                                width: '28px',
+                                height: '32px',
+                                borderRadius: '4px',
+                                border: '1px solid #ccc',
+                                cursor: 'pointer',
+                                background: '#f0f0f1',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }
+                        }, createElement('span', {
+                            className: 'dashicons dashicons-no-alt',
+                            style: {
+                                fontSize: '16px',
+                                width: '16px',
+                                height: '16px'
+                            }
+                        }))
                     ),
                     this.state.isOpen && createElement(
                         'div',
@@ -266,7 +305,7 @@ jQuery(document).ready(function($) {
         // Generate CSS based on current settings
         let css = `
             body.login {
-                background-color: ${settings.background_color || '#ffffff'};
+                ${settings.background_color ? `background-color: ${settings.background_color};` : ''}
                 ${settings.background_image ? `
                     background-image: url('${settings.background_image}');
                     background-size: ${settings.background_size || 'cover'};
@@ -275,14 +314,13 @@ jQuery(document).ready(function($) {
                 ` : 'background-image: none;'}
             }
             #login {
-                background: ${settings.form_background || '#ffffff'};
-                border-radius: ${settings.form_border_radius || '4px'};
-                padding: ${settings.form_padding || '20px'};
+                ${settings.form_background ? `background: ${settings.form_background};` : ''}
+                ${settings.form_border_radius ? `border-radius: ${settings.form_border_radius};` : ''}
+                ${settings.form_padding ? `padding: ${settings.form_padding};` : ''}
             }
             .wp-core-ui .button-primary {
-                background: ${settings.button_color || '#0073aa'};
-                border-color: ${settings.button_color || '#0073aa'};
-                color: ${settings.button_text_color || '#ffffff'};
+                ${settings.button_color ? `background: ${settings.button_color}; border-color: ${settings.button_color};` : ''}
+                ${settings.button_text_color ? `color: ${settings.button_text_color};` : ''}
             }
         `;
         
@@ -291,13 +329,13 @@ jQuery(document).ready(function($) {
             css += `
                 .login h1 a {
                     background-image: url('${settings.logo_url}');
-                    width: ${settings.logo_width || '84px'};
-                    height: ${settings.logo_height || '84px'};
+                    ${settings.logo_width ? `width: ${settings.logo_width};` : ''}
+                    ${settings.logo_height ? `height: ${settings.logo_height};` : ''}
                     background-size: contain;
                     background-position: center;
                     background-repeat: no-repeat;
                     text-indent: -9999px;
-                    text-align: ${settings.logo_position || 'center'};
+                    ${settings.logo_position ? `text-align: ${settings.logo_position};` : ''}
                 }
             `;
         } else {
@@ -371,24 +409,25 @@ jQuery(document).ready(function($) {
     });
     
     // Handle reset button
-    $('.reset-button').on('click', function(e) {
+    $('#reset-all-button').on('click', function(e) {
         e.preventDefault();
         
         // Create custom confirmation modal
         const modalOverlay = $('<div class="custom-modal-overlay"></div>');
         const modal = $(`
-            <div class="custom-modal">
-                <div class="custom-modal-header">
-                    <span class="custom-modal-icon">ℹ️</span>
-                    <h3 class="custom-modal-title">Reset All Settings</h3>
+            <div class="custom-modal bg-white rounded-lg shadow-lg w-96">
+                <div class="custom-modal-header px-5 py-4 border-b border-gray-200 flex items-center">
+                    <span class="dashicons dashicons-info text-blue-500 mr-2 text-xl"></span>
+                    <h3 class="custom-modal-title text-lg font-semibold text-gray-900">Reset Form</h3>
                 </div>
-                <div class="custom-modal-content">
-                    <p>You are about to reset all login customization settings to their default values.</p>
-                    <p>This action cannot be undone. Are you sure you want to proceed?</p>
+                <div class="custom-modal-content p-5 text-gray-600">
+                    <p class="mb-2">You are about to reset all form fields to their default values.</p>
+                    <p class="mb-2">This will only reset the form, not save the changes.</p>
+                    <p>Click Save after resetting if you want to apply these changes.</p>
                 </div>
-                <div class="custom-modal-actions">
-                    <button class="custom-modal-cancel">Cancel</button>
-                    <button class="custom-modal-confirm"><span class="dashicons dashicons-image-rotate"></span>Reset All</button>
+                <div class="custom-modal-actions p-4 bg-gray-50 flex justify-end gap-3 rounded-b-lg">
+                    <button class="custom-modal-cancel px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">Cancel</button>
+                    <button class="custom-modal-confirm px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">Reset Form</button>
                 </div>
             </div>
         `);
@@ -418,84 +457,59 @@ jQuery(document).ready(function($) {
                 modalOverlay.remove();
                 
                 // Get the reset button
-                const button = $('.reset-button');
+                const button = $('#reset-all-button');
                 
                 // Visual feedback
-                button.prop('disabled', true).text('Resetting...');
+                button.addClass('opacity-50');
+            
+                // Reset form fields in the UI
+                // Reset all inputs to empty values
+                $('input#background_color').val('').trigger('change');
+                $('input#form_background').val('').trigger('change');
+                $('input#button_color').val('').trigger('change');
+                $('input#button_text_color').val('').trigger('change');
                 
-                // Send AJAX request to reset settings on the server
-                const formData = new FormData();
-                formData.append('action', 'modify_login_reset_builder_settings');
-                formData.append('nonce', modifyLoginBuilder.nonce);
+                // Reset image fields
+                $('input#background_image').val('').trigger('change');
+                $('input#logo_url').val('').trigger('change');
                 
-                $.ajax({
-                    url: modifyLoginBuilder.ajax_url,
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            // Reset form fields in the UI
-                            // Reset hidden inputs for color pickers
-                            $('input#background_color').val(defaultSettings.background_color).trigger('change');
-                            $('input#form_background').val(defaultSettings.form_background).trigger('change');
-                            $('input#button_color').val(defaultSettings.button_color).trigger('change');
-                            $('input#button_text_color').val(defaultSettings.button_text_color).trigger('change');
-                            
-                            // Reset image fields
-                            $('input#background_image').val('').trigger('change');
-                            $('input#logo_url').val('').trigger('change');
-                            
-                            // Reset select fields
-                            $('select#background_size').val(defaultSettings.background_size).trigger('change');
-                            $('select#background_position').val(defaultSettings.background_position).trigger('change');
-                            $('select#background_repeat').val(defaultSettings.background_repeat).trigger('change');
-                            $('select#logo_position').val(defaultSettings.logo_position).trigger('change');
-                            
-                            // Reset input text fields
-                            $('input#form_border_radius').val(defaultSettings.form_border_radius).trigger('change');
-                            $('input#form_padding').val(defaultSettings.form_padding).trigger('change');
-                            $('input#logo_width').val(defaultSettings.logo_width).trigger('change');
-                            $('input#logo_height').val(defaultSettings.logo_height).trigger('change');
-                            
-                            // Reset textarea
-                            $('textarea#custom_css').val(defaultSettings.custom_css).trigger('change');
-                            
-                            // Hide all image previews and show dropzones
-                            $('.image-preview').addClass('hidden');
-                            $('.dropzone-area').removeClass('hidden');
-                            
-                            // Force refresh color pickers UI by manually updating them
-                            $('.gutenberg-color-picker-container').each(function(){
-                                const container = $(this);
-                                const hiddenInput = container.prev('input[type="hidden"]');
-                                const id = hiddenInput.attr('id');
-                                const defaultColor = defaultSettings[id] || '#ffffff';
-                                
-                                // Update color button and text display
-                                container.find('.color-picker-button').css('background-color', defaultColor);
-                                container.find('.color-picker-value').text(defaultColor);
-                            });
-                            
-                            // Update preview
-                            updatePreview();
-                            
-                            // Update visual state
-                            button.text('Reset Complete!');
-                        } else {
-                            button.text('Error Resetting');
-                        }
-                    },
-                    error: function() {
-                        button.text('Error Resetting');
-                    },
-                    complete: function() {
-                        setTimeout(function() {
-                            button.prop('disabled', false).empty().append('<span class="dashicons dashicons-image-rotate text-lg w-5 h-5"></span>');
-                        }, 1500);
-                    }
+                // Reset select fields - also empty these
+                $('select#background_size').val('').trigger('change');
+                $('select#background_position').val('').trigger('change');
+                $('select#background_repeat').val('').trigger('change');
+                $('select#logo_position').val('').trigger('change');
+                
+                // Reset input text fields - also empty these
+                $('input#form_border_radius').val('').trigger('change');
+                $('input#form_padding').val('').trigger('change');
+                $('input#logo_width').val('').trigger('change');
+                $('input#logo_height').val('').trigger('change');
+                
+                // Reset textarea
+                $('textarea#custom_css').val('').trigger('change');
+                
+                // Hide all image previews and show dropzones
+                $('.image-preview').addClass('hidden');
+                $('.dropzone-area').removeClass('hidden');
+                
+                // Force refresh color pickers UI by manually updating them
+                $('.gutenberg-color-picker-container').each(function(){
+                    const container = $(this);
+                    const hiddenInput = container.prev('input[type="hidden"]');
+                    
+                    // Update color button and text display
+                    container.find('.color-picker-button').css('background-color', 'transparent');
+                    container.find('.color-picker-input').val('');
                 });
+                
+                // Update preview
+                updatePreview();
+                
+                // Show success notification
+                showNotification('success', 'Form has been reset to default values. Click Save to apply changes.');
+                
+                // Reset button state
+                button.removeClass('opacity-50');
             }, 300);
         });
     });
