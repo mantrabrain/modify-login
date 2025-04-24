@@ -440,7 +440,7 @@ class Modify_Login_Admin {
             // General Settings
             'enable_custom_login'            => isset($settings['enable_custom_login']) ? $settings['enable_custom_login'] : 0,
             'login_page_title'               => isset($settings['login_page_title']) ? $settings['login_page_title'] : 'Login',
-            'login_endpoint'                 => isset($settings['login_endpoint']) ? $settings['login_endpoint'] : 'setup',
+            'login_endpoint'                 => isset($settings['login_endpoint']) ? $settings['login_endpoint'] : '',
             'enable_redirect'                => isset($settings['enable_redirect']) ? $settings['enable_redirect'] : 0,
             'redirect_url'                   => isset($settings['redirect_url']) ? $settings['redirect_url'] : '',
             'login_redirect_url'             => isset($settings['login_redirect_url']) ? $settings['login_redirect_url'] : '',
