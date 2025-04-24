@@ -5,7 +5,6 @@
 /vendor export-ignore
 /tests export-ignore
 /bin export-ignore
-/src export-ignore
 /.git export-ignore
 
 # Files
@@ -19,6 +18,7 @@
 /.travis.yml export-ignore
 /composer.json export-ignore
 /composer.lock export-ignore
+/tailwind.config.js export-ignore
 /package.json export-ignore
 /package-lock.json export-ignore
 /phpcs.xml export-ignore
@@ -27,6 +27,7 @@
 /README.md export-ignore
 /CHANGELOG.md export-ignore
 /CONTRIBUTING.md export-ignore
+/build-zip.sh export-ignore
 /LICENSE export-ignore
 
 # Don't include development resources in the build
