@@ -117,7 +117,7 @@ class Modify_Login_Install {
     private static function create_options() {
         // General settings
         add_option('modify_login_version', MODIFY_LOGIN_VERSION);
-        //add_option('modify_login_login_endpoint', 'setup');
+        add_option('modify_login_login_endpoint', 'setup');
         // add_option('modify_login_redirect_url', home_url('404'));
         
         // // Design settings
