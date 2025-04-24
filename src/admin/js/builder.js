@@ -1,4 +1,71 @@
 jQuery(document).ready(function($) {
+    // Function to show notifications
+    function showNotification(type, message) {
+        // Create notification container if it doesn't exist
+        if (!$('#modify-login-notifications').length) {
+            $('body').append('<div id="modify-login-notifications" class="fixed top-4 right-4 z-50"></div>');
+        }
+        
+        // Generate unique ID for the notification
+        const id = 'notification-' + Date.now();
+        
+        // Create notification element
+        const notification = $(`
+            <div id="${id}" class="notification p-4 mb-3 rounded-lg shadow-md flex items-center justify-between transform translate-x-full opacity-0 transition-all duration-300" style="min-width: 300px; max-width: 400px;">
+                <div class="flex items-center">
+                    <span class="notification-icon mr-3"></span>
+                    <p class="notification-message text-sm m-0">${message}</p>
+                </div>
+                <button class="notification-close ml-3 text-gray-500 hover:text-gray-700 focus:outline-none" aria-label="Close">
+                    <span class="dashicons dashicons-no-alt"></span>
+                </button>
+            </div>
+        `);
+        
+        // Set notification type
+        if (type === 'success') {
+            notification.addClass('bg-green-100 border-l-4 border-green-600 text-green-900');
+            notification.find('.notification-icon').addClass('dashicons dashicons-yes-alt text-green-600');
+        } else if (type === 'reset') {
+            notification.addClass('bg-blue-100 border-l-4 border-blue-600 text-blue-900'); 
+            notification.find('.notification-icon').addClass('dashicons dashicons-update text-blue-600');
+        } else {
+            notification.addClass('bg-red-100 border-l-4 border-red-600 text-red-900');
+            notification.find('.notification-icon').addClass('dashicons dashicons-warning text-red-600');
+        }
+        
+        // Add notification to container
+        $('#modify-login-notifications').append(notification);
+        
+        // Show notification with animation
+        setTimeout(() => {
+            notification.removeClass('translate-x-full opacity-0');
+        }, 10);
+        
+        // Add click handler for close button
+        notification.find('.notification-close').on('click', () => {
+            closeNotification(id);
+        });
+        
+        // Auto-close after 5 seconds for success, 8 seconds for errors
+        setTimeout(() => {
+            closeNotification(id);
+        }, type === 'success' || type === 'reset' ? 5000 : 8000);
+    }
+    
+    // Function to close notification
+    function closeNotification(id) {
+        const notification = $(`#${id}`);
+        
+        // Animate out
+        notification.addClass('translate-x-full opacity-0');
+        
+        // Remove after animation completes
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }
+    
     // Set up WordPress Gutenberg Color Picker
     const { Component, render, createElement } = wp.element;
     const { ColorPicker, BaseControl } = wp.components;
@@ -10,7 +77,7 @@ jQuery(document).ready(function($) {
         background_size: 'cover',
         background_position: 'center center',
         background_repeat: 'no-repeat',
-        background_opacity: 1,
+        background_opacity: 1.0,
         logo_url: '',
         logo_width: '84px',
         logo_height: '84px',
@@ -30,9 +97,14 @@ jQuery(document).ready(function($) {
     $('.color-picker').each(function() {
         const input = $(this);
         const inputId = input.attr('id');
-        const defaultColor = input.data('default-color') || '#ffffff';
+        const defaultColor = '';
         const currentColor = input.val() || defaultColor;
         const container = $('<div class="gutenberg-color-picker-container"></div>');
+        
+        // Add special initial class if empty value
+        if (!currentColor) {
+            //container.addClass('color-empty');
+        }
         
         // Replace the input with a container
         input.after(container);
@@ -49,6 +121,26 @@ jQuery(document).ready(function($) {
                     color: props.initialColor,
                     isOpen: false
                 };
+                
+                // Store a reference to the color input
+                this.colorInputRef = React.createRef();
+            }
+            
+            componentDidUpdate(prevProps) {
+                // Check if initialColor prop changed
+                if (prevProps.initialColor !== this.props.initialColor) {
+                    this.setState({ color: this.props.initialColor });
+                }
+            }
+            
+            clearColor = () => {
+                this.setState({ color: '' });
+                this.props.onChange('');
+                
+                // Force update the input field DOM element
+                if (this.colorInputRef.current) {
+                    this.colorInputRef.current.value = '';
+                }
             }
             
             render() {
@@ -61,7 +153,7 @@ jQuery(document).ready(function($) {
                             className: 'color-picker-button',
                             onClick: () => this.setState({ isOpen: !this.state.isOpen }),
                             style: {
-                                backgroundColor: this.state.color,
+                                backgroundColor: this.state.color || 'transparent',
                                 width: '32px',
                                 height: '32px',
                                 borderRadius: '4px',
@@ -73,7 +165,9 @@ jQuery(document).ready(function($) {
                         createElement('input', {
                             type: 'text',
                             className: 'color-picker-input',
-                            value: this.state.color,
+                            value: this.state.color || '',
+                            ref: this.colorInputRef,
+                            onClick: () => this.setState({ isOpen: !this.state.isOpen }),
                             onChange: (e) => {
                                 const newColor = e.target.value;
                                 this.setState({ color: newColor });
@@ -86,16 +180,14 @@ jQuery(document).ready(function($) {
                                 padding: '0 8px',
                                 borderRadius: '4px',
                                 border: '1px solid #ccc',
-                                fontFamily: 'monospace'
+                                fontFamily: 'monospace',
+                                cursor: 'pointer'
                             }
                         }),
                         createElement('button', {
                             type: 'button',
                             className: 'color-picker-clear',
-                            onClick: () => {
-                                this.setState({ color: '' });
-                                this.props.onChange('');
-                            },
+                            onClick: this.clearColor,
                             style: {
                                 marginLeft: '4px',
                                 padding: '0',
@@ -230,7 +322,7 @@ jQuery(document).ready(function($) {
         const valueDisplay = $('#background_opacity_value');
         
         // Set initial position
-        const initialValue = parseFloat(input.val());
+        const initialValue = parseFloat(input.val()) || 1.0; // Default to 1.0 (100%) if not set
         updateSliderPosition(initialValue);
         
         // Update the slider UI
@@ -410,9 +502,19 @@ jQuery(document).ready(function($) {
         const preview = $('#login-preview');
         const settings = {};
         
-        // Collect all form values
+        // Collect all form values for settings object
         $('.form-group input, .form-group textarea, .form-group select').each(function() {
-            settings[$(this).attr('name')] = $(this).val();
+            const input = $(this);
+            const name = input.attr('name');
+            const value = input.val();
+            
+            // Include all fields, even if empty
+            settings[name] = value;
+            
+            // Debug logo fields
+            if (name === 'logo_url' || name === 'logo_width' || name === 'logo_height') {
+                console.log(`Sending ${name} with value: ${value}`);
+            }
         });
 
         // Apply settings to preview iframe
@@ -497,9 +599,20 @@ jQuery(document).ready(function($) {
         }
         
         style.textContent = css;
-        //previewDoc.head.appendChild(style);
-              
-        customCss.innerHTML = css;
+
+        // Check if customCss exists, if not create and append it
+        if (customCss) {
+            // Update existing style element
+            customCss.innerHTML = css;
+        } else {
+            // If it doesn't exist yet, append the new style element
+            try {
+                previewDoc.head.appendChild(style);
+                console.log('Added new style element to preview');
+            } catch (e) {
+                console.error('Error updating preview styles:', e);
+            }
+        }
     }
 
     // Function to adjust color brightness (similar to the PHP version)
@@ -535,9 +648,19 @@ jQuery(document).ready(function($) {
         formData.append('action', 'modify_login_save_builder_settings');
         formData.append('nonce', modifyLoginBuilder.nonce);
 
-        // Collect all form values
+        // Collect all form values for AJAX
         $('.form-group input, .form-group textarea, .form-group select').each(function() {
-            formData.append($(this).attr('name'), $(this).val());
+            const input = $(this);
+            const name = input.attr('name');
+            const value = input.val();
+            
+            // Include all fields, even if empty
+            formData.append(name, value);
+            
+            // Debug logo fields
+            if (name === 'logo_url' || name === 'logo_width' || name === 'logo_height') {
+                console.log(`Sending ${name} with value: ${value}`);
+            }
         });
 
         // Disable button and show loading state
@@ -556,18 +679,27 @@ jQuery(document).ready(function($) {
                     setTimeout(function() {
                         button.text('Save Settings');
                     }, 2000);
+                    
+                    // Show success notification
+                    showNotification('success', 'Settings saved successfully.');
                 } else {
                     button.text('Error Saving');
                     setTimeout(function() {
                         button.text('Save Settings');
                     }, 2000);
+                    
+                    // Show error notification
+                    showNotification('error', response.data || 'Error saving settings. Please try again.');
                 }
             },
-            error: function() {
+            error: function(xhr, status, error) {
                 button.text('Error Saving');
                 setTimeout(function() {
                     button.text('Save Settings');
                 }, 2000);
+                
+                // Show detailed error notification
+                showNotification('error', 'Server error: ' + (xhr.responseText || error));
             },
             complete: function() {
                 button.prop('disabled', false);
@@ -627,64 +759,94 @@ jQuery(document).ready(function($) {
                 const button = $('#reset-all-button');
                 
                 // Visual feedback
+                const originalText = button.text();
                 button.addClass('opacity-50').prop('disabled', true).text('Resetting...');
                 
-                // Reset all form fields to default values using the defaultSettings object
-                Object.keys(defaultSettings).forEach(function(key) {
-                    const input = $(`input#${key}`);
-                    if (input.length) {
-                        input.val(defaultSettings[key]).trigger('change');
-                        
-                        // Update color picker UI for color fields
-                        if (input.prev('.gutenberg-color-picker-container').length) {
-                            const container = input.prev('.gutenberg-color-picker-container');
-                            container.find('.color-picker-button').css('background-color', defaultSettings[key]);
-                            container.find('.color-picker-input').val(defaultSettings[key]);
-                        }
+                // Reset all form fields without saving to database
+                // Clear text inputs
+                $('.form-group input[type="text"]').val('').trigger('change');
+                
+                // Reset select elements to defaults
+                $('.form-group select').each(function() {
+                    const select = $(this);
+                    const defaultVal = select.find('option:first').val();
+                    select.val(defaultVal).trigger('change');
+                });
+                
+                // Clear textareas
+                $('.form-group textarea').val('').trigger('change');
+                
+                // Clear hidden inputs
+                $('.form-group input[type="hidden"]').val('').trigger('change');
+                
+                // Handle color pickers
+                $('.gutenberg-color-picker-container').each(function() {
+                    const container = $(this);
+                    const hiddenInput = container.next('input[type="hidden"]');
+                    
+                    // Clear value completely - no default colors
+                    hiddenInput.val('').trigger('change');
+                    
+                    // Update color picker button to be transparent
+                    container.find('.color-picker-button').css('background-color', 'transparent');
+                    
+                    // Clear text input
+                    const inputField = container.find('.color-picker-input');
+                    if (inputField.length) {
+                        inputField.val('');
                     }
                     
-                    // Handle select elements
-                    const select = $(`select#${key}`);
-                    if (select.length) {
-                        select.val(defaultSettings[key]).trigger('change');
-                    }
-                    
-                    // Handle textarea elements
-                    const textarea = $(`textarea#${key}`);
-                    if (textarea.length) {
-                        textarea.val(defaultSettings[key]).trigger('change');
+                    // Try to use the existing clear button functionality
+                    const clearButton = container.find('.color-picker-clear');
+                    if (clearButton.length) {
+                        clearButton.trigger('click');
                     }
                 });
                 
-                // Handle background image field
-                if (!defaultSettings.background_image) {
-                    const bgImageInput = $('input#background_image');
-                    bgImageInput.val('').trigger('change');
-                    const imagePreview = bgImageInput.closest('.media-dropzone').find('.image-preview');
-                    const dropzoneArea = bgImageInput.closest('.media-dropzone').find('.dropzone-area');
+                // Handle image fields
+                $('.media-dropzone').each(function() {
+                    const dropzone = $(this);
+                    const input = dropzone.find('input[type="hidden"]');
+                    const imagePreview = dropzone.find('.image-preview');
+                    const dropzoneArea = dropzone.find('.dropzone-area');
+                    
+                    // Clear value
+                    input.val('').trigger('change');
+                    
+                    // Hide preview, show dropzone
                     imagePreview.addClass('hidden');
                     dropzoneArea.removeClass('hidden');
-                }
+                });
                 
-                // Handle logo image field
-                if (!defaultSettings.logo_url) {
-                    const logoInput = $('input#logo_url');
-                    logoInput.val('').trigger('change');
-                    const imagePreview = logoInput.closest('.media-dropzone').find('.image-preview');
-                    const dropzoneArea = logoInput.closest('.media-dropzone').find('.dropzone-area');
-                    imagePreview.addClass('hidden');
-                    dropzoneArea.removeClass('hidden');
-                }
+                // Clear logo dimensions specifically
+                $('#logo_width, #logo_height').val('').trigger('change');
+                
+                // Clear any custom CSS
+                $('#custom_css').val('').trigger('change');
+                
+                // Reset opacity slider to 100%
+                const opacityTrack = $('.opacity-slider-track');
+                const opacityFill = $('.opacity-slider-fill');
+                const opacityHandle = $('.opacity-slider-handle');
+                const opacityValueDisplay = $('#background_opacity_value');
+                const opacityInput = $('#background_opacity');
+
+                // Set opacity to 100%
+                opacityFill.css('width', '100%');
+                opacityHandle.css('left', '100%');
+                opacityHandle.css('transform', 'translate(-50%, -50%)');
+                opacityValueDisplay.text('100%');
+                opacityInput.val(1.0).trigger('change');
                 
                 // Update preview
                 updatePreview();
                 
                 // Reset button state
                 setTimeout(function() {
-                    button.removeClass('opacity-50').prop('disabled', false).text('Reset All');
+                    button.removeClass('opacity-50').prop('disabled', false).text(originalText);
                     
-                    // Show a notification
-                    showNotification('success', 'Form has been reset to default values. Click Save to apply changes.');
+                    // Show notification
+                    showNotification('reset', 'Form has been reset. Click Save if you want to apply these changes.');
                 }, 500);
             }, 300);
         });
@@ -692,4 +854,9 @@ jQuery(document).ready(function($) {
     
     // Initialize preview
     updatePreview();
+
+    // Reset button in modal
+    $('#builder-reset-confirm').on('click', function() {
+        // Nothing here - redundant
+    });
 });

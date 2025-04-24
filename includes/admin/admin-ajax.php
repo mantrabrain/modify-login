@@ -55,6 +55,8 @@ class Modify_Login_Admin_Ajax {
             'background_repeat' => isset($_POST['background_repeat']) ? sanitize_text_field($_POST['background_repeat']) : 'no-repeat',
             'background_opacity' => isset($_POST['background_opacity']) ? floatval($_POST['background_opacity']) : 1,
             'logo_url' => isset($_POST['logo_url']) ? esc_url_raw($_POST['logo_url']) : '',
+            'logo_width' => isset($_POST['logo_width']) ? sanitize_text_field($_POST['logo_width']) : '',
+            'logo_height' => isset($_POST['logo_height']) ? sanitize_text_field($_POST['logo_height']) : '',
             'form_background' => isset($_POST['form_background']) ? sanitize_hex_color($_POST['form_background']) : '#ffffff',
             'form_border_radius' => isset($_POST['form_border_radius']) ? sanitize_text_field($_POST['form_border_radius']) : '4px',
             'form_padding' => isset($_POST['form_padding']) ? sanitize_text_field($_POST['form_padding']) : '20px',
@@ -65,6 +67,11 @@ class Modify_Login_Admin_Ajax {
             'link_color' => isset($_POST['link_color']) ? sanitize_hex_color($_POST['link_color']) : '#0073aa',
             'link_hover_color' => isset($_POST['link_hover_color']) ? sanitize_hex_color($_POST['link_hover_color']) : '#00a0d2',
         );
+
+        // Log key settings for debugging
+        error_log('Modify Login: Saving settings - logo_url: ' . $settings['logo_url']);
+        error_log('Modify Login: Saving settings - logo_width: ' . $settings['logo_width']);
+        error_log('Modify Login: Saving settings - logo_height: ' . $settings['logo_height']);
 
         // Save each setting
         foreach ($settings as $key => $value) {
@@ -213,7 +220,7 @@ class Modify_Login_Admin_Ajax {
     }
 
     /**
-     * Reset all builder settings to default values
+     * Reset builder settings
      */
     public function reset_builder_settings() {
         // Verify nonce
@@ -221,42 +228,55 @@ class Modify_Login_Admin_Ajax {
             wp_send_json_error('Invalid nonce');
         }
 
-        // Check user capabilities
+        // Check user permissions
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+            wp_send_json_error('Permission denied');
         }
 
         // Default settings
         $defaults = array(
-            'background_color' => '#ffffff',
+            'background_color' => '#f0f0f1',
             'background_image' => '',
+            'background_position' => 'center',
             'background_size' => 'cover',
-            'background_position' => 'center center',
             'background_repeat' => 'no-repeat',
-            'background_opacity' => 1,
             'logo_url' => '',
-            'logo_width' => '84px',
-            'logo_height' => '84px',
-            'logo_position' => 'center',
-            'form_background' => '#ffffff',
+            'logo_width' => '',
+            'logo_height' => '',
+            'logo_link' => '',
+            'logo_link_title' => '',
+            'form_background_color' => '#ffffff',
+            'form_text_color' => '#3c434a',
+            'form_width' => '320px',
             'form_border_radius' => '4px',
-            'form_padding' => '20px',
-            'button_color' => '#0073aa',
+            'form_padding' => '26px 24px 34px',
+            'form_border' => '1px solid #c3c4c7',
+            'form_shadow' => '0 1px 3px rgba(0, 0, 0, 0.04)',
+            'input_background_color' => '#ffffff',
+            'input_text_color' => '#3c434a',
+            'input_border_color' => '#8c8f94',
+            'input_border_radius' => '3px',
+            'button_background_color' => '#2271b1',
             'button_text_color' => '#ffffff',
+            'button_border_radius' => '3px',
             'custom_css' => '',
-            'label_color' => '#444444',
+            // Maintain backward compatibility with old field names
+            'form_background' => '#ffffff',
+            'button_color' => '#2271b1',
+            'label_color' => '#3c434a',
             'link_color' => '#0073aa',
             'link_hover_color' => '#00a0d2',
         );
 
-        // Delete and reset all builder settings
+        // Reset all settings
         foreach ($defaults as $key => $value) {
-            delete_option('modify_login_' . $key);
-            if (!empty($value)) {
-                update_option('modify_login_' . $key, $value);
-            }
+            update_option("modify_login_{$key}", $value);
         }
 
-        wp_send_json_success('Settings reset successfully');
+        // Send response
+        wp_send_json_success(array(
+            'message' => 'All settings have been reset to default values.',
+            'defaults' => $defaults
+        ));
     }
 } 

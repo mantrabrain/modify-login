@@ -104,6 +104,7 @@ class Modify_Login_Frontend {
         $form_padding = get_option('modify_login_form_padding');
         
         $button_color = get_option('modify_login_button_color');
+        
         $button_text_color = get_option('modify_login_button_text_color');
         
         // New color options
@@ -145,54 +146,53 @@ class Modify_Login_Frontend {
             }
             echo 'opacity: ' . esc_attr($background_opacity) . ';';
             echo 'z-index: -1;';
+            echo '}'; // Close pseudo-element
         } else {
-            echo '}';
+            echo '}'; // Close body.login if no background image
         }
 
         // Logo styles
         if (!empty($logo_url)) {
             echo '.login h1 a {';
             echo 'background-image: url(' . esc_url($logo_url) . ') !important;';
+            
+            // Width
             if (!empty($logo_width)) {
+                // Ensure width has units
+                if (is_numeric($logo_width)) {
+                    $logo_width .= 'px';
+                }
                 echo 'width: ' . esc_attr($logo_width) . ' !important;';
+            } else {
+                // Default width if not specified
+                echo 'width: 84px !important;';
             }
+            
+            // Height
             if (!empty($logo_height)) {
+                // Ensure height has units
+                if (is_numeric($logo_height)) {
+                    $logo_height .= 'px';
+                }
                 echo 'height: ' . esc_attr($logo_height) . ' !important;';
+            } else {
+                // Default height if not specified
+                echo 'height: 84px !important;';
             }
-            echo 'background-size: contain !important;';
-            echo 'background-position: center !important;';
-            echo 'background-repeat: no-repeat !important;';
-            echo 'text-indent: -9999px !important;';
+            
+            // Logo position - text alignment
             if (!empty($logo_position)) {
                 echo 'text-align: ' . esc_attr($logo_position) . ' !important;';
             }
-            echo 'margin: 0 auto 25px auto !important;';
+            
             echo '}';
+            
+            // Debug output
+            error_log('Modify Login: Logo URL set to ' . $logo_url);
+            error_log('Modify Login: Logo width set to ' . $logo_width);
+            error_log('Modify Login: Logo height set to ' . $logo_height);
         }
 
-        // Only output form styles if at least one property is set
-        if (!empty($form_background) || !empty($form_border_radius) || !empty($form_padding)) {
-            echo '.login form {';
-            if (!empty($form_background)) {
-                echo 'background: ' . esc_attr($form_background) . ' !important;';
-            }
-            if (!empty($form_border_radius)) {
-                echo 'border-radius: ' . esc_attr($form_border_radius) . ' !important;';
-            }
-            if (!empty($form_padding)) {
-                echo 'padding: ' . esc_attr($form_padding) . ' !important;';
-            }
-            echo 'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);';
-            echo '}';
-        }
-
-        // Form Label Color
-        if (!empty($label_color)) {
-            echo '.login form label {';
-            echo 'color: ' . esc_attr($label_color) . ' !important;';
-            echo '}';
-        }
-        
         // Button styles
         if (!empty($button_color) || !empty($button_text_color)) {
             echo '.wp-core-ui .button-primary {';
@@ -203,8 +203,19 @@ class Modify_Login_Frontend {
             if (!empty($button_text_color)) {
                 echo 'color: ' . esc_attr($button_text_color) . ' !important;';
             }
-            echo 'text-decoration: none;';
-            echo 'text-shadow: none;';
+            echo 'text-decoration: none !important;';
+            echo 'text-shadow: none !important;';
+            echo '}';
+            
+            // Add additional selectors to ensure button styles are applied
+            echo '.wp-core-ui .button.button-primary, .wp-core-ui .button-group.button-primary button, .wp-core-ui input[type="submit"] {';
+            if (!empty($button_color)) {
+                echo 'background: ' . esc_attr($button_color) . ' !important;';
+                echo 'border-color: ' . esc_attr($button_color) . ' !important;';
+            }
+            if (!empty($button_text_color)) {
+                echo 'color: ' . esc_attr($button_text_color) . ' !important;';
+            }
             echo '}';
         }
 
@@ -220,7 +231,31 @@ class Modify_Login_Frontend {
             echo 'border-left: 4px solid ' . esc_attr($button_color) . ';';
             echo '}';
         }
+
+        // Only output form styles if at least one property is set
+        if (!empty($form_background) || !empty($form_border_radius) || !empty($form_padding)) {
+            echo '.login form, #loginform {';
+            if (!empty($form_background)) {
+                echo 'background: ' . esc_attr($form_background) . ' !important;';
+            }
+            if (!empty($form_border_radius)) {
+                echo 'border-radius: ' . esc_attr($form_border_radius) . ' !important;';
+            }
+            if (!empty($form_padding)) {
+                echo 'padding: ' . esc_attr($form_padding) . ' !important;';
+            }
+            echo 'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13) !important;';
+            echo '}';
+        }
+
+        // Form Label Color
+        if (!empty($label_color)) {
+            echo '.login form label, #loginform label, #login form label {';
+            echo 'color: ' . esc_attr($label_color) . ' !important;';
+            echo '}';
+        }
         
+
         // Link Colors
         if (!empty($link_color)) {
             echo '.login a, .login #nav a, .login #backtoblog a {';
