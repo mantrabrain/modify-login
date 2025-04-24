@@ -30,19 +30,12 @@
 /LICENSE export-ignore
 
 # Don't include development resources in the build
-*.map export-ignore
+
 *.md export-ignore
-*.scss export-ignore
-*.sass export-ignore
-*.less export-ignore
+
 .babelrc export-ignore
 .jshintrc export-ignore
 .browserslistrc export-ignore
 .nvmrc export-ignore
 .prettierrc export-ignore
 .prettierignore export-ignore
-
-# Directories to exclude
-/assets/src export-ignore
-/assets/raw export-ignore
-/docs export-ignore 
