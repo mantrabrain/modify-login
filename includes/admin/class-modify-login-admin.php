@@ -29,12 +29,33 @@ class Modify_Login_Admin {
     private $version;
 
     /**
+     * Singleton instance
+     *
+     * @var Modify_Login_Admin
+     */
+    private static $instance = null;
+
+    /**
+     * Get the singleton instance
+     *
+     * @param string $plugin_name The name of this plugin.
+     * @param string $version The version of this plugin.
+     * @return Modify_Login_Admin The singleton instance
+     */
+    public static function instance($plugin_name = 'modify-login', $version = '2.0.0') {
+        if (is_null(self::$instance)) {
+            self::$instance = new self($plugin_name, $version);
+        }
+        return self::$instance;
+    }
+
+    /**
      * Initialize the class and set its properties.
      *
      * @param string $plugin_name The name of this plugin.
      * @param string $version     The version of this plugin.
      */
-    public function __construct($plugin_name, $version) {
+    private function __construct($plugin_name, $version) {
         $this->plugin_name = $plugin_name;
         $this->version = $version;
 
@@ -48,7 +69,8 @@ class Modify_Login_Admin {
         // Add color picker support
         add_action('admin_enqueue_scripts', array($this, 'enqueue_color_picker'));
 
-        // Initialize AJAX handler
+        // Include the AJAX handler file and initialize it
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/admin-ajax.php';
         new Modify_Login_Admin_Ajax();
     }
 
@@ -167,8 +189,15 @@ class Modify_Login_Admin {
             'modify-login-logs',
             array($this, 'display_logs_page')
         );
-
-        // Design tab removed as requested
+        
+        add_submenu_page(
+            'modify-login',
+            __('Login Builder', 'modify-login'),
+            __('Login Builder', 'modify-login'),
+            'manage_options',
+            'modify-login-builder',
+            array($this, 'display_builder_page')
+        );
     }
 
     /**
@@ -326,54 +355,62 @@ class Modify_Login_Admin {
     }
 
     /**
-     * Get plugin settings
-     *
+     * Get settings for admin
+     * 
      * @return array
      */
     public function get_settings() {
-        $defaults = array(
+        $settings = get_option('modify_login_settings', array());
+        
+        $default_settings = array(
             // General Settings
-            'login_redirect_url' => '',
-            'logout_redirect_url' => '',
+            'enable_custom_login'            => isset($settings['enable_custom_login']) ? $settings['enable_custom_login'] : 0,
+            'login_page_title'               => isset($settings['login_page_title']) ? $settings['login_page_title'] : 'Login',
+            'login_endpoint'                 => isset($settings['login_endpoint']) ? $settings['login_endpoint'] : 'login',
+            'enable_redirect'                => isset($settings['enable_redirect']) ? $settings['enable_redirect'] : 0,
+            'redirect_url'                   => isset($settings['redirect_url']) ? $settings['redirect_url'] : '',
+            'login_redirect_url'             => isset($settings['login_redirect_url']) ? $settings['login_redirect_url'] : '',
+            'logout_redirect_url'            => isset($settings['logout_redirect_url']) ? $settings['logout_redirect_url'] : '',
             
             // Security Settings
-            'login_endpoint' => '',
-            'enable_redirect' => false,
-            'redirect_url' => '',
-            'enable_recaptcha' => 'no',
-            'recaptcha_site_key' => '',
-            'recaptcha_secret_key' => '',
-            'enable_social_login' => 'no',
-            'social_login_providers' => array(),
-            'enable_2fa' => 'no',
-            '2fa_method' => 'email',
-            'login_attempts_limit' => 5,
-            'login_lockout_time' => 30,
-            'enable_ip_restriction' => 'no',
-            'allowed_ips' => array(),
-            'enable_brute_force_protection' => 'yes',
-            'enable_password_strength_meter' => 'yes',
-            'minimum_password_strength' => 'medium',
+            'enable_brute_force_protection'  => isset($settings['enable_brute_force_protection']) ? $settings['enable_brute_force_protection'] : 0,
+            'max_login_attempts'             => isset($settings['max_login_attempts']) ? $settings['max_login_attempts'] : 3,
+            'lockout_time'                   => isset($settings['lockout_time']) ? $settings['lockout_time'] : 60,
+            'enable_recaptcha'               => isset($settings['enable_recaptcha']) ? $settings['enable_recaptcha'] : 0,
+            'recaptcha_site_key'             => isset($settings['recaptcha_site_key']) ? $settings['recaptcha_site_key'] : '',
+            'recaptcha_secret_key'           => isset($settings['recaptcha_secret_key']) ? $settings['recaptcha_secret_key'] : '',
+            'enable_2fa'                     => isset($settings['enable_2fa']) ? $settings['enable_2fa'] : 0,
             
             // Design Settings
-            'enable_custom_branding' => 'no',
-            'custom_logo_url' => '',
-            'custom_background_url' => '',
-            'custom_favicon_url' => '',
-            'enable_custom_colors' => 'no',
-            'primary_color' => '#0073aa',
-            'secondary_color' => '#23282d',
-            'text_color' => '#1d2327',
-            'background_color' => '#f0f0f1',
+            'enable_custom_design'           => isset($settings['enable_custom_design']) ? $settings['enable_custom_design'] : 0,
+            'background_color'               => isset($settings['background_color']) ? $settings['background_color'] : '#f1f1f1',
+            'background_image'               => isset($settings['background_image']) ? $settings['background_image'] : '',
+            'logo_image'                     => isset($settings['logo_image']) ? $settings['logo_image'] : '',
+            'logo_width'                     => isset($settings['logo_width']) ? $settings['logo_width'] : 150,
+            'logo_height'                    => isset($settings['logo_height']) ? $settings['logo_height'] : '',
+            'logo_url'                       => isset($settings['logo_url']) ? $settings['logo_url'] : home_url(),
+            'form_background_color'          => isset($settings['form_background_color']) ? $settings['form_background_color'] : '#ffffff',
+            'form_text_color'                => isset($settings['form_text_color']) ? $settings['form_text_color'] : '#000000',
+            'form_input_border_color'        => isset($settings['form_input_border_color']) ? $settings['form_input_border_color'] : '#dcdcde',
+            'form_input_background_color'    => isset($settings['form_input_background_color']) ? $settings['form_input_background_color'] : '#ffffff',
+            'button_background_color'        => isset($settings['button_background_color']) ? $settings['button_background_color'] : '#135e96',
+            'button_text_color'              => isset($settings['button_text_color']) ? $settings['button_text_color'] : '#ffffff',
+            'button_border_radius'           => isset($settings['button_border_radius']) ? $settings['button_border_radius'] : 3,
+            'button_hover_background_color'  => isset($settings['button_hover_background_color']) ? $settings['button_hover_background_color'] : '#124e7c',
+            'button_hover_text_color'        => isset($settings['button_hover_text_color']) ? $settings['button_hover_text_color'] : '#ffffff',
+            'custom_css'                     => isset($settings['custom_css']) ? $settings['custom_css'] : '',
             
             // Email Settings
-            'enable_login_notifications' => 'yes',
-            'notification_email' => get_option('admin_email'),
-            'email_from_name' => get_bloginfo('name'),
-            'email_from_address' => get_option('admin_email'),
+            'enable_email_notification'      => isset($settings['enable_email_notification']) ? $settings['enable_email_notification'] : 0,
+            'notification_email'             => isset($settings['notification_email']) ? $settings['notification_email'] : get_option('admin_email'),
+            'login_email_subject'            => isset($settings['login_email_subject']) ? $settings['login_email_subject'] : 'New login at {site_name}',
+            'login_email_body'               => isset($settings['login_email_body']) ? $settings['login_email_body'] : "Hello Admin,\n\nA user has logged in to your site {site_name}.\n\nUsername: {username}\nIP Address: {ip_address}\nDate: {date}\nTime: {time}\n\nRegards,\n{site_name} Security",
+            
+            // Branding Settings
+            'enable_white_label'             => isset($settings['enable_white_label']) ? $settings['enable_white_label'] : 0,
+            'white_label_text'               => isset($settings['white_label_text']) ? $settings['white_label_text'] : get_bloginfo('name'),
         );
-
-        $settings = get_option('modify_login_settings', array());
-        return wp_parse_args($settings, $defaults);
+        
+        return $default_settings;
     }
 } 

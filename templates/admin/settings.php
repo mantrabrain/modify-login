@@ -85,13 +85,7 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                 <!-- Left Sidebar - Navigation Tabs -->
                 <div class="w-full lg:w-64 flex-shrink-0">
                     <nav class="space-y-1" aria-label="Settings">
-                        <a href="#general" data-tab="general" class="tab-link group flex items-center px-3 py-2 text-sm font-medium rounded-md <?php echo $active_tab === 'general' ? 'text-gray-900 bg-gray-100' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'; ?>" <?php echo $active_tab === 'general' ? 'aria-current="page"' : ''; ?>>
-                            <svg class="mr-3 h-5 w-5 text-gray-500 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
-                            </svg>
-                            <?php esc_html_e('General', 'modify-login'); ?>
-                        </a>
-                        <a href="#login-security" data-tab="login-security" class="tab-link group flex items-center px-3 py-2 text-sm font-medium rounded-md <?php echo $active_tab === 'login-security' ? 'text-gray-900 bg-gray-100' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'; ?>" <?php echo $active_tab === 'login-security' ? 'aria-current="page"' : ''; ?>>
+                        <a href="#login-security" data-tab="login-security" class="tab-link group flex items-center px-3 py-2 text-sm font-medium rounded-md <?php echo $active_tab === 'login-security' || $active_tab === 'general' ? 'text-gray-900 bg-gray-100' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'; ?>" <?php echo $active_tab === 'login-security' || $active_tab === 'general' ? 'aria-current="page"' : ''; ?>>
                             <svg class="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                 <path d="M10 2a5 5 0 00-5 5v2a2 2 0 00-2 2v5a2 2 0 002 2h10a2 2 0 002-2v-5a2 2 0 00-2-2H7V7a3 3 0 015.905-1.683 1 1 0 001.19-1.677A5.002 5.002 0 0010 2z" />
                             </svg>
@@ -108,98 +102,170 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
 
                 <!-- Right Content - Tab Panels -->
                 <div class="flex-1">
-                    <!-- General Settings -->
-                    <div id="general" class="tab-panel <?php echo $active_tab === 'general' ? '' : 'hidden'; ?>">
+                    <!-- Login Security Settings -->
+                    <div id="login-security" class="tab-panel <?php echo $active_tab === 'login-security' || $active_tab === 'general' ? '' : 'hidden'; ?>">
                         <div class="bg-white shadow rounded-lg overflow-hidden">
                             <div class="p-6 space-y-6">
-                                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                    <div class="sm:col-span-4">
-                                        <label for="login_redirect_url" class="block text-sm font-medium text-gray-700">
-                                            <?php esc_html_e('Login Redirect URL', 'modify-login'); ?>
-                                        </label>
-                                        <div class="mt-1">
-                                            <input type="url" name="login_redirect_url" id="login_redirect_url" 
-                                                placeholder="<?php esc_attr_e('e.g., https://example.com/dashboard', 'modify-login'); ?>"
-                                                value="<?php echo esc_attr($settings['login_redirect_url']); ?>" 
-                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                            <p class="mt-2 text-sm text-gray-500">
-                                                <?php esc_html_e('Leave empty to use the default WordPress redirect.', 'modify-login'); ?>
-                                            </p>
+                                <!-- Login Endpoint Explanation Card -->
+                                <div class="login-protection-info">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                            </svg>
                                         </div>
-                                    </div>
-
-                                    <div class="sm:col-span-4">
-                                        <label for="logout_redirect_url" class="block text-sm font-medium text-gray-700">
-                                            <?php esc_html_e('Logout Redirect URL', 'modify-login'); ?>
-                                        </label>
-                                        <div class="mt-1">
-                                            <input type="url" name="logout_redirect_url" id="logout_redirect_url" 
-                                                placeholder="<?php esc_attr_e('e.g., https://example.com', 'modify-login'); ?>"
-                                                value="<?php echo esc_attr($settings['logout_redirect_url']); ?>" 
-                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                            <p class="mt-2 text-sm text-gray-500">
-                                                <?php esc_html_e('Leave empty to use the default WordPress redirect.', 'modify-login'); ?>
-                                            </p>
+                                        <div class="ml-3">
+                                            <h3>
+                                                <?php esc_html_e('How Login Protection Works', 'modify-login'); ?>
+                                            </h3>
+                                            <ul>
+                                                <li>
+                                                    <span class="step-number">1</span>
+                                                    <span><?php esc_html_e('Set a custom login URL (e.g., "setup") to create an alternative to wp-login.php', 'modify-login'); ?></span>
+                                                </li>
+                                                <li>
+                                                    <span class="step-number">2</span>
+                                                    <span><?php esc_html_e('When redirection is enabled, direct access to wp-login.php and wp-admin is blocked for non-logged in users', 'modify-login'); ?></span>
+                                                </li>
+                                                <li>
+                                                    <span class="step-number">3</span>
+                                                    <span><?php esc_html_e('Unauthorized access attempts will be redirected to the URL you specify below', 'modify-login'); ?></span>
+                                                </li>
+                                                <li>
+                                                    <span class="step-number">4</span>
+                                                    <span><?php esc_html_e('Only your custom login URL will display the WordPress login form', 'modify-login'); ?></span>
+                                                </li>
+                                            </ul>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Login Security Settings -->
-                    <div id="login-security" class="tab-panel <?php echo $active_tab === 'login-security' ? '' : 'hidden'; ?>">
-                        <div class="bg-white shadow rounded-lg overflow-hidden">
-                            <div class="p-6 space-y-6">
                                 <div class="form-group">
-                                    <div class="form-field">
-                                        <label for="login_endpoint" class="block text-sm font-medium text-gray-700">
-                                            <?php esc_html_e('Login Endpoint', 'modify-login'); ?>
-                                        </label>
-                                        <div class="mt-1 flex rounded-md shadow-sm">
-                                            <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                                                <?php echo esc_url(home_url('/')); ?>
-                                            </span>
-                                            <input type="text" id="login_endpoint" name="login_endpoint" 
-                                                value="<?php echo esc_attr($settings['login_endpoint']); ?>" 
-                                                class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300"
-                                                placeholder="setup">
+                                    <!-- Custom Login URL Section -->
+                                    <div class="mb-8">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                            <?php esc_html_e('Custom Login URL', 'modify-login'); ?>
+                                        </h3>
+                                        
+                                        <div class="form-field">
+                                            <label for="login_endpoint" class="block text-sm font-medium text-gray-700">
+                                                <?php esc_html_e('Login Endpoint', 'modify-login'); ?>
+                                            </label>
+                                            <div class="mt-1 flex rounded-md shadow-sm">
+                                                <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                                                    <?php echo esc_url(home_url('/')); ?>
+                                                </span>
+                                                <input type="text" id="login_endpoint" name="login_endpoint" 
+                                                    value="<?php echo isset($settings['login_endpoint']) ? esc_attr($settings['login_endpoint']) : ''; ?>" 
+                                                    class="flex-1 min-w-0 block w-full px-3 py-2 rounded-none rounded-r-md focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm border-gray-300"
+                                                    placeholder="setup">
+                                            </div>
+                                            <p class="mt-2 text-sm text-gray-500">
+                                                <?php esc_html_e('Enter a custom endpoint for your login page (e.g., "setup"). Users will access the login form at your-site.com/setup instead of wp-login.php. If left empty, the default wp-login.php will be used and custom login protection will not be active.', 'modify-login'); ?>
+                                            </p>
                                         </div>
-                                        <p class="mt-2 text-sm text-gray-500">
-                                            <?php esc_html_e('Enter the custom endpoint for your login page. Example: setup', 'modify-login'); ?>
-                                        </p>
                                     </div>
 
-                                    <div class="mt-4">
-                                        <div class="flex items-start">
-                                            <div class="flex items-center h-5">
-                                                <input type="checkbox" id="enable_redirect" name="enable_redirect" 
-                                                    value="1" <?php checked($settings['enable_redirect'], true); ?> 
-                                                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                    <!-- Access Protection Section -->
+                                    <div class="mb-8">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                            <?php esc_html_e('Access Protection', 'modify-login'); ?>
+                                        </h3>
+                                        
+                                        <div class="mt-4">
+                                            <div class="flex items-start">
+                                                <div class="flex items-center h-5">
+                                                    <input type="checkbox" id="enable_redirect" name="enable_redirect" 
+                                                        value="1" <?php checked(isset($settings['enable_redirect']) ? $settings['enable_redirect'] : 0, true); ?> 
+                                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                                        onchange="toggleRedirectUrlField()">
+                                                </div>
+                                                <div class="ml-3 text-sm">
+                                                    <label for="enable_redirect" class="font-medium text-gray-700">
+                                                        <?php esc_html_e('Enable Redirect Protection', 'modify-login'); ?>
+                                                    </label>
+                                                    <p class="text-gray-500">
+                                                        <?php esc_html_e('Block direct access to wp-login.php and wp-admin for non-logged in users, redirecting them to the URL specified below.', 'modify-login'); ?>
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div class="ml-3 text-sm">
-                                                <label for="enable_redirect" class="font-medium text-gray-700">
-                                                    <?php esc_html_e('Enable Redirect', 'modify-login'); ?>
-                                                </label>
-                                                <p class="text-gray-500">
-                                                    <?php esc_html_e('Redirect unauthorized access attempts', 'modify-login'); ?>
+                                        </div>
+
+                                        <div id="redirect_url_field" class="mt-4" style="<?php echo isset($settings['enable_redirect']) && $settings['enable_redirect'] ? '' : 'display: none;'; ?>">
+                                            <label for="redirect_url" class="block text-sm font-medium text-gray-700">
+                                                <?php esc_html_e('Redirect URL for Unauthorized Access', 'modify-login'); ?>
+                                            </label>
+                                            <div class="mt-1">
+                                                <input type="url" id="redirect_url" name="redirect_url" 
+                                                    value="<?php echo isset($settings['redirect_url']) ? esc_attr($settings['redirect_url']) : ''; ?>" 
+                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                                                    placeholder="https://example.com/404">
+                                                <p class="mt-2 text-sm text-gray-500">
+                                                    <?php esc_html_e('Enter the URL where unauthorized access attempts to wp-login.php and wp-admin will be redirected. Use your 404 page or homepage for best security.', 'modify-login'); ?>
                                                 </p>
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Post-Authentication Redirection Section -->
+                                    <div class="mb-8">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                            <?php esc_html_e('Post-Authentication Redirection', 'modify-login'); ?>
+                                        </h3>
+                                        
+                                        <div class="mt-4">
+                                            <label for="login_redirect_url" class="block text-sm font-medium text-gray-700">
+                                                <?php esc_html_e('Login Redirect URL', 'modify-login'); ?>
+                                            </label>
+                                            <div class="mt-1">
+                                                <input type="url" name="login_redirect_url" id="login_redirect_url" 
+                                                    placeholder="<?php esc_attr_e('e.g., https://example.com/dashboard', 'modify-login'); ?>"
+                                                    value="<?php echo isset($settings['login_redirect_url']) ? esc_attr($settings['login_redirect_url']) : ''; ?>" 
+                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                <p class="mt-2 text-sm text-gray-500">
+                                                    <?php esc_html_e('Determines where users are sent after successful login. Perfect for directing users to a specific page like a members area or dashboard. Leave empty to use WordPress default (usually admin dashboard or the page they were trying to access).', 'modify-login'); ?>
+                                                </p>
+                                            </div>
+                                        </div>
 
-                                    <div class="mt-4">
-                                        <label for="redirect_url" class="block text-sm font-medium text-gray-700">
-                                            <?php esc_html_e('Redirect URL', 'modify-login'); ?>
-                                        </label>
-                                        <div class="mt-1">
-                                            <input type="url" id="redirect_url" name="redirect_url" 
-                                                value="<?php echo esc_attr($settings['redirect_url']); ?>" 
-                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                                placeholder="https://example.com/404">
-                                            <p class="mt-2 text-sm text-gray-500">
-                                                <?php esc_html_e('Enter the URL where unauthorized access attempts should be redirected to.', 'modify-login'); ?>
-                                            </p>
+                                        <div class="mt-4">
+                                            <label for="logout_redirect_url" class="block text-sm font-medium text-gray-700">
+                                                <?php esc_html_e('Logout Redirect URL', 'modify-login'); ?>
+                                            </label>
+                                            <div class="mt-1">
+                                                <input type="url" name="logout_redirect_url" id="logout_redirect_url" 
+                                                    placeholder="<?php esc_attr_e('e.g., https://example.com', 'modify-login'); ?>"
+                                                    value="<?php echo isset($settings['logout_redirect_url']) ? esc_attr($settings['logout_redirect_url']) : ''; ?>" 
+                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                <p class="mt-2 text-sm text-gray-500">
+                                                    <?php esc_html_e('Controls where users are redirected when they log out. Useful for sending users to your homepage or a custom "logged out" page instead of the default WordPress login screen with logout message.', 'modify-login'); ?>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-6 pt-4 border-t border-gray-200">
+                                        <div class="important-note-warning">
+                                            <div class="flex">
+                                                <div class="flex-shrink-0">
+                                                    <svg class="h-6 w-6 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div class="ml-3">
+                                                    <h3>
+                                                        <?php esc_html_e('Important Note', 'modify-login'); ?>
+                                                    </h3>
+                                                    <div>
+                                                        <p>
+                                                            <?php esc_html_e('After changing these settings, please verify that you can access your new login URL before logging out.', 'modify-login'); ?>
+                                                        </p>
+                                                        <p>
+                                                            <?php esc_html_e('If you get locked out, access your WordPress database and delete the "modify_login_settings" option from the wp_options table.', 'modify-login'); ?>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -211,12 +277,39 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                     <div id="captcha" class="tab-panel <?php echo $active_tab === 'captcha' ? '' : 'hidden'; ?>">
                         <div class="bg-white shadow rounded-lg overflow-hidden">
                             <div class="p-6 space-y-6">
+                                <!-- Information about reCAPTCHA -->
+                                <div class="login-protection-info mb-6">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3><?php esc_html_e('How to Get reCAPTCHA Keys', 'modify-login'); ?></h3>
+                                            <div class="mt-2 text-sm">
+                                                <p><?php esc_html_e('To use Google reCAPTCHA, you need to obtain Site and Secret keys:', 'modify-login'); ?></p>
+                                                <ol class="list-decimal pl-5 mt-2 space-y-1">
+                                                    <li><?php esc_html_e('Go to the Google reCAPTCHA admin console: https://www.google.com/recaptcha/admin', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Sign in with your Google account', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Register a new site by clicking the "+" button', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Enter a label (e.g., "My WordPress Site")', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Select reCAPTCHA v2 "I\'m not a robot" Checkbox', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Add your domain(s) in the "Domains" field', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Accept the Terms of Service and click "Submit"', 'modify-login'); ?></li>
+                                                    <li><?php esc_html_e('Copy the provided "Site Key" and "Secret Key" below', 'modify-login'); ?></li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <!-- reCAPTCHA Settings -->
                                 <div class="sm:col-span-6">
                                     <div class="flex items-start">
                                         <div class="flex items-center h-5">
                                             <input type="checkbox" name="enable_recaptcha" id="enable_recaptcha" 
-                                                value="yes" <?php checked($settings['enable_recaptcha'], 'yes'); ?> 
+                                                value="yes" <?php checked(isset($settings['enable_recaptcha']) ? $settings['enable_recaptcha'] : 0, 'yes'); ?> 
                                                 class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
                                         </div>
                                         <div class="ml-3 text-sm">
@@ -224,7 +317,7 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                                 <?php esc_html_e('Enable reCAPTCHA', 'modify-login'); ?>
                                             </label>
                                             <p class="text-gray-500">
-                                                <?php esc_html_e('Add Google reCAPTCHA to the login form.', 'modify-login'); ?>
+                                                <?php esc_html_e('Add Google reCAPTCHA to the login form to protect against bots and automated login attempts.', 'modify-login'); ?>
                                             </p>
                                         </div>
                                     </div>
@@ -237,8 +330,11 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                         </label>
                                         <div class="mt-1">
                                             <input type="text" name="recaptcha_site_key" id="recaptcha_site_key" 
-                                                value="<?php echo esc_attr($settings['recaptcha_site_key']); ?>" 
+                                                value="<?php echo isset($settings['recaptcha_site_key']) ? esc_attr($settings['recaptcha_site_key']) : ''; ?>" 
                                                 class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <p class="mt-2 text-sm text-gray-500">
+                                                <?php esc_html_e('The Site Key is used in the HTML code your site serves to users.', 'modify-login'); ?>
+                                            </p>
                                         </div>
                                     </div>
 
@@ -248,8 +344,11 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                         </label>
                                         <div class="mt-1">
                                             <input type="text" name="recaptcha_secret_key" id="recaptcha_secret_key" 
-                                                value="<?php echo esc_attr($settings['recaptcha_secret_key']); ?>" 
+                                                value="<?php echo isset($settings['recaptcha_secret_key']) ? esc_attr($settings['recaptcha_secret_key']) : ''; ?>" 
                                                 class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                            <p class="mt-2 text-sm text-gray-500">
+                                                <?php esc_html_e('The Secret Key is used for communication between your site and Google. Keep this key secret.', 'modify-login'); ?>
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
@@ -269,4 +368,47 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
             </div>
         </form>
     </div>
-</div> 
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tab switching
+        const tabLinks = document.querySelectorAll('.tab-link');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+        const activeTabInput = document.getElementById('active_tab');
+
+        tabLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const tabId = this.getAttribute('data-tab');
+                
+                // Update active tab styles
+                tabLinks.forEach(l => l.classList.remove('text-gray-900', 'bg-gray-100'));
+                tabLinks.forEach(l => l.classList.add('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50'));
+                this.classList.remove('text-gray-600', 'hover:text-gray-900', 'hover:bg-gray-50');
+                this.classList.add('text-gray-900', 'bg-gray-100');
+                
+                // Show active tab panel
+                tabPanels.forEach(panel => panel.classList.add('hidden'));
+                document.getElementById(tabId).classList.remove('hidden');
+                
+                // Update hidden input for active tab
+                activeTabInput.value = tabId;
+            });
+        });
+        
+        // Initialize conditional field visibility
+        toggleRedirectUrlField();
+    });
+    
+    function toggleRedirectUrlField() {
+        const redirectFieldContainer = document.getElementById('redirect_url_field');
+        const enableRedirectCheckbox = document.getElementById('enable_redirect');
+        
+        if (enableRedirectCheckbox.checked) {
+            redirectFieldContainer.style.display = 'block';
+        } else {
+            redirectFieldContainer.style.display = 'none';
+        }
+    }
+</script> 

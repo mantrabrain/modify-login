@@ -102,7 +102,8 @@ final class Modify_Login
         // Admin classes
         if (is_admin()) {
             require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/admin/class-modify-login-admin.php';
-            $this->admin = new \ModifyLogin\Admin\Modify_Login_Admin('modify-login', $this->version);
+            // No need to load admin-ajax.php as the Admin class already creates an instance of it
+            $this->admin = \ModifyLogin\Admin\Modify_Login_Admin::instance('modify-login', $this->version);
         }
 
         // Frontend classes

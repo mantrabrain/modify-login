@@ -68,11 +68,6 @@ class Modify_Login_Admin_Ajax {
             'link_hover_color' => isset($_POST['link_hover_color']) ? sanitize_hex_color($_POST['link_hover_color']) : '#00a0d2',
         );
 
-        // Log key settings for debugging
-        error_log('Modify Login: Saving settings - logo_url: ' . $settings['logo_url']);
-        error_log('Modify Login: Saving settings - logo_width: ' . $settings['logo_width']);
-        error_log('Modify Login: Saving settings - logo_height: ' . $settings['logo_height']);
-
         // Save each setting
         foreach ($settings as $key => $value) {
             update_option('modify_login_' . $key, $value);
@@ -137,8 +132,16 @@ class Modify_Login_Admin_Ajax {
 
         // Get and sanitize settings
         $settings = array(
+            // General settings
             'login_redirect_url' => isset($_POST['login_redirect_url']) ? esc_url_raw($_POST['login_redirect_url']) : '',
             'logout_redirect_url' => isset($_POST['logout_redirect_url']) ? esc_url_raw($_POST['logout_redirect_url']) : '',
+            
+            // Login Security settings
+            'login_endpoint' => isset($_POST['login_endpoint']) ? sanitize_text_field($_POST['login_endpoint']) : '',
+            'enable_redirect' => isset($_POST['enable_redirect']) ? true : false,
+            'redirect_url' => isset($_POST['redirect_url']) ? esc_url_raw($_POST['redirect_url']) : '',
+            
+            // reCAPTCHA settings
             'enable_recaptcha' => isset($_POST['enable_recaptcha']) ? 'yes' : 'no',
             'recaptcha_site_key' => isset($_POST['recaptcha_site_key']) ? sanitize_text_field($_POST['recaptcha_site_key']) : '',
             'recaptcha_secret_key' => isset($_POST['recaptcha_secret_key']) ? sanitize_text_field($_POST['recaptcha_secret_key']) : '',
@@ -146,6 +149,14 @@ class Modify_Login_Admin_Ajax {
 
         // Save settings
         update_option('modify_login_settings', $settings);
+        
+        // If login endpoint changed, flag that we need to flush rewrite rules
+        if (isset($_POST['login_endpoint'])) {
+            $current_endpoint = get_option('modify_login_login_endpoint', '');
+            if ($_POST['login_endpoint'] !== $current_endpoint) {
+                update_option('modify_login_rewrite_rules_flushed', false);
+            }
+        }
 
         wp_send_json_success('Settings saved successfully');
     }
