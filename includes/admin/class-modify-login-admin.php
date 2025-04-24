@@ -65,21 +65,23 @@ class Modify_Login_Admin {
         // Enqueue admin scripts and styles
         add_action('admin_enqueue_scripts', array($this, 'enqueue_styles'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_scripts'));
-        
-        // Add color picker support
-        add_action('admin_enqueue_scripts', array($this, 'enqueue_color_picker'));
 
         // Include the AJAX handler file and initialize it
-        require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/admin-ajax.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'admin/admin-ajax.php';
         new Modify_Login_Admin_Ajax();
     }
 
     /**
      * Register the stylesheets for the admin area.
      *
-     * @since    1.0.0
+     * @param string $hook The current admin page hook.
      */
     public function enqueue_styles($hook) {
+        // Only load styles on plugin pages
+        if (!$this->is_plugin_page($hook)) {
+            return;
+        }
+        
         // Register all styles first
         wp_register_style(
             'modify-login-tailwind',
@@ -102,60 +104,99 @@ class Modify_Login_Admin {
             $this->version
         );
 
-        // Always load the tailwind styles
-        wp_enqueue_style('modify-login-tailwind');
-
-        // Load specific styles based on page
+        // Load styles based on specific page
         if ($hook === 'toplevel_page_modify-login') {
+            wp_enqueue_style('modify-login-tailwind');
             wp_enqueue_style('modify-login-settings');
-        } elseif ($hook === 'modify-login_page_modify-login-logs') {
+        } 
+        elseif ($hook === 'modify-login_page_modify-login-logs') {
+            wp_enqueue_style('modify-login-tailwind');
             wp_enqueue_style('modify-login-logs');
+        }
+        elseif ($hook === 'modify-login_page_modify-login-builder') {
+            wp_enqueue_style('modify-login-tailwind');
+            // The builder CSS is loaded in the display_builder_page method
         }
     }
 
     /**
      * Register the JavaScript for the admin area.
+     * 
+     * @param string $hook The current admin page hook.
      */
-    public function enqueue_scripts() {
-        // Enqueue color picker first
-        wp_enqueue_style('wp-color-picker');
-        wp_enqueue_script('wp-color-picker');
-
-        // Then enqueue our admin script with color picker as a dependency
-        wp_enqueue_script(
-            $this->plugin_name,
+    public function enqueue_scripts($hook) {
+        // Only load scripts on plugin pages
+        if (!$this->is_plugin_page($hook)) {
+            return;
+        }
+        
+        // Register scripts first
+        wp_register_script(
+            'modify-login-settings',
             MODIFY_LOGIN_URL . 'assets/dist/admin/js/settings.min.js',
             array('jquery', 'wp-color-picker'),
             $this->version,
             true
         );
-
-        // Add media uploader scripts
-        wp_enqueue_media();
         
-        wp_localize_script($this->plugin_name, 'modifyLoginAdmin', array(
+        wp_register_script(
+            'modify-login-logs',
+            MODIFY_LOGIN_URL . 'assets/dist/admin/js/logs.min.js',
+            array('jquery'),
+            $this->version,
+            true
+        );
+        
+        // Base data for all admin scripts
+        $base_data = array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('modify_login_admin_nonce')
-        ));
+        );
+
+        // Enqueue scripts based on current page
+        if ($hook === 'toplevel_page_modify-login') {
+            // Settings page
+            wp_enqueue_style('wp-color-picker');
+            wp_enqueue_script('wp-color-picker');
+            wp_enqueue_script('modify-login-settings');
+            wp_localize_script('modify-login-settings', 'modifyLoginAdmin', $base_data);
+            
+            // Add media uploader only if needed
+            wp_enqueue_media();
+        } 
+        elseif ($hook === 'modify-login_page_modify-login-logs') {
+            // Logs page
+            wp_enqueue_script('modify-login-logs');
+            wp_localize_script('modify-login-logs', 'modifyLoginAdmin', $base_data);
+        }
+        // Builder page scripts are loaded in display_builder_page method
+    }
+
+    /**
+     * Check if we're on a plugin-specific page
+     * 
+     * @param string $hook The current admin page hook.
+     * @return boolean Whether this is a plugin page
+     */
+    private function is_plugin_page($hook) {
+        $plugin_pages = array(
+            'toplevel_page_modify-login',
+            'modify-login_page_modify-login-logs',
+            'modify-login_page_modify-login-builder'
+        );
+        
+        return in_array($hook, $plugin_pages);
     }
 
     /**
      * Enqueue color picker scripts and styles
+     * 
+     * @deprecated This method is no longer used. Color picker initialization is now handled in display_builder_page().
+     * @param string $hook The current admin page hook.
      */
     public function enqueue_color_picker($hook) {
-        // Only load on our plugin's builder page
-        if ($hook !== 'modify-login_page_modify-login-builder') {
-            return;
-        }
-        
-        // Enqueue the WordPress component libraries for Gutenberg color picker
-        wp_enqueue_script('wp-components');
-        wp_enqueue_script('wp-element');
-        wp_enqueue_script('wp-i18n');
-        wp_enqueue_script('wp-data');
-        
-        // Enqueue the styles for components
-        wp_enqueue_style('wp-components');
+        _deprecated_function(__FUNCTION__, '2.1.0', 'display_builder_page');
+        return; // No longer used
     }
 
     /**
@@ -259,6 +300,19 @@ class Modify_Login_Admin {
      * Display the logs page.
      */
     public function display_logs_page() {
+        // Add any logs-specific script data
+        wp_localize_script('modify-login-logs', 'modifyLoginLogs', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('modify_login_admin_nonce'),
+            'i18n' => array(
+                'clearConfirm' => __('Are you sure you want to clear all logs? This action cannot be undone.', 'modify-login'),
+                'clearing' => __('Clearing...', 'modify-login'),
+                'cleared' => __('All logs have been cleared.', 'modify-login'),
+                'error' => __('Error', 'modify-login'),
+                'success' => __('Success', 'modify-login'),
+            )
+        ));
+        
         // Include the logs page template
         include MODIFY_LOGIN_PATH . 'templates/admin/logs.php';
     }
@@ -270,11 +324,21 @@ class Modify_Login_Admin {
         // Force cache invalidation with current timestamp
         $version = MODIFY_LOGIN_VERSION . '.' . time();
         
-        // Enqueue builder scripts and styles
-        wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array(), $version);
+        // Enqueue WordPress component libraries for Gutenberg color picker
+        wp_enqueue_script('wp-components');
+        wp_enqueue_script('wp-element');
+        wp_enqueue_script('wp-i18n');
+        wp_enqueue_script('wp-data');
+        wp_enqueue_style('wp-components');
+        
+        // Ensure media uploader is available
+        wp_enqueue_media();
+        
+        // Enqueue builder-specific scripts and styles
+        wp_enqueue_style('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/css/builder.min.css', array('wp-components'), $version);
         wp_enqueue_script('modify-login-builder', MODIFY_LOGIN_URL . 'assets/dist/admin/js/builder.min.js', array('jquery', 'wp-components', 'wp-element', 'wp-i18n'), $version, true);
 
-        // Localize the builder script
+        // Localize the builder script with necessary data
         wp_localize_script('modify-login-builder', 'modifyLoginBuilder', array(
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('modify_login_builder_nonce'),
@@ -283,6 +347,16 @@ class Modify_Login_Admin {
                 'form' => get_option('modify_login_form_background', '#ffffff'),
                 'button' => get_option('modify_login_button_color', '#0073aa'),
                 'buttonText' => get_option('modify_login_button_text_color', '#ffffff'),
+            ),
+            'i18n' => array(
+                'save' => __('Save Changes', 'modify-login'),
+                'saving' => __('Saving...', 'modify-login'),
+                'saved' => __('Settings Saved!', 'modify-login'),
+                'reset' => __('Reset Defaults', 'modify-login'),
+                'resetConfirm' => __('Are you sure you want to reset all settings to default values?', 'modify-login'),
+                'resetting' => __('Resetting...', 'modify-login'),
+                'error' => __('Error', 'modify-login'),
+                'success' => __('Success', 'modify-login'),
             )
         ));
 

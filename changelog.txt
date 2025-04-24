@@ -1,0 +1,26 @@
+= 1.1 - 2023-12-17 =
+* Added: Redirect URL for unauthorized access
+* Fixed: WordPress 6.4 compatibility check
+
+= 1.0.5 - 2022-05-27 =
+* Version compatibility tested
+
+= 1.0.4 - 2021-07-24 =
+* Version compatibility tested
+
+= 1.0.3 - 2021-04-03 =
+* Version compatibility tested
+
+= 1.0.2 - 2020-09-01 =
+* Version compatibility tested
+
+= 1.0.1 - 2019-08-29 =
+* Initial Version released
+
+== Upgrade Notice ==
+
+= 2.0.0 =
+Major update with completely redesigned interface, visual login page builder, and many new features! Please backup your site before upgrading.
+
+= 1.1 =
+Added redirect URL feature for unauthorized access attempts and WordPress 6.4 compatibility.

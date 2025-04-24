@@ -37,13 +37,19 @@ class Modify_Login_Admin_Ajax {
      */
     public function save_builder_settings() {
         // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'modify_login_builder_nonce')) {
-            wp_send_json_error('Invalid nonce');
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field($_POST['nonce']), 'modify_login_builder_nonce')) {
+            wp_send_json_error(array(
+                'message' => 'Security verification failed. Please refresh the page and try again.',
+                'code' => 'invalid_nonce'
+            ));
         }
 
         // Check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('Insufficient permissions');
+            wp_send_json_error(array(
+                'message' => 'You do not have permission to perform this action.',
+                'code' => 'insufficient_permissions'
+            ));
         }
 
         // Get and sanitize the settings
@@ -53,7 +59,7 @@ class Modify_Login_Admin_Ajax {
             'background_size' => isset($_POST['background_size']) ? sanitize_text_field($_POST['background_size']) : 'cover',
             'background_position' => isset($_POST['background_position']) ? sanitize_text_field($_POST['background_position']) : 'center center',
             'background_repeat' => isset($_POST['background_repeat']) ? sanitize_text_field($_POST['background_repeat']) : 'no-repeat',
-            'background_opacity' => isset($_POST['background_opacity']) ? floatval($_POST['background_opacity']) : 1,
+            'background_opacity' => isset($_POST['background_opacity']) ? (float) $_POST['background_opacity'] : 1,
             'logo_url' => isset($_POST['logo_url']) ? esc_url_raw($_POST['logo_url']) : '',
             'logo_width' => isset($_POST['logo_width']) ? sanitize_text_field($_POST['logo_width']) : '',
             'logo_height' => isset($_POST['logo_height']) ? sanitize_text_field($_POST['logo_height']) : '',
@@ -69,11 +75,26 @@ class Modify_Login_Admin_Ajax {
         );
 
         // Save each setting
+        $saved_count = 0;
         foreach ($settings as $key => $value) {
-            update_option('modify_login_' . $key, $value);
+            $option_name = 'modify_login_' . $key;
+            $result = update_option($option_name, $value);
+            if ($result) {
+                $saved_count++;
+            }
         }
 
-        wp_send_json_success('Settings saved successfully');
+        if ($saved_count === count($settings)) {
+            wp_send_json_success(array(
+                'message' => 'Settings saved successfully',
+                'count' => $saved_count
+            ));
+        } else {
+            wp_send_json_success(array(
+                'message' => 'Some settings may not have been saved. Please verify your changes.',
+                'count' => $saved_count
+            ));
+        }
     }
 
     /**
@@ -234,14 +255,20 @@ class Modify_Login_Admin_Ajax {
      * Reset builder settings
      */
     public function reset_builder_settings() {
-        // Verify nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'modify_login_builder_nonce')) {
-            wp_send_json_error('Invalid nonce');
+        // Verify nonce with specific action name
+        if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field($_POST['nonce']), 'modify_login_builder_nonce')) {
+            wp_send_json_error(array(
+                'message' => 'Security verification failed. Please refresh the page and try again.',
+                'code' => 'invalid_nonce'
+            ));
         }
 
         // Check user permissions
         if (!current_user_can('manage_options')) {
-            wp_send_json_error('Permission denied');
+            wp_send_json_error(array(
+                'message' => 'You do not have permission to perform this action.',
+                'code' => 'insufficient_permissions'
+            ));
         }
 
         // Default settings
@@ -251,6 +278,7 @@ class Modify_Login_Admin_Ajax {
             'background_position' => 'center',
             'background_size' => 'cover',
             'background_repeat' => 'no-repeat',
+            'background_opacity' => '1',
             'logo_url' => '',
             'logo_width' => '',
             'logo_height' => '',
@@ -284,10 +312,10 @@ class Modify_Login_Admin_Ajax {
             update_option("modify_login_{$key}", $value);
         }
 
-        // Send response
+        // Send response with sanitized values
         wp_send_json_success(array(
             'message' => 'All settings have been reset to default values.',
-            'defaults' => $defaults
+            'defaults' => array_map('esc_attr', $defaults)
         ));
     }
 } 
