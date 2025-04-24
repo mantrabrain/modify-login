@@ -191,7 +191,7 @@ Always remember to keep a secure record of your custom login endpoint in a passw
 
 == Changelog ==
 
-= 2.0.0 - 2023-12-30 =
+= 2.0.0 - 2025-04-24 =
 * Added: Complete UI redesign with modern interface
 * Added: Visual login page builder with live preview
 * Added: Background image customization with opacity, position and size controls
