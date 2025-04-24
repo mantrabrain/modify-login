@@ -272,6 +272,9 @@ class Modify_Login_Admin {
                         'enable_recaptcha' => isset($_POST['enable_recaptcha']) ? 'yes' : 'no',
                         'recaptcha_site_key' => isset($_POST['recaptcha_site_key']) ? sanitize_text_field($_POST['recaptcha_site_key']) : '',
                         'recaptcha_secret_key' => isset($_POST['recaptcha_secret_key']) ? sanitize_text_field($_POST['recaptcha_secret_key']) : '',
+                        
+                        // Tracking Settings
+                        'enable_tracking' => isset($_POST['enable_tracking']) ? true : false,
                     );
                     
                     // Update settings in database
@@ -454,6 +457,7 @@ class Modify_Login_Admin {
             'recaptcha_site_key'             => isset($settings['recaptcha_site_key']) ? $settings['recaptcha_site_key'] : '',
             'recaptcha_secret_key'           => isset($settings['recaptcha_secret_key']) ? $settings['recaptcha_secret_key'] : '',
             'enable_2fa'                     => isset($settings['enable_2fa']) ? $settings['enable_2fa'] : 0,
+            'enable_tracking'                => isset($settings['enable_tracking']) ? $settings['enable_tracking'] : 0,
             
             // Design Settings
             'enable_custom_design'           => isset($settings['enable_custom_design']) ? $settings['enable_custom_design'] : 0,

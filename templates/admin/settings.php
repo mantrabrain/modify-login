@@ -153,7 +153,17 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                             </label>
                                             <div class="mt-1 flex rounded-md shadow-sm">
                                                 <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
-                                                    <?php echo esc_url(home_url('/')); ?>
+                                                    <?php 
+                                                    // Check permalink structure for correct display
+                                                    $permalink_structure = get_option('permalink_structure');
+                                                    $using_plain_permalinks = empty($permalink_structure);
+                                                    
+                                                    if ($using_plain_permalinks) {
+                                                        echo esc_url(home_url('/')) . '?';
+                                                    } else {
+                                                        echo esc_url(home_url('/'));
+                                                    }
+                                                    ?>
                                                 </span>
                                                 <input type="text" id="login_endpoint" name="login_endpoint" 
                                                     value="<?php echo isset($settings['login_endpoint']) ? esc_attr($settings['login_endpoint']) : ''; ?>" 
@@ -161,8 +171,45 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                                     placeholder="setup">
                                             </div>
                                             <p class="mt-2 text-sm text-gray-500">
-                                                <?php esc_html_e('Enter a custom endpoint for your login page (e.g., "setup"). Users will access the login form at your-site.com/setup instead of wp-login.php. If left empty, the default wp-login.php will be used and custom login protection will not be active.', 'modify-login'); ?>
+                                                <?php 
+                                                // Get the current login endpoint or use "setup" as example
+                                                $endpoint = isset($settings['login_endpoint']) && !empty($settings['login_endpoint']) 
+                                                    ? esc_attr($settings['login_endpoint']) 
+                                                    : 'setup';
+                                                
+                                                $full_login_url = $using_plain_permalinks 
+                                                    ? home_url('/') . '?' . $endpoint
+                                                    : home_url('/') . $endpoint;
+                                                
+                                                // Detailed description with current login URL
+                                                echo sprintf(
+                                                    esc_html__('Create a custom login URL to replace the default wp-login.php page. Your current login URL is: %s', 'modify-login'),
+                                                    '<strong><a href="' . esc_url($full_login_url) . '" target="_blank">' . esc_url($full_login_url) . '</a></strong>'
+                                                );
+                                                ?>
                                             </p>
+                                            <div class="mt-3 text-sm text-gray-600">
+                                                <ul class="list-disc pl-5 space-y-1">
+                                                    <li><?php esc_html_e('Choose a unique, non-obvious name for better security (avoid "login", "admin", etc.)', 'modify-login'); ?></li>
+                                                    <li>
+                                                        <?php 
+                                                        $site_url_base = rtrim(home_url(), '/');
+                                                        if ($using_plain_permalinks) {
+                                                            echo sprintf(
+                                                                esc_html__('With plain permalinks, your login URL will be in the format: %s/?endpoint', 'modify-login'),
+                                                                $site_url_base
+                                                            );
+                                                        } else {
+                                                            echo sprintf(
+                                                                esc_html__('With pretty permalinks, your login URL will be in the format: %s/endpoint', 'modify-login'),
+                                                                $site_url_base
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </li>
+                                                    <li><?php esc_html_e('Bookmark your new login URL to ensure you can always access it', 'modify-login'); ?></li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -244,6 +291,40 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                         </div>
                                     </div>
                                     
+                                    <!-- Login Tracking Settings -->
+                                    <div class="mb-8">
+                                        <h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                            <?php esc_html_e('Login Tracking', 'modify-login'); ?>
+                                        </h3>
+                                        
+                                        <div class="mt-4">
+                                            <div class="flex items-start">
+                                                <div class="flex items-center h-5">
+                                                    <input type="checkbox" id="enable_tracking" name="enable_tracking" 
+                                                        value="1" <?php checked(isset($settings['enable_tracking']) ? $settings['enable_tracking'] : 0, true); ?> 
+                                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                                </div>
+                                                <div class="ml-3 text-sm">
+                                                    <label for="enable_tracking" class="font-medium text-gray-700">
+                                                        <?php esc_html_e('Enable Login Tracking', 'modify-login'); ?>
+                                                    </label>
+                                                    <p class="text-gray-500">
+                                                        <?php esc_html_e('Log all login attempts to your site, including successful logins and failures. This helps you monitor unauthorized access attempts.', 'modify-login'); ?>
+                                                    </p>
+                                                    <p class="text-gray-500 mt-1">
+                                                        <?php esc_html_e('Each log entry will include username, IP address, location data, and time of the attempt.', 'modify-login'); ?>
+                                                    </p>
+                                                    <p class="text-gray-500 mt-1">
+                                                        <?php echo sprintf(
+                                                            esc_html__('View login attempts in the %s section.', 'modify-login'),
+                                                            '<a href="' . admin_url('admin.php?page=modify-login-logs') . '" class="text-blue-600 hover:text-blue-800">Login Logs</a>'
+                                                        ); ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <div class="mt-6 pt-4 border-t border-gray-200">
                                         <div class="important-note-warning">
                                             <div class="flex">
@@ -305,51 +386,64 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
                                 </div>
                                 
                                 <!-- reCAPTCHA Settings -->
-                                <div class="sm:col-span-6">
-                                    <div class="flex items-start">
-                                        <div class="flex items-center h-5">
-                                            <input type="checkbox" name="enable_recaptcha" id="enable_recaptcha" 
-                                                value="yes" <?php checked(isset($settings['enable_recaptcha']) ? $settings['enable_recaptcha'] : 0, 'yes'); ?> 
-                                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                                <div class="mb-8">
+                                    <h3 class="text-lg font-medium text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                                        <?php esc_html_e('reCAPTCHA Protection', 'modify-login'); ?>
+                                    </h3>
+                                    
+                                    <div class="mt-4">
+                                        <div class="flex items-start">
+                                            <div class="flex items-center h-5">
+                                                <input type="checkbox" id="enable_recaptcha" name="enable_recaptcha" 
+                                                    value="1" <?php checked(isset($settings['enable_recaptcha']) && $settings['enable_recaptcha'] === 'yes', true); ?> 
+                                                    class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                                    onchange="toggleRecaptchaFields()">
+                                            </div>
+                                            <div class="ml-3 text-sm">
+                                                <label for="enable_recaptcha" class="font-medium text-gray-700">
+                                                    <?php esc_html_e('Enable reCAPTCHA', 'modify-login'); ?>
+                                                </label>
+                                                <p class="text-gray-500">
+                                                    <?php esc_html_e('Add Google reCAPTCHA to your login form to prevent automated login attempts.', 'modify-login'); ?>
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div class="ml-3 text-sm">
-                                            <label for="enable_recaptcha" class="font-medium text-gray-700">
-                                                <?php esc_html_e('Enable reCAPTCHA', 'modify-login'); ?>
+                                    </div>
+                                    
+                                    <div id="recaptcha_fields" class="mt-4 ml-6 pl-4 border-l-2 border-gray-200 <?php echo isset($settings['enable_recaptcha']) && $settings['enable_recaptcha'] === 'yes' ? '' : 'hidden'; ?>">
+                                        <div class="mb-4">
+                                            <label for="recaptcha_site_key" class="block text-sm font-medium text-gray-700 mb-1">
+                                                <?php esc_html_e('Site Key', 'modify-login'); ?>
                                             </label>
-                                            <p class="text-gray-500">
-                                                <?php esc_html_e('Add Google reCAPTCHA to the login form to protect against bots and automated login attempts.', 'modify-login'); ?>
+                                            <input type="text" id="recaptcha_site_key" name="recaptcha_site_key" 
+                                                value="<?php echo esc_attr(isset($settings['recaptcha_site_key']) ? $settings['recaptcha_site_key'] : ''); ?>" 
+                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                            <p class="mt-1 text-sm text-gray-500">
+                                                <?php esc_html_e('Enter your reCAPTCHA site key here.', 'modify-login'); ?>
                                             </p>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                    <div class="sm:col-span-4">
-                                        <label for="recaptcha_site_key" class="block text-sm font-medium text-gray-700">
-                                            <?php esc_html_e('reCAPTCHA Site Key', 'modify-login'); ?>
-                                        </label>
-                                        <div class="mt-1">
-                                            <input type="text" name="recaptcha_site_key" id="recaptcha_site_key" 
-                                                value="<?php echo isset($settings['recaptcha_site_key']) ? esc_attr($settings['recaptcha_site_key']) : ''; ?>" 
-                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                            <p class="mt-2 text-sm text-gray-500">
-                                                <?php esc_html_e('The Site Key is used in the HTML code your site serves to users.', 'modify-login'); ?>
+                                        
+                                        <div class="mb-4">
+                                            <label for="recaptcha_secret_key" class="block text-sm font-medium text-gray-700 mb-1">
+                                                <?php esc_html_e('Secret Key', 'modify-login'); ?>
+                                            </label>
+                                            <input type="password" id="recaptcha_secret_key" name="recaptcha_secret_key" 
+                                                value="<?php echo esc_attr(isset($settings['recaptcha_secret_key']) ? $settings['recaptcha_secret_key'] : ''); ?>" 
+                                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                            <p class="mt-1 text-sm text-gray-500">
+                                                <?php esc_html_e('Enter your reCAPTCHA secret key here.', 'modify-login'); ?>
                                             </p>
                                         </div>
-                                    </div>
-
-                                    <div class="sm:col-span-4">
-                                        <label for="recaptcha_secret_key" class="block text-sm font-medium text-gray-700">
-                                            <?php esc_html_e('reCAPTCHA Secret Key', 'modify-login'); ?>
-                                        </label>
-                                        <div class="mt-1">
-                                            <input type="text" name="recaptcha_secret_key" id="recaptcha_secret_key" 
-                                                value="<?php echo isset($settings['recaptcha_secret_key']) ? esc_attr($settings['recaptcha_secret_key']) : ''; ?>" 
-                                                class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                            <p class="mt-2 text-sm text-gray-500">
-                                                <?php esc_html_e('The Secret Key is used for communication between your site and Google. Keep this key secret.', 'modify-login'); ?>
-                                            </p>
-                                        </div>
+                                        
+                                        <p class="text-sm text-gray-500 mt-2">
+                                            <?php 
+                                            // Translators: %s is the URL to Google reCAPTCHA admin
+                                            echo sprintf(
+                                                __('You can get your keys from %s', 'modify-login'),
+                                                '<a href="https://www.google.com/recaptcha/admin" target="_blank" class="text-blue-600 hover:text-blue-800">Google reCAPTCHA Admin</a>'
+                                            ); 
+                                            ?>
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -409,6 +503,20 @@ $active_tab = isset($active_tab) ? $active_tab : 'general';
             redirectFieldContainer.style.display = 'block';
         } else {
             redirectFieldContainer.style.display = 'none';
+        }
+    }
+
+    // Toggle visibility of reCAPTCHA fields based on checkbox
+    function toggleRecaptchaFields() {
+        const enableRecaptcha = document.getElementById('enable_recaptcha');
+        const recaptchaFields = document.getElementById('recaptcha_fields');
+        
+        if (enableRecaptcha && recaptchaFields) {
+            if (enableRecaptcha.checked) {
+                recaptchaFields.classList.remove('hidden');
+            } else {
+                recaptchaFields.classList.add('hidden');
+            }
         }
     }
 </script> 

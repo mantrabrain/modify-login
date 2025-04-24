@@ -43,17 +43,27 @@ spl_autoload_register(function ($class) {
 
 // Include required files
 require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login.php';
-// No need to load these files here since they're already loaded in the Modify_Login class
-// require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login-loader.php';
-// require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login-install.php';
+require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login-rewrite.php';
 
-// Initialize the plugin
+/**
+ * Initialize the plugin
+ *
+ * @return ModifyLogin\Core\Modify_Login
+ */
 function modify_login() {
     return ModifyLogin\Core\Modify_Login::instance();
 }
 
 // Start the plugin
 $GLOBALS['modify-login'] = modify_login();
+
+// Initialize the rewrite handler
+function modify_login_rewrite() {
+    return ModifyLogin\Core\Modify_Login_Rewrite::instance();
+}
+
+// Start the rewrite handler
+$GLOBALS['modify-login-rewrite'] = modify_login_rewrite();
 
 // Register activation hook
 register_activation_hook(__FILE__, 'modify_login_activate');
@@ -71,18 +81,3 @@ function modify_login_activate() {
     // Force flush rewrite rules
     flush_rewrite_rules();
 }
-
-// Fix for existing installations - flush rewrite rules immediately 
-add_action('init', function() {
-    $settings = get_option('modify_login_settings', array());
-    $login_endpoint = isset($settings['login_endpoint']) ? $settings['login_endpoint'] : '';
-    
-    if (!empty($login_endpoint) && get_option('modify_login_rewrite_rules_flushed', false) === false) {
-        update_option('modify_login_rewrite_rules_flushed', false);
-        // Delay the flush to ensure rules are registered first
-        add_action('wp_loaded', function() {
-            flush_rewrite_rules();
-            update_option('modify_login_rewrite_rules_flushed', true);
-        });
-    }
-}, 1);

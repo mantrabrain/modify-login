@@ -51,10 +51,6 @@ class Modify_Login_Frontend {
         add_action('wp_login_failed', array($this, 'track_login_attempt'));
         add_action('wp_login', array($this, 'track_successful_login'), 10, 2);
         
-        // Register redirect hooks
-        add_filter('login_redirect', array($this, 'handle_login_redirect'), 10, 3);
-        add_filter('logout_redirect', array($this, 'handle_logout_redirect'), 10, 3);
-
         // Initialize custom login endpoint and redirection protection
         $this->init_login_endpoint_protection();
     }
@@ -468,13 +464,25 @@ class Modify_Login_Frontend {
     public function track_login_attempt($username) {
         global $wpdb;
         
+        
         // Get settings using our helper method
         $settings = $this->get_plugin_settings();
         
-        // Only track if tracking is enabled in settings
-        if (!isset($settings['enable_tracking']) || !$settings['enable_tracking']) {
+        // Only track if tracking is enabled in settings - handle both boolean and string values
+        $tracking_enabled = false;
+        if (isset($settings['enable_tracking'])) {
+            if (is_bool($settings['enable_tracking'])) {
+                $tracking_enabled = $settings['enable_tracking'];
+            } else {
+                // Handle string values like 'yes' or '1'
+                $tracking_enabled = $settings['enable_tracking'] === 'yes' || $settings['enable_tracking'] === '1' || $settings['enable_tracking'] === 1;
+            }
+        }
+        
+        if (!$tracking_enabled) {
             return;
         }
+        
         
         // Ensure username is sanitized
         $username = sanitize_user($username);
@@ -490,24 +498,40 @@ class Modify_Login_Frontend {
             // Table doesn't exist, try to create it
             if (class_exists('\\ModifyLogin\\Core\\Modify_Login_Install')) {
                 \ModifyLogin\Core\Modify_Login_Install::maybe_create_tables();
+                
+                // Check if table was created successfully
+                if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                    return;
+                }
+            } else {
+                error_log('Modify Login: Install class not found, cannot create table');
+                return;
             }
         }
         
+        // Prepare the data for insert
+        $data = array(
+            'user_id' => 0, // Unknown user at this point
+            'ip_address' => $this->get_client_ip(), 
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
+            'status' => 'failed',
+            'attempted_username' => $username,
+            'country' => $location['country'],
+            'city' => $location['city'],
+            'created_at' => current_time('mysql')
+        );
+        
         // Insert login attempt record
-        $wpdb->insert(
+        $result = $wpdb->insert(
             $table_name,
-            array(
-                'user_id' => 0, // Unknown user at this point
-                'ip_address' => $this->get_client_ip(), 
-                'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
-                'status' => 'failed',
-                'attempted_username' => $username,
-                'country' => $location['country'],
-                'city' => $location['city'],
-                'created_at' => current_time('mysql')
-            ),
+            $data,
             array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         );
+        
+        if ($result === false) {
+            error_log('Modify Login: Failed to insert login attempt record. DB Error: ' . $wpdb->last_error);
+        } else {
+        }
     }
 
     /**
@@ -519,13 +543,25 @@ class Modify_Login_Frontend {
     public function track_successful_login($user_login, $user) {
         global $wpdb;
         
+        
         // Get settings using our helper method
         $settings = $this->get_plugin_settings();
         
-        // Only track if tracking is enabled in settings
-        if (!isset($settings['enable_tracking']) || !$settings['enable_tracking']) {
+        // Only track if tracking is enabled in settings - handle both boolean and string values
+        $tracking_enabled = false;
+        if (isset($settings['enable_tracking'])) {
+            if (is_bool($settings['enable_tracking'])) {
+                $tracking_enabled = $settings['enable_tracking'];
+            } else {
+                // Handle string values like 'yes' or '1'
+                $tracking_enabled = $settings['enable_tracking'] === 'yes' || $settings['enable_tracking'] === '1' || $settings['enable_tracking'] === 1;
+            }
+        }
+        
+        if (!$tracking_enabled) {
             return;
         }
+        
         
         // Get location info based on IP
         $location = $this->get_location_info($this->get_client_ip());
@@ -535,27 +571,47 @@ class Modify_Login_Frontend {
         
         // Ensure the table exists
         if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+            error_log('Modify Login: Login logs table does not exist, attempting to create it');
             // Table doesn't exist, try to create it
             if (class_exists('\\ModifyLogin\\Core\\Modify_Login_Install')) {
                 \ModifyLogin\Core\Modify_Login_Install::maybe_create_tables();
+                
+                // Check if table was created successfully
+                if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
+                    error_log('Modify Login: Failed to create login logs table');
+                    return;
+                }
+                error_log('Modify Login: Successfully created login logs table');
+            } else {
+                error_log('Modify Login: Install class not found, cannot create table');
+                return;
             }
         }
         
+        // Prepare the data for insert
+        $data = array(
+            'user_id' => $user->ID,
+            'ip_address' => $this->get_client_ip(),
+            'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
+            'status' => 'success',
+            'attempted_username' => sanitize_user($user_login),
+            'country' => $location['country'],
+            'city' => $location['city'],
+            'created_at' => current_time('mysql')
+        );
+        
         // Insert login success record
-        $wpdb->insert(
+        $result = $wpdb->insert(
             $table_name,
-            array(
-                'user_id' => $user->ID,
-                'ip_address' => $this->get_client_ip(),
-                'user_agent' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : '',
-                'status' => 'success',
-                'attempted_username' => sanitize_user($user_login),
-                'country' => $location['country'],
-                'city' => $location['city'],
-                'created_at' => current_time('mysql')
-            ),
+            $data,
             array('%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
         );
+        
+        if ($result === false) {
+            error_log('Modify Login: Failed to insert successful login record. DB Error: ' . $wpdb->last_error);
+        } else {
+            error_log('Modify Login: Successfully recorded successful login for ' . $user_login);
+        }
     }
 
     /**
@@ -595,122 +651,16 @@ class Modify_Login_Frontend {
         // Get settings using our helper method
         $settings = $this->get_plugin_settings();
         
-        $login_endpoint = $settings['login_endpoint'];
         $enable_redirect = $settings['enable_redirect'];
         $redirect_url = $settings['redirect_url'];
 
-        // If login endpoint is set, register the custom endpoint
-        if (!empty($login_endpoint)) {
-            // Store login endpoint as individual option for compatibility with rewrite rules
-            update_option('modify_login_login_endpoint', $login_endpoint);
-            
-            // Add rewrite rules on init priority 10
-            add_action('init', array($this, 'register_login_endpoint'), 10);
-            
-            // Check for query vars and handle the endpoint
-            add_filter('query_vars', array($this, 'add_query_vars'));
-            add_action('template_redirect', array($this, 'handle_login_endpoint'));
-            
-            // Force flush rewrite rules if this is the first time or if the endpoint has changed
-            if (get_option('modify_login_rewrite_rules_flushed', false) === false) {
-                add_action('wp_loaded', function() {
-                    flush_rewrite_rules();
-                    update_option('modify_login_rewrite_rules_flushed', true);
-                });
-            }
-            
-            // Modify the login form to submit to our custom endpoint
-            add_filter('login_form_middle', array($this, 'add_endpoint_input'));
-            add_filter('site_url', array($this, 'change_login_url'), 10, 4);
-            add_filter('network_site_url', array($this, 'change_login_url'), 10, 3);
-            add_filter('wp_redirect', array($this, 'modify_login_redirect'), 10, 2);
-            add_action('login_form', array($this, 'add_login_form_hidden_fields'));
-        }
+        // The rewrite class now handles all the endpoint functionality
+        // No need to register endpoints here as it's done in the Modify_Login_Rewrite class
 
         // If redirect protection is enabled, add the protection hooks
         if ($enable_redirect) {
             add_action('init', array($this, 'protect_login_page'), 1);
             add_action('template_redirect', array($this, 'protect_admin_page'), 1);
-        }
-    }
-
-    /**
-     * Add the custom query var
-     * 
-     * @param array $vars The array of available query variables
-     * @return array Modified array of query variables
-     */
-    public function add_query_vars($vars) {
-        $vars[] = 'modify_login_endpoint';
-        return $vars;
-    }
-
-    /**
-     * Register the custom login endpoint.
-     */
-    public function register_login_endpoint() {
-        $login_endpoint = get_option('modify_login_login_endpoint', '');
-        
-        if (!empty($login_endpoint)) {
-            // Use add_rewrite_endpoint instead of add_rewrite_rule for better compatibility
-            add_rewrite_rule(
-                '^' . $login_endpoint . '/?$',
-                'index.php?modify_login_endpoint=1',
-                'top'
-            );
-            
-            // Register the tag
-            add_rewrite_tag('%modify_login_endpoint%', '([^&]+)');
-        }
-    }
-
-    /**
-     * Handle requests to the custom login endpoint.
-     */
-    public function handle_login_endpoint() {
-        global $wp_query;
-        
-        // Get settings using our helper method
-        $settings = $this->get_plugin_settings();
-        $login_endpoint = isset($settings['login_endpoint']) ? sanitize_text_field($settings['login_endpoint']) : '';
-        
-        // Check if our endpoint is being accessed
-        $is_endpoint = isset($wp_query->query_vars['modify_login_endpoint']) || 
-                      (isset($wp_query->query) && isset($wp_query->query['pagename']) && 
-                       $wp_query->query['pagename'] == $login_endpoint);
-        
-        // Also check POST data for form submissions
-        $is_form_submission = isset($_POST['using_custom_endpoint']) || isset($_POST['modify_login_endpoint']);
-        
-        if ($is_endpoint || $is_form_submission) {
-            // Ensure WordPress authentication cookies are recognized
-            if (!defined('AUTH_COOKIE')) {
-                define('AUTH_COOKIE', 'wordpress_' . COOKIEHASH);
-            }
-            if (!defined('SECURE_AUTH_COOKIE')) {
-                define('SECURE_AUTH_COOKIE', 'wordpress_sec_' . COOKIEHASH);
-            }
-            if (!defined('LOGGED_IN_COOKIE')) {
-                define('LOGGED_IN_COOKIE', 'wordpress_logged_in_' . COOKIEHASH);
-            }
-            
-            // Preserve error messages from login attempts
-            if (isset($_REQUEST['login']) && sanitize_text_field($_REQUEST['login']) === 'failed') {
-                $_REQUEST['login'] = 'failed';
-            }
-            
-            // Define special globals needed by wp-login.php
-            global $error, $interim_login, $action, $user_login;
-            
-            // Set these variables to ensure proper login handling
-            $error = isset($_GET['error']) ? sanitize_text_field($_GET['error']) : '';
-            $interim_login = isset($_REQUEST['interim-login']) ? sanitize_text_field($_REQUEST['interim-login']) : '';
-            $action = isset($_REQUEST['action']) ? sanitize_text_field($_REQUEST['action']) : '';
-            $user_login = isset($_POST['log']) ? sanitize_user($_POST['log']) : '';
-            
-            // Load the login functionality
-            require_once(ABSPATH . 'wp-login.php');
-            exit;
         }
     }
 
@@ -778,200 +728,6 @@ class Modify_Login_Frontend {
     }
 
     /**
-     * Add hidden input field to the login form to identify our custom endpoint
-     */
-    public function add_login_form_hidden_fields() {
-        echo '<input type="hidden" name="using_custom_endpoint" value="1" />';
-        
-        // Get settings using our helper method
-        $settings = $this->get_plugin_settings();
-        
-        // Get login endpoint from settings
-        $login_endpoint = isset($settings['login_endpoint']) ? sanitize_text_field($settings['login_endpoint']) : '';
-        
-        // Only add script if custom endpoint is set
-        if (!empty($login_endpoint)) {
-            ?>
-            <script type="text/javascript">
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Get the login form
-                    var loginForm = document.getElementById('loginform');
-                    if (loginForm) {
-                        // Create the new form action URL using the custom endpoint
-                        var siteUrl = '<?php echo esc_js(trailingslashit(site_url())); ?>';
-                        var customEndpoint = '<?php echo esc_js($login_endpoint); ?>';
-                        
-                        // Set the form action to the custom endpoint
-                        loginForm.action = siteUrl + customEndpoint;
-                        
-                        // Log for debugging
-                        console.log('Form action updated to: ' + loginForm.action);
-                    }
-                });
-            </script>
-            <?php
-        }
-    }
-    
-    /**
-     * Add a hidden input field to the login form
-     * 
-     * @param string $content The current content of the login form.
-     * @return string
-     */
-    public function add_endpoint_input($content) {
-        return $content . '<input type="hidden" name="modify_login_endpoint" value="1" />';
-    }
-    
-    /**
-     * Change the login URL to use our custom endpoint
-     * 
-     * @param string $url    The complete site URL including scheme and path.
-     * @param string $path   Path relative to the site URL. Blank string if no path is specified.
-     * @param string $scheme The scheme to use.
-     * @param int    $blog_id (Multisite) Blog ID.
-     * @return string Modified URL if it's a login URL
-     */
-    public function change_login_url($url, $path, $scheme = null, $blog_id = null) {
-        // Get settings using our helper method
-        $settings = $this->get_plugin_settings();
-        
-        // Get login endpoint from settings
-        $login_endpoint = isset($settings['login_endpoint']) ? sanitize_text_field($settings['login_endpoint']) : '';
-        
-        // Only modify the URL if our custom endpoint is set
-        if (empty($login_endpoint)) {
-            return $url;
-        }
-        
-        // Check if this is a login-related URL
-        if (strpos($url, 'wp-login.php') !== false) {
-            // Get the site URL with the appropriate scheme
-            $site_url = get_site_url(null, '', $scheme);
-            
-            // Start building the new URL with the login endpoint
-            $new_url = trailingslashit($site_url) . $login_endpoint;
-            
-            // Parse the original URL to extract any query parameters
-            $url_parts = parse_url($url);
-            
-            // If there are query parameters, append them to the new URL
-            if (isset($url_parts['query']) && !empty($url_parts['query'])) {
-                $new_url .= '?' . $url_parts['query'];
-            }
-            
-            return $new_url;
-        }
-        
-        // Return original URL for non-login URLs
-        return $url;
-    }
-    
-    /**
-     * Fix redirects to wp-login.php when using custom login endpoints
-     *
-     * @param string $location The redirect location.
-     * @param int    $status   The HTTP response status code.
-     * @return string Modified location if it's a login page redirect
-     */
-    public function modify_login_redirect($location, $status) {
-        // Get settings using our helper method
-        $settings = $this->get_plugin_settings();
-        
-        // Get login endpoint from settings
-        $login_endpoint = isset($settings['login_endpoint']) ? sanitize_text_field($settings['login_endpoint']) : '';
-        
-        // Only modify if our custom endpoint is set
-        if (empty($login_endpoint)) {
-            return $location;
-        }
-        
-        // Check if this is a login-related redirect
-        if (strpos($location, 'wp-login.php') !== false) {
-            // Parse the location URL
-            $url_parts = parse_url($location);
-            
-            // Get site URL for building new URL
-            $site_url = get_site_url();
-            
-            // Build the new URL with the login endpoint
-            $new_location = trailingslashit($site_url) . $login_endpoint;
-            
-            // Add any query parameters from the original URL
-            if (isset($url_parts['query']) && !empty($url_parts['query'])) {
-                $new_location .= '?' . $url_parts['query'];
-            }
-            
-            return esc_url_raw($new_location);
-        }
-        
-        // Return original location for non-login redirects
-        return $location;
-    }
-
-    /**
-     * Handle login redirect based on plugin settings
-     *
-     * @param string   $redirect_to URL to redirect to.
-     * @param string   $request     URL the user is coming from.
-     * @param WP_User  $user        Logged-in user's data.
-     * @return string Modified redirect URL
-     */
-    public function handle_login_redirect($redirect_to, $request, $user) {
-        // If user isn't logged in or isn't valid, return the default
-        if (!is_a($user, 'WP_User') || !$user->exists()) {
-            return $redirect_to;
-        }
-        
-        // Get settings using our helper method
-        $settings = $this->get_plugin_settings();
-        
-        // Get the login redirect URL from settings
-        $login_redirect_url = isset($settings['login_redirect_url']) ? esc_url_raw($settings['login_redirect_url']) : '';
-        
-        // Only apply custom redirect if URL is set and is valid
-        if (!empty($login_redirect_url) && wp_validate_redirect($login_redirect_url, false)) {
-            // Verify if the URL is valid and on the same domain or is an allowed external domain
-            $login_redirect_url = wp_validate_redirect($login_redirect_url, home_url('/'));
-            
-            // If redirecting to admin but user doesn't have admin access, redirect to home
-            if (strpos($login_redirect_url, admin_url()) !== false && !current_user_can('read')) {
-                // If user doesn't have permission for admin, redirect to home
-                return home_url('/');
-            }
-            
-            return $login_redirect_url;
-        }
-        
-        // If no custom redirect or not applicable, return the default
-        return $redirect_to;
-    }
-
-    /**
-     * Handle logout redirect based on plugin settings
-     *
-     * @param string $redirect_to The redirect destination URL.
-     * @param string $request The requested redirect destination URL passed as a parameter.
-     * @param WP_User $user WP_User object of the user that's logging out.
-     * @return string Modified redirect URL
-     */
-    public function handle_logout_redirect($redirect_to, $request, $user) {
-        // Get settings using our helper method
-        $settings = $this->get_plugin_settings();
-        
-        // Get logout redirect URL from settings
-        $logout_redirect_url = isset($settings['logout_redirect_url']) ? esc_url_raw($settings['logout_redirect_url']) : '';
-        
-        // If we have a logout redirect URL in settings and it's valid, use that URL
-        if (!empty($logout_redirect_url) && wp_validate_redirect($logout_redirect_url, false)) {
-            return wp_validate_redirect($logout_redirect_url, home_url('/'));
-        }
-        
-        // If no custom redirect, return the default
-        return $redirect_to;
-    }
-
-    /**
      * Get settings with proper defaults
      * 
      * @return array Array of settings with defaults
@@ -982,33 +738,40 @@ class Modify_Login_Frontend {
             try {
                 // Use the singleton instance instead of creating a new instance
                 $admin = \ModifyLogin\Admin\Modify_Login_Admin::instance($this->plugin_name, $this->version);
-                return $admin->get_settings();
+                $settings = $admin->get_settings();
+                error_log('Modify Login: Got settings via admin class: ' . print_r($settings, true));
+                return $settings;
             } catch (\Exception $e) {
                 // Fall back to direct option retrieval below
+                error_log('Modify Login: Error getting settings via admin class: ' . $e->getMessage());
             }
         }
         
         // Fallback to direct settings retrieval with defaults
-        $settings = get_option('modify_login_settings', array());
+        $raw_settings = get_option('modify_login_settings', array());
+        error_log('Modify Login: Raw settings from database: ' . print_r($raw_settings, true));
         
         $default_settings = array(
             // Login Endpoint settings
-            'login_endpoint'     => isset($settings['login_endpoint']) ? $settings['login_endpoint'] : 'login',
-            'enable_redirect'    => isset($settings['enable_redirect']) ? $settings['enable_redirect'] : 0,
-            'redirect_url'       => isset($settings['redirect_url']) ? $settings['redirect_url'] : '',
+            'login_endpoint'     => isset($raw_settings['login_endpoint']) ? $raw_settings['login_endpoint'] : 'setup',
+            'enable_redirect'    => isset($raw_settings['enable_redirect']) ? $raw_settings['enable_redirect'] : 0,
+            'redirect_url'       => isset($raw_settings['redirect_url']) ? $raw_settings['redirect_url'] : '',
             
             // Redirect settings
-            'login_redirect_url' => isset($settings['login_redirect_url']) ? $settings['login_redirect_url'] : '',
-            'logout_redirect_url' => isset($settings['logout_redirect_url']) ? $settings['logout_redirect_url'] : '',
+            'login_redirect_url' => isset($raw_settings['login_redirect_url']) ? $raw_settings['login_redirect_url'] : '',
+            'logout_redirect_url' => isset($raw_settings['logout_redirect_url']) ? $raw_settings['logout_redirect_url'] : '',
             
             // Additional general settings with defaults to prevent undefined warnings
-            'enable_recaptcha'   => isset($settings['enable_recaptcha']) ? $settings['enable_recaptcha'] : 0,
-            'recaptcha_site_key' => isset($settings['recaptcha_site_key']) ? $settings['recaptcha_site_key'] : '',
-            'recaptcha_secret_key' => isset($settings['recaptcha_secret_key']) ? $settings['recaptcha_secret_key'] : '',
-            'enable_tracking'    => isset($settings['enable_tracking']) ? $settings['enable_tracking'] : 0,
-            'allowed_login_attempts' => isset($settings['allowed_login_attempts']) ? $settings['allowed_login_attempts'] : 3,
-            'lockout_time'       => isset($settings['lockout_time']) ? $settings['lockout_time'] : 15,
+            'enable_recaptcha'   => isset($raw_settings['enable_recaptcha']) ? $raw_settings['enable_recaptcha'] : 0,
+            'recaptcha_site_key' => isset($raw_settings['recaptcha_site_key']) ? $raw_settings['recaptcha_site_key'] : '',
+            'recaptcha_secret_key' => isset($raw_settings['recaptcha_secret_key']) ? $raw_settings['recaptcha_secret_key'] : '',
+            'enable_tracking'    => isset($raw_settings['enable_tracking']) ? $raw_settings['enable_tracking'] : 0,
+            'allowed_login_attempts' => isset($raw_settings['allowed_login_attempts']) ? $raw_settings['allowed_login_attempts'] : 3,
+            'lockout_time'       => isset($raw_settings['lockout_time']) ? $raw_settings['lockout_time'] : 15,
         );
+        
+        error_log('Modify Login: enable_tracking value: ' . (isset($raw_settings['enable_tracking']) ? var_export($raw_settings['enable_tracking'], true) : 'not set'));
+        error_log('Modify Login: Final settings with defaults: ' . print_r($default_settings, true));
         
         return $default_settings;
     }
