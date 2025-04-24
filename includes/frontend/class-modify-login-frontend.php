@@ -571,7 +571,7 @@ class Modify_Login_Frontend {
         
         // Ensure the table exists
         if ($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
-            error_log('Modify Login: Login logs table does not exist, attempting to create it');
+            //error_log('Modify Login: Login logs table does not exist, attempting to create it');
             // Table doesn't exist, try to create it
             if (class_exists('\\ModifyLogin\\Core\\Modify_Login_Install')) {
                 \ModifyLogin\Core\Modify_Login_Install::maybe_create_tables();
@@ -610,7 +610,7 @@ class Modify_Login_Frontend {
         if ($result === false) {
             error_log('Modify Login: Failed to insert successful login record. DB Error: ' . $wpdb->last_error);
         } else {
-            error_log('Modify Login: Successfully recorded successful login for ' . $user_login);
+           // error_log('Modify Login: Successfully recorded successful login for ' . $user_login);
         }
     }
 
@@ -739,17 +739,16 @@ class Modify_Login_Frontend {
                 // Use the singleton instance instead of creating a new instance
                 $admin = \ModifyLogin\Admin\Modify_Login_Admin::instance($this->plugin_name, $this->version);
                 $settings = $admin->get_settings();
-                error_log('Modify Login: Got settings via admin class: ' . print_r($settings, true));
                 return $settings;
             } catch (\Exception $e) {
                 // Fall back to direct option retrieval below
-                error_log('Modify Login: Error getting settings via admin class: ' . $e->getMessage());
+                //error_log('Modify Login: Error getting settings via admin class: ' . $e->getMessage());
             }
         }
         
         // Fallback to direct settings retrieval with defaults
         $raw_settings = get_option('modify_login_settings', array());
-        error_log('Modify Login: Raw settings from database: ' . print_r($raw_settings, true));
+        //error_log('Modify Login: Raw settings from database: ' . print_r($raw_settings, true));
         
         $default_settings = array(
             // Login Endpoint settings
@@ -770,8 +769,8 @@ class Modify_Login_Frontend {
             'lockout_time'       => isset($raw_settings['lockout_time']) ? $raw_settings['lockout_time'] : 15,
         );
         
-        error_log('Modify Login: enable_tracking value: ' . (isset($raw_settings['enable_tracking']) ? var_export($raw_settings['enable_tracking'], true) : 'not set'));
-        error_log('Modify Login: Final settings with defaults: ' . print_r($default_settings, true));
+        //error_log('Modify Login: enable_tracking value: ' . (isset($raw_settings['enable_tracking']) ? var_export($raw_settings['enable_tracking'], true) : 'not set'));
+       // error_log('Modify Login: Final settings with defaults: ' . print_r($default_settings, true));
         
         return $default_settings;
     }
