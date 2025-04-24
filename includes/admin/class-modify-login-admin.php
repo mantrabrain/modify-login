@@ -168,23 +168,55 @@ class Modify_Login_Admin {
             array($this, 'display_logs_page')
         );
 
-        add_submenu_page(
-            'modify-login',
-            __('Login Builder', 'modify-login'),
-            __('Login Builder', 'modify-login'),
-            'manage_options',
-            'modify-login-builder',
-            array($this, 'display_builder_page')
-        );
+        // Design tab removed as requested
     }
 
     /**
      * Display the admin page.
      */
     public function display_admin_page() {
-        // Save settings if form is submitted
-        if (isset($_POST['modify_login_settings_nonce']) && wp_verify_nonce($_POST['modify_login_settings_nonce'], 'modify_login_save_settings')) {
-            $this->save_settings();
+        $success_message = '';
+        $error_message = '';
+        $active_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'general';
+
+        // Check if form was submitted
+        if (isset($_POST['modify_login_save_settings_submit'])) {
+            // Verify nonce
+            if (isset($_POST['modify_login_settings_nonce']) && wp_verify_nonce($_POST['modify_login_settings_nonce'], 'modify_login_save_settings')) {
+                try {
+                    // Get the active tab from the submission
+                    $active_tab = isset($_POST['active_tab']) ? sanitize_text_field($_POST['active_tab']) : 'general';
+                    
+                    // Save settings directly
+                    $settings = array(
+                        // General Settings
+                        'login_redirect_url' => isset($_POST['login_redirect_url']) ? esc_url_raw($_POST['login_redirect_url']) : '',
+                        'logout_redirect_url' => isset($_POST['logout_redirect_url']) ? esc_url_raw($_POST['logout_redirect_url']) : '',
+                        
+                        // Security Settings
+                        'login_endpoint' => isset($_POST['login_endpoint']) ? sanitize_text_field($_POST['login_endpoint']) : '',
+                        'enable_redirect' => isset($_POST['enable_redirect']) ? true : false,
+                        'redirect_url' => isset($_POST['redirect_url']) ? esc_url_raw($_POST['redirect_url']) : '',
+                        
+                        // reCAPTCHA Settings
+                        'enable_recaptcha' => isset($_POST['enable_recaptcha']) ? 'yes' : 'no',
+                        'recaptcha_site_key' => isset($_POST['recaptcha_site_key']) ? sanitize_text_field($_POST['recaptcha_site_key']) : '',
+                        'recaptcha_secret_key' => isset($_POST['recaptcha_secret_key']) ? sanitize_text_field($_POST['recaptcha_secret_key']) : '',
+                    );
+                    
+                    // Update settings in database
+                    update_option('modify_login_settings', $settings);
+                    
+                    // Set success message
+                    $success_message = __('Settings saved successfully.', 'modify-login');
+                } catch (Exception $e) {
+                    // Set error message if something went wrong
+                    $error_message = $e->getMessage();
+                }
+            } else {
+                // Nonce verification failed
+                $error_message = __('Security verification failed. Please try again.', 'modify-login');
+            }
         }
 
         // Get current settings
@@ -305,6 +337,9 @@ class Modify_Login_Admin {
             'logout_redirect_url' => '',
             
             // Security Settings
+            'login_endpoint' => '',
+            'enable_redirect' => false,
+            'redirect_url' => '',
             'enable_recaptcha' => 'no',
             'recaptcha_site_key' => '',
             'recaptcha_secret_key' => '',

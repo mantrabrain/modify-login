@@ -4,6 +4,30 @@ jQuery(document).ready(function($) {
     // Initialize color pickers
     $('input[type="color"]').wpColorPicker();
 
+    // Tab switching functionality
+    $('.tab-link').on('click', function(e) {
+        e.preventDefault();
+        var targetTab = $(this).data('tab');
+        
+        // Update hidden field with current tab
+        $('#active_tab').val(targetTab);
+        
+        // Show the target panel, hide others
+        $('.tab-panel').addClass('hidden');
+        $('#' + targetTab).removeClass('hidden');
+        
+        // Update active state on tabs
+        $('.tab-link').removeClass('text-gray-900 bg-gray-100').addClass('text-gray-600 hover:text-gray-900 hover:bg-gray-50').removeAttr('aria-current');
+        $(this).removeClass('text-gray-600 hover:text-gray-900 hover:bg-gray-50').addClass('text-gray-900 bg-gray-100').attr('aria-current', 'page');
+    });
+    
+    // Auto-hide success message after 5 seconds
+    if ($('#success-message').length) {
+        setTimeout(function() {
+            $('#success-message').fadeOut('slow');
+        }, 5000);
+    }
+
     // Initialize WordPress Media Uploader
     let mediaUploader;
     $('.upload-media-button').on('click', function(e) {
@@ -145,21 +169,5 @@ jQuery(document).ready(function($) {
         var $preview = $($button.data('preview'));
         
         $preview.slideToggle();
-    });
-
-    // Tab functionality
-    $('.nav-tab').on('click', function(e) {
-        e.preventDefault();
-        
-        var $tab = $(this);
-        var target = $tab.data('target');
-        
-        // Update active tab
-        $('.nav-tab').removeClass('nav-tab-active');
-        $tab.addClass('nav-tab-active');
-        
-        // Show target section
-        $('.tab-content').hide();
-        $(target).show();
     });
 }); 
