@@ -1,8 +1,76 @@
-/svn-repository/
-node_modules/
+# Operating System files
 .DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editor files
+*.sublime-project
+*.sublime-workspace
+*.komodoproject
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# Node.js
+/node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+/package-lock.json
+/yarn.lock
+
+# Composer
+/vendor/
+composer.lock
+
+# Build output
+/build/
+/dist/
+/assets/dist/
+*.zip
+*.tar.gz
+*.log
+
+# Environment files
 .env
-.env.local
+.env.*
+!.env.example
+
+# WordPress specific
+/wp-content/
+/logs/
+/db-dumps/
+
+# Development files
+.phpunit.result.cache
+.phpcs.cache
+phpunit.xml
+phpcs.xml
+/phpcs.xml.dist
+/README.md
+/CHANGELOG.md
+/CONTRIBUTING.md
+/LICENSE
+
+# Misc
+*.map
+*.backup
+*.bak
+*.tmp
+.sass-cache/
+/coverage/
+/tests/coverage/
+.cache/
+.well-known/
+.php_cs
+.php_cs.cache
+Gemfile.lock
+Gruntfile.js
+Gulpfile.js
+gulpfile.babel.js
+webpack.config.js
+babel.config.js
+jest.config.js
 
