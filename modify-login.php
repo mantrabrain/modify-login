@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('MODIFY_LOGIN_VERSION', '2.0.0');
+define('MODIFY_LOGIN_VERSION', '2.0.1');
 define('MODIFY_LOGIN_FILE', __FILE__);
 define('MODIFY_LOGIN_PATH', plugin_dir_path(__FILE__));
 define('MODIFY_LOGIN_URL', plugin_dir_url(__FILE__));

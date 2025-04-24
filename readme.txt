@@ -5,7 +5,7 @@ Tags: custom login, hide wp-login, login security, login page, login customizer
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -83,13 +83,13 @@ Secure WordPress login with custom URL, protect wp-admin, and design beautiful l
 
 = What is the default login endpoint? =
 
-The plugin comes with "setup" as the default login endpoint. Your login URL will be: yourdomain.com/setup
+The plugin comes with "setup" as the default login endpoint. Your login URL will be: yourdomain.com/setup or yourdomain.com/?setup [ Depend Upon your permalink]
 
 You can easily change this to any text you prefer in the Settings > Modify Login page.
 
 = How do I access the login page after enabling the custom login URL? =
 
-After activating the plugin, you can access your login page at: yourdomain.com/setup
+After activating the plugin, you can access your login page at: yourdomain.com/setup or yourdomain.com/?setup [ Depend upon your permalink structure ]
 
 If you've changed the default endpoint to something else, you'll need to use that instead (e.g., yourdomain.com/your-custom-endpoint).
 
@@ -165,7 +165,7 @@ If your custom login URL stops working, try these troubleshooting steps:
 
 If you forget your custom login endpoint, you have several options to regain access:
 
-1. **Try the default endpoint**: First, try using the default "setup" endpoint (yourdomain.com/setup) as it may still work if you haven't changed it.
+1. **Try the default endpoint**: First, try using the default "setup" endpoint (yourdomain.com/setup or yourdomain.com/?setup [As per your permalink structure]) as it may still work if you haven't changed it.
 
 2. **Check the database**: Your login endpoint is stored in the WordPress options table. If you have database access, you can find it in the `modify_login_settings` option or `modify_login_login_endpoint` option.
 
@@ -191,7 +191,7 @@ Always remember to keep a secure record of your custom login endpoint in a passw
 
 == Changelog ==
 
-= 2.0.0 - 2025-04-24 =
+= 2.0.1 - 2025-04-24 =
 * Added: Complete UI redesign with modern interface
 * Added: Visual login page builder with live preview
 * Added: Background image customization with opacity, position and size controls
@@ -206,30 +206,4 @@ Always remember to keep a secure record of your custom login endpoint in a passw
 * Improved: Code architecture and performance optimization
 * Improved: Documentation and user guidance
 * Fixed: Various bugs and compatibility issues
-
-= 1.1 - 2023-12-17 =
-* Added: Redirect URL for unauthorized access
-* Fixed: WordPress 6.4 compatibility check
-
-= 1.0.5 - 2022-05-27 =
-* Version compatibility tested
-
-= 1.0.4 - 2021-07-24 =
-* Version compatibility tested
-
-= 1.0.3 - 2021-04-03 =
-* Version compatibility tested
-
-= 1.0.2 - 2020-09-01 =
-* Version compatibility tested
-
-= 1.0.1 - 2019-08-29 =
-* Initial Version released
-
-== Upgrade Notice ==
-
-= 2.0.0 =
-Major update with completely redesigned interface, visual login page builder, and many new features! Please backup your site before upgrading.
-
-= 1.1 =
-Added redirect URL feature for unauthorized access attempts and WordPress 6.4 compatibility.
+* Fixed: Plain permalink issue resolved
