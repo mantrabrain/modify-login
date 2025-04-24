@@ -229,6 +229,10 @@ class Modify_Login_Admin {
         $settings = array(
             'background_color' => get_option('modify_login_background_color', '#ffffff'),
             'background_image' => get_option('modify_login_background_image', ''),
+            'background_size' => get_option('modify_login_background_size', 'cover'),
+            'background_position' => get_option('modify_login_background_position', 'center center'),
+            'background_repeat' => get_option('modify_login_background_repeat', 'no-repeat'),
+            'background_opacity' => get_option('modify_login_background_opacity', 1),
             'logo_url' => get_option('modify_login_logo_url', ''),
             'form_background' => get_option('modify_login_form_background', '#ffffff'),
             'form_border_radius' => get_option('modify_login_form_border_radius', '4px'),
@@ -236,6 +240,9 @@ class Modify_Login_Admin {
             'button_color' => get_option('modify_login_button_color', '#0073aa'),
             'button_text_color' => get_option('modify_login_button_text_color', '#ffffff'),
             'custom_css' => get_option('modify_login_custom_css', ''),
+            'label_color' => get_option('modify_login_label_color', '#444444'),
+            'link_color' => get_option('modify_login_link_color', '#0073aa'),
+            'link_hover_color' => get_option('modify_login_link_hover_color', '#00a0d2'),
         );
 
         // Include the builder template

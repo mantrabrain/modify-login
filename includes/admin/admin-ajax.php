@@ -50,6 +50,10 @@ class Modify_Login_Admin_Ajax {
         $settings = array(
             'background_color' => isset($_POST['background_color']) ? sanitize_hex_color($_POST['background_color']) : '#ffffff',
             'background_image' => isset($_POST['background_image']) ? esc_url_raw($_POST['background_image']) : '',
+            'background_size' => isset($_POST['background_size']) ? sanitize_text_field($_POST['background_size']) : 'cover',
+            'background_position' => isset($_POST['background_position']) ? sanitize_text_field($_POST['background_position']) : 'center center',
+            'background_repeat' => isset($_POST['background_repeat']) ? sanitize_text_field($_POST['background_repeat']) : 'no-repeat',
+            'background_opacity' => isset($_POST['background_opacity']) ? floatval($_POST['background_opacity']) : 1,
             'logo_url' => isset($_POST['logo_url']) ? esc_url_raw($_POST['logo_url']) : '',
             'form_background' => isset($_POST['form_background']) ? sanitize_hex_color($_POST['form_background']) : '#ffffff',
             'form_border_radius' => isset($_POST['form_border_radius']) ? sanitize_text_field($_POST['form_border_radius']) : '4px',
@@ -57,6 +61,9 @@ class Modify_Login_Admin_Ajax {
             'button_color' => isset($_POST['button_color']) ? sanitize_hex_color($_POST['button_color']) : '#0073aa',
             'button_text_color' => isset($_POST['button_text_color']) ? sanitize_hex_color($_POST['button_text_color']) : '#ffffff',
             'custom_css' => isset($_POST['custom_css']) ? wp_strip_all_tags($_POST['custom_css']) : '',
+            'label_color' => isset($_POST['label_color']) ? sanitize_hex_color($_POST['label_color']) : '#444444',
+            'link_color' => isset($_POST['link_color']) ? sanitize_hex_color($_POST['link_color']) : '#0073aa',
+            'link_hover_color' => isset($_POST['link_hover_color']) ? sanitize_hex_color($_POST['link_hover_color']) : '#00a0d2',
         );
 
         // Save each setting
@@ -226,6 +233,7 @@ class Modify_Login_Admin_Ajax {
             'background_size' => 'cover',
             'background_position' => 'center center',
             'background_repeat' => 'no-repeat',
+            'background_opacity' => 1,
             'logo_url' => '',
             'logo_width' => '84px',
             'logo_height' => '84px',
@@ -236,6 +244,9 @@ class Modify_Login_Admin_Ajax {
             'button_color' => '#0073aa',
             'button_text_color' => '#ffffff',
             'custom_css' => '',
+            'label_color' => '#444444',
+            'link_color' => '#0073aa',
+            'link_hover_color' => '#00a0d2',
         );
 
         // Delete and reset all builder settings

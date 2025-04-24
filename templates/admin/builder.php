@@ -22,6 +22,24 @@ if (!defined('ABSPATH')) {
             </div>
             
             <div class="panel-content flex-1 overflow-y-auto p-5">
+                <!-- Links Card -->
+                <div class="card bg-white border border-gray-200 rounded-lg mb-5 transition-shadow hover:shadow">
+                    <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2.5">
+                        <span class="dashicons dashicons-admin-links text-gray-500 text-lg w-5 h-5"></span>
+                        <h3 class="text-sm font-semibold text-gray-800 m-0"><?php _e('Links', 'modify-login'); ?></h3>
+                    </div>
+                    <div class="p-4">
+                        <div class="form-group mb-4">
+                            <label for="link_color" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Link Color', 'modify-login'); ?></label>
+                            <input type="text" id="link_color" name="link_color" value="<?php echo isset($settings['link_color']) ? esc_attr($settings['link_color']) : ''; ?>" class="color-picker" data-default-color="#0073aa">
+                        </div>
+                        <div class="form-group mb-4 last:mb-0">
+                            <label for="link_hover_color" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Link Hover Color', 'modify-login'); ?></label>
+                            <input type="text" id="link_hover_color" name="link_hover_color" value="<?php echo isset($settings['link_hover_color']) ? esc_attr($settings['link_hover_color']) : ''; ?>" class="color-picker" data-default-color="#00a0d2">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Background Card -->
                 <div class="card bg-white border border-gray-200 rounded-lg mb-5 transition-shadow hover:shadow">
                     <div class="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center gap-2.5">
@@ -106,6 +124,17 @@ if (!defined('ABSPATH')) {
                                             <option value="repeat-x"><?php _e('Repeat X', 'modify-login'); ?></option>
                                             <option value="repeat-y"><?php _e('Repeat Y', 'modify-login'); ?></option>
                                         </select>
+                                    </div>
+                                    <div class="form-group mb-4 last:mb-0">
+                                        <label for="background_opacity" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Opacity', 'modify-login'); ?></label>
+                                        <div class="opacity-slider-container">
+                                            <div class="opacity-slider-track">
+                                                <div class="opacity-slider-fill"></div>
+                                                <div class="opacity-slider-handle" tabindex="0"></div>
+                                            </div>
+                                            <input type="hidden" id="background_opacity" name="background_opacity" value="<?php echo isset($settings['background_opacity']) ? esc_attr($settings['background_opacity']) : '1'; ?>">
+                                            <span class="opacity-value text-sm font-medium ml-3" id="background_opacity_value">100%</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -192,17 +221,21 @@ if (!defined('ABSPATH')) {
                         <h3 class="text-sm font-semibold text-gray-800 m-0"><?php _e('Form', 'modify-login'); ?></h3>
                     </div>
                     <div class="p-4">
-                        <div class="form-group mb-4 last:mb-0">
-                            <label for="form_background" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Form Background', 'modify-login'); ?></label>
+                        <div class="form-group mb-4">
+                            <label for="form_background" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Background', 'modify-login'); ?></label>
                             <input type="text" id="form_background" name="form_background" value="<?php echo esc_attr($settings['form_background']); ?>" class="color-picker" data-default-color="#ffffff">
                         </div>
-                        <div class="form-group mb-4 last:mb-0">
+                        <div class="form-group mb-4">
                             <label for="form_border_radius" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Border Radius', 'modify-login'); ?></label>
                             <input type="text" id="form_border_radius" name="form_border_radius" value="<?php echo esc_attr($settings['form_border_radius']); ?>" class="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 bg-white transition-all hover:border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
                         </div>
-                        <div class="form-group mb-4 last:mb-0">
+                        <div class="form-group mb-4">
                             <label for="form_padding" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Padding', 'modify-login'); ?></label>
                             <input type="text" id="form_padding" name="form_padding" value="<?php echo esc_attr($settings['form_padding']); ?>" class="w-full px-3 py-2.5 border border-gray-300 rounded-md text-sm text-gray-800 bg-white transition-all hover:border-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <div class="form-group mb-4">
+                            <label for="label_color" class="block mb-2 text-sm font-medium text-gray-700"><?php _e('Label Color', 'modify-login'); ?></label>
+                            <input type="text" id="label_color" name="label_color" value="<?php echo isset($settings['label_color']) ? esc_attr($settings['label_color']) : ''; ?>" class="color-picker" data-default-color="#444444">
                         </div>
                     </div>
                 </div>

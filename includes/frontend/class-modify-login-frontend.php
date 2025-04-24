@@ -86,88 +86,154 @@ class Modify_Login_Frontend {
      * Add custom styles to the login page.
      */
     public function custom_login_styles() {
-        // Get all saved settings
-        $background_color = get_option('modify_login_background_color', '#ffffff');
-        $background_image = get_option('modify_login_background_image', '');
-        $background_size = get_option('modify_login_background_size', 'cover');
-        $background_position = get_option('modify_login_background_position', 'center center');
-        $background_repeat = get_option('modify_login_background_repeat', 'no-repeat');
+        // Get all saved settings without default values
+        $background_color = get_option('modify_login_background_color');
+        $background_image = get_option('modify_login_background_image');
+        $background_size = get_option('modify_login_background_size');
+        $background_position = get_option('modify_login_background_position');
+        $background_repeat = get_option('modify_login_background_repeat');
+        $background_opacity = get_option('modify_login_background_opacity', 1);
         
-        $logo_url = get_option('modify_login_logo_url', '');
-        $logo_width = get_option('modify_login_logo_width', '84px');
-        $logo_height = get_option('modify_login_logo_height', '84px');
-        $logo_position = get_option('modify_login_logo_position', 'center');
+        $logo_url = get_option('modify_login_logo_url');
+        $logo_width = get_option('modify_login_logo_width');
+        $logo_height = get_option('modify_login_logo_height');
+        $logo_position = get_option('modify_login_logo_position');
         
-        $form_background = get_option('modify_login_form_background', '#ffffff');
-        $form_border_radius = get_option('modify_login_form_border_radius', '4px');
-        $form_padding = get_option('modify_login_form_padding', '20px');
+        $form_background = get_option('modify_login_form_background');
+        $form_border_radius = get_option('modify_login_form_border_radius');
+        $form_padding = get_option('modify_login_form_padding');
         
-        $button_color = get_option('modify_login_button_color', '#0073aa');
-        $button_text_color = get_option('modify_login_button_text_color', '#ffffff');
+        $button_color = get_option('modify_login_button_color');
+        $button_text_color = get_option('modify_login_button_text_color');
         
-        $custom_css = get_option('modify_login_custom_css', '');
+        // New color options
+        $link_color = get_option('modify_login_link_color');
+        $link_hover_color = get_option('modify_login_link_hover_color');
+        $label_color = get_option('modify_login_label_color');
+        
+        $custom_css = get_option('modify_login_custom_css');
 
         // Output styles
-        echo '<style type="text/css">';
+        echo '<style type="text/css" id="modify-login-custom-css">';
         
         // Background styles
         echo 'body.login {';
-        echo 'background-color: ' . esc_attr($background_color) . ';';
-        if (!empty($background_image)) {
-            echo 'background-image: url(' . esc_url($background_image) . ');';
-            echo 'background-size: ' . esc_attr($background_size) . ';';
-            echo 'background-position: ' . esc_attr($background_position) . ';';
-            echo 'background-repeat: ' . esc_attr($background_repeat) . ';';
+        if (!empty($background_color)) {
+            echo 'background-color: ' . esc_attr($background_color) . ';';
         }
-        echo '}';
+        if (!empty($background_image)) {
+            echo 'position: relative;'; // Add position relative for the pseudo-element
+            echo '}';
+            
+            // Create a pseudo-element for the background image with opacity
+            echo 'body.login::before {';
+            echo 'content: "";';
+            echo 'position: absolute;';
+            echo 'top: 0;';
+            echo 'left: 0;';
+            echo 'width: 100%;';
+            echo 'height: 100%;';
+            echo 'background-image: url(' . esc_url($background_image) . ');';
+            if (!empty($background_size)) {
+                echo 'background-size: ' . esc_attr($background_size) . ';';
+            }
+            if (!empty($background_position)) {
+                echo 'background-position: ' . esc_attr($background_position) . ';';
+            }
+            if (!empty($background_repeat)) {
+                echo 'background-repeat: ' . esc_attr($background_repeat) . ';';
+            }
+            echo 'opacity: ' . esc_attr($background_opacity) . ';';
+            echo 'z-index: -1;';
+        } else {
+            echo '}';
+        }
 
         // Logo styles
-        echo '.login h1 a {';
         if (!empty($logo_url)) {
+            echo '.login h1 a {';
             echo 'background-image: url(' . esc_url($logo_url) . ') !important;';
-            echo 'width: ' . esc_attr($logo_width) . ' !important;';
-            echo 'height: ' . esc_attr($logo_height) . ' !important;';
+            if (!empty($logo_width)) {
+                echo 'width: ' . esc_attr($logo_width) . ' !important;';
+            }
+            if (!empty($logo_height)) {
+                echo 'height: ' . esc_attr($logo_height) . ' !important;';
+            }
             echo 'background-size: contain !important;';
             echo 'background-position: center !important;';
             echo 'background-repeat: no-repeat !important;';
             echo 'text-indent: -9999px !important;';
-            echo 'text-align: ' . esc_attr($logo_position) . ' !important;';
+            if (!empty($logo_position)) {
+                echo 'text-align: ' . esc_attr($logo_position) . ' !important;';
+            }
             echo 'margin: 0 auto 25px auto !important;';
+            echo '}';
         }
-        echo '}';
 
-        // Form styles
-        echo '#login {';
-        echo 'width: 320px;';
-        echo 'padding: 8% 0 0;';
-        echo 'margin: auto;';
-        echo '}';
+        // Only output form styles if at least one property is set
+        if (!empty($form_background) || !empty($form_border_radius) || !empty($form_padding)) {
+            echo '.login form {';
+            if (!empty($form_background)) {
+                echo 'background: ' . esc_attr($form_background) . ' !important;';
+            }
+            if (!empty($form_border_radius)) {
+                echo 'border-radius: ' . esc_attr($form_border_radius) . ' !important;';
+            }
+            if (!empty($form_padding)) {
+                echo 'padding: ' . esc_attr($form_padding) . ' !important;';
+            }
+            echo 'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);';
+            echo '}';
+        }
+
+        // Form Label Color
+        if (!empty($label_color)) {
+            echo '.login form label {';
+            echo 'color: ' . esc_attr($label_color) . ' !important;';
+            echo '}';
+        }
         
-        echo '.login form {';
-        echo 'background: ' . esc_attr($form_background) . ' !important;';
-        echo 'border-radius: ' . esc_attr($form_border_radius) . ' !important;';
-        echo 'padding: ' . esc_attr($form_padding) . ' !important;';
-        echo 'box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13);';
-        echo '}';
-
         // Button styles
-        echo '.wp-core-ui .button-primary {';
-        echo 'background: ' . esc_attr($button_color) . ' !important;';
-        echo 'border-color: ' . esc_attr($button_color) . ' !important;';
-        echo 'color: ' . esc_attr($button_text_color) . ' !important;';
-        echo 'text-decoration: none;';
-        echo 'text-shadow: none;';
-        echo '}';
+        if (!empty($button_color) || !empty($button_text_color)) {
+            echo '.wp-core-ui .button-primary {';
+            if (!empty($button_color)) {
+                echo 'background: ' . esc_attr($button_color) . ' !important;';
+                echo 'border-color: ' . esc_attr($button_color) . ' !important;';
+            }
+            if (!empty($button_text_color)) {
+                echo 'color: ' . esc_attr($button_text_color) . ' !important;';
+            }
+            echo 'text-decoration: none;';
+            echo 'text-shadow: none;';
+            echo '}';
+        }
 
-        echo '.wp-core-ui .button-primary:hover, .wp-core-ui .button-primary:focus {';
-        echo 'background: ' . esc_attr($this->adjust_brightness($button_color, -10)) . ' !important;';
-        echo 'border-color: ' . esc_attr($this->adjust_brightness($button_color, -10)) . ' !important;';
-        echo '}';
-
-        // Message styling
-        echo '.login .message, .login .success {';
-        echo 'border-left: 4px solid ' . esc_attr($button_color) . ';';
-        echo '}';
+        // Only add hover styles if button color is set
+        if (!empty($button_color)) {
+            echo '.wp-core-ui .button-primary:hover, .wp-core-ui .button-primary:focus {';
+            echo 'background: ' . esc_attr($this->adjust_brightness($button_color, -10)) . ' !important;';
+            echo 'border-color: ' . esc_attr($this->adjust_brightness($button_color, -10)) . ' !important;';
+            echo '}';
+            
+            // Message styling - only if button color is set
+            echo '.login .message, .login .success {';
+            echo 'border-left: 4px solid ' . esc_attr($button_color) . ';';
+            echo '}';
+        }
+        
+        // Link Colors
+        if (!empty($link_color)) {
+            echo '.login a, .login #nav a, .login #backtoblog a {';
+            echo 'color: ' . esc_attr($link_color) . ' !important;';
+            echo '}';
+        }
+        
+        // Link Hover Colors
+        if (!empty($link_hover_color)) {
+            echo '.login a:hover, .login #nav a:hover, .login #backtoblog a:hover {';
+            echo 'color: ' . esc_attr($link_hover_color) . ' !important;';
+            echo '}';
+        }
         
         // Add user's custom CSS
         if (!empty($custom_css)) {

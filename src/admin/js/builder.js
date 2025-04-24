@@ -10,6 +10,7 @@ jQuery(document).ready(function($) {
         background_size: 'cover',
         background_position: 'center center',
         background_repeat: 'no-repeat',
+        background_opacity: 1,
         logo_url: '',
         logo_width: '84px',
         logo_height: '84px',
@@ -19,7 +20,10 @@ jQuery(document).ready(function($) {
         form_padding: '20px',
         button_color: '#0073aa',
         button_text_color: '#ffffff',
-        custom_css: ''
+        custom_css: '',
+        link_color: '',
+        link_hover_color: '',
+        label_color: ''
     };
     
     // Initialize each color picker input
@@ -214,6 +218,119 @@ jQuery(document).ready(function($) {
         });
     });
     
+    // Initialize opacity slider
+    initializeOpacitySlider();
+    
+    function initializeOpacitySlider() {
+        const container = $('.opacity-slider-container');
+        const track = $('.opacity-slider-track');
+        const fill = $('.opacity-slider-fill');
+        const handle = $('.opacity-slider-handle');
+        const input = $('#background_opacity');
+        const valueDisplay = $('#background_opacity_value');
+        
+        // Set initial position
+        const initialValue = parseFloat(input.val());
+        updateSliderPosition(initialValue);
+        
+        // Update the slider UI
+        function updateSliderPosition(value) {
+            // Ensure value is between 0 and 1
+            value = Math.max(0, Math.min(1, value));
+            
+            // Calculate the position percentage
+            const percent = value * 100;
+            
+            // Update the fill and handle positions
+            fill.css('width', `${percent}%`);
+            handle.css('left', `${percent}%`);
+            handle.css('right', 'auto');
+            handle.css('transform', 'translate(-50%, -50%)');
+            
+            // Update the input value and display
+            input.val(value);
+            valueDisplay.text(`${Math.round(percent)}%`);
+        }
+        
+        // Handle mouse/touch down on track
+        track.on('mousedown touchstart', function(e) {
+            e.preventDefault();
+            handleSliderInteraction(e);
+            
+            // Add mouse/touch move and up events
+            $(document).on('mousemove touchmove', handleSliderInteraction);
+            $(document).on('mouseup touchend', function() {
+                $(document).off('mousemove touchmove', handleSliderInteraction);
+                $(document).off('mouseup touchend');
+            });
+        });
+        
+        // Handle mouse/touch down on handle
+        handle.on('mousedown touchstart', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Add mouse/touch move and up events
+            $(document).on('mousemove touchmove', handleSliderInteraction);
+            $(document).on('mouseup touchend', function() {
+                $(document).off('mousemove touchmove', handleSliderInteraction);
+                $(document).off('mouseup touchend');
+            });
+        });
+        
+        // Process mouse/touch interaction
+        function handleSliderInteraction(e) {
+            // Get mouse/touch position
+            let clientX;
+            if (e.type === 'touchmove' || e.type === 'touchstart') {
+                clientX = e.originalEvent.touches[0].clientX;
+            } else {
+                clientX = e.clientX;
+            }
+            
+            // Get track dimensions and position
+            const trackRect = track[0].getBoundingClientRect();
+            
+            // Calculate value based on position
+            let value = (clientX - trackRect.left) / trackRect.width;
+            
+            // Constrain value between 0 and 1
+            value = Math.max(0, Math.min(1, value));
+            
+            // Update slider and trigger change
+            updateSliderPosition(value);
+            updatePreview();
+        }
+        
+        // Keyboard accessibility
+        handle.on('keydown', function(e) {
+            let value = parseFloat(input.val());
+            
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'ArrowUp':
+                    value = Math.min(1, value + 0.01);
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowDown':
+                    value = Math.max(0, value - 0.01);
+                    break;
+                case 'Home':
+                    value = 0;
+                    break;
+                case 'End':
+                    value = 1;
+                    break;
+                default:
+                    return;
+            }
+            
+            e.preventDefault();
+            updateSliderPosition(value);
+            updatePreview();
+        });
+    }
+    
     // Handle all image property toggle buttons - Keep popovers within their parent containers
     $('.toggle-image-properties').on('click', function(e) {
         e.preventDefault();
@@ -301,61 +418,111 @@ jQuery(document).ready(function($) {
         // Apply settings to preview iframe
         const previewDoc = preview[0].contentDocument || preview[0].contentWindow.document;
         const style = previewDoc.createElement('style');
+        style.id = 'modify-login-custom-css';
+        const customCss = previewDoc.getElementById('modify-login-custom-css');
         
         // Generate CSS based on current settings
         let css = `
             body.login {
-                ${settings.background_color ? `background-color: ${settings.background_color};` : ''}
-                ${settings.background_image ? `
-                    background-image: url('${settings.background_image}');
-                    background-size: ${settings.background_size || 'cover'};
-                    background-position: ${settings.background_position || 'center center'};
-                    background-repeat: ${settings.background_repeat || 'no-repeat'};
-                ` : 'background-image: none;'}
+                ${settings.background_color ? `background-color: ${settings.background_color} !important;` : ''}
+                ${settings.background_image ? `position: relative !important;` : ''}
             }
-            #login {
-                ${settings.form_background ? `background: ${settings.form_background};` : ''}
-                ${settings.form_border_radius ? `border-radius: ${settings.form_border_radius};` : ''}
-                ${settings.form_padding ? `padding: ${settings.form_padding};` : ''}
+            
+            ${settings.background_image ? `
+                body.login::before {
+                    content: "" !important;
+                    position: absolute !important;
+                    top: 0 !important;
+                    left: 0 !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-image: url('${settings.background_image}') !important;
+                    ${settings.background_size ? `background-size: ${settings.background_size} !important;` : ''}
+                    ${settings.background_position ? `background-position: ${settings.background_position} !important;` : ''}
+                    ${settings.background_repeat ? `background-repeat: ${settings.background_repeat} !important;` : ''}
+                    opacity: ${settings.background_opacity} !important;
+                    z-index: -1 !important;
+                }
+            ` : ''}
+            .login form {
+                ${settings.form_background ? `background: ${settings.form_background} !important;` : ''}
+                ${settings.form_border_radius ? `border-radius: ${settings.form_border_radius} !important;` : ''}
+                ${settings.form_padding ? `padding: ${settings.form_padding} !important;` : ''}
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.13) !important;
             }
             .wp-core-ui .button-primary {
-                ${settings.button_color ? `background: ${settings.button_color}; border-color: ${settings.button_color};` : ''}
-                ${settings.button_text_color ? `color: ${settings.button_text_color};` : ''}
+                ${settings.button_color ? `background: ${settings.button_color} !important; border-color: ${settings.button_color} !important;` : ''}
+                ${settings.button_text_color ? `color: ${settings.button_text_color} !important;` : ''}
+                text-decoration: none !important;
+                text-shadow: none !important;
             }
+            
+            /* Link Colors */
+            ${settings.link_color ? `.login a, .login #nav a, .login #backtoblog a {
+                color: ${settings.link_color} !important;
+            }` : ''}
+            
+            /* Link Hover Colors */
+            ${settings.link_hover_color ? `.login a:hover, .login #nav a:hover, .login #backtoblog a:hover {
+                color: ${settings.link_hover_color} !important;
+            }` : ''}
+            
+            /* Form Label Colors */
+            ${settings.label_color ? `.login form label {
+                color: ${settings.label_color} !important;
+            }` : ''}
         `;
+
         
         // Add logo styles if logo is set
         if (settings.logo_url) {
             css += `
                 .login h1 a {
-                    background-image: url('${settings.logo_url}');
-                    ${settings.logo_width ? `width: ${settings.logo_width};` : ''}
-                    ${settings.logo_height ? `height: ${settings.logo_height};` : ''}
-                    background-size: contain;
-                    background-position: center;
-                    background-repeat: no-repeat;
-                    text-indent: -9999px;
-                    ${settings.logo_position ? `text-align: ${settings.logo_position};` : ''}
-                }
-            `;
-        } else {
-            css += `
-                .login h1 a {
-                    background-image: none;
-                    width: auto;
-                    height: auto;
-                    text-indent: 0;
+                    background-image: url('${settings.logo_url}') !important;
+                    ${settings.logo_width ? `width: ${settings.logo_width} !important;` : ''}
+                    ${settings.logo_height ? `height: ${settings.logo_height} !important;` : ''}
+                    background-size: contain !important;
+                    background-position: center !important;
+                    background-repeat: no-repeat !important;
+                    text-indent: -9999px !important;
+                    ${settings.logo_position ? `text-align: ${settings.logo_position} !important;` : ''}
+                    margin: 0 auto 25px auto !important;
                 }
             `;
         }
         
-        // Add custom CSS
+        // Add user's custom CSS
         if (settings.custom_css) {
             css += settings.custom_css;
         }
         
         style.textContent = css;
-        previewDoc.head.appendChild(style);
+        //previewDoc.head.appendChild(style);
+              
+        customCss.innerHTML = css;
+    }
+
+    // Function to adjust color brightness (similar to the PHP version)
+    function adjustBrightness(hex, steps) {
+        // Remove # if present
+        hex = hex.replace('#', '');
+        
+        // Parse the hex color
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Adjust brightness
+        const adjustR = Math.max(0, Math.min(255, r + steps));
+        const adjustG = Math.max(0, Math.min(255, g + steps));
+        const adjustB = Math.max(0, Math.min(255, b + steps));
+        
+        // Convert back to hex
+        const rHex = adjustR.toString(16).padStart(2, '0');
+        const gHex = adjustG.toString(16).padStart(2, '0');
+        const bHex = adjustB.toString(16).padStart(2, '0');
+        
+        return `#${rHex}${gHex}${bHex}`;
     }
 
     // Handle save button
@@ -460,56 +627,65 @@ jQuery(document).ready(function($) {
                 const button = $('#reset-all-button');
                 
                 // Visual feedback
-                button.addClass('opacity-50');
-            
-                // Reset form fields in the UI
-                // Reset all inputs to empty values
-                $('input#background_color').val('').trigger('change');
-                $('input#form_background').val('').trigger('change');
-                $('input#button_color').val('').trigger('change');
-                $('input#button_text_color').val('').trigger('change');
+                button.addClass('opacity-50').prop('disabled', true).text('Resetting...');
                 
-                // Reset image fields
-                $('input#background_image').val('').trigger('change');
-                $('input#logo_url').val('').trigger('change');
-                
-                // Reset select fields - also empty these
-                $('select#background_size').val('').trigger('change');
-                $('select#background_position').val('').trigger('change');
-                $('select#background_repeat').val('').trigger('change');
-                $('select#logo_position').val('').trigger('change');
-                
-                // Reset input text fields - also empty these
-                $('input#form_border_radius').val('').trigger('change');
-                $('input#form_padding').val('').trigger('change');
-                $('input#logo_width').val('').trigger('change');
-                $('input#logo_height').val('').trigger('change');
-                
-                // Reset textarea
-                $('textarea#custom_css').val('').trigger('change');
-                
-                // Hide all image previews and show dropzones
-                $('.image-preview').addClass('hidden');
-                $('.dropzone-area').removeClass('hidden');
-                
-                // Force refresh color pickers UI by manually updating them
-                $('.gutenberg-color-picker-container').each(function(){
-                    const container = $(this);
-                    const hiddenInput = container.prev('input[type="hidden"]');
+                // Reset all form fields to default values using the defaultSettings object
+                Object.keys(defaultSettings).forEach(function(key) {
+                    const input = $(`input#${key}`);
+                    if (input.length) {
+                        input.val(defaultSettings[key]).trigger('change');
+                        
+                        // Update color picker UI for color fields
+                        if (input.prev('.gutenberg-color-picker-container').length) {
+                            const container = input.prev('.gutenberg-color-picker-container');
+                            container.find('.color-picker-button').css('background-color', defaultSettings[key]);
+                            container.find('.color-picker-input').val(defaultSettings[key]);
+                        }
+                    }
                     
-                    // Update color button and text display
-                    container.find('.color-picker-button').css('background-color', 'transparent');
-                    container.find('.color-picker-input').val('');
+                    // Handle select elements
+                    const select = $(`select#${key}`);
+                    if (select.length) {
+                        select.val(defaultSettings[key]).trigger('change');
+                    }
+                    
+                    // Handle textarea elements
+                    const textarea = $(`textarea#${key}`);
+                    if (textarea.length) {
+                        textarea.val(defaultSettings[key]).trigger('change');
+                    }
                 });
+                
+                // Handle background image field
+                if (!defaultSettings.background_image) {
+                    const bgImageInput = $('input#background_image');
+                    bgImageInput.val('').trigger('change');
+                    const imagePreview = bgImageInput.closest('.media-dropzone').find('.image-preview');
+                    const dropzoneArea = bgImageInput.closest('.media-dropzone').find('.dropzone-area');
+                    imagePreview.addClass('hidden');
+                    dropzoneArea.removeClass('hidden');
+                }
+                
+                // Handle logo image field
+                if (!defaultSettings.logo_url) {
+                    const logoInput = $('input#logo_url');
+                    logoInput.val('').trigger('change');
+                    const imagePreview = logoInput.closest('.media-dropzone').find('.image-preview');
+                    const dropzoneArea = logoInput.closest('.media-dropzone').find('.dropzone-area');
+                    imagePreview.addClass('hidden');
+                    dropzoneArea.removeClass('hidden');
+                }
                 
                 // Update preview
                 updatePreview();
                 
-                // Show success notification
-                showNotification('success', 'Form has been reset to default values. Click Save to apply changes.');
-                
                 // Reset button state
-                button.removeClass('opacity-50');
+                setTimeout(function() {
+                    button.removeClass('opacity-50').prop('disabled', false).text('Reset All');
+                    
+                    // Show a notification
+                    showNotification('success', 'Form has been reset to default values. Click Save to apply changes.');
+                }, 500);
             }, 300);
         });
     });
