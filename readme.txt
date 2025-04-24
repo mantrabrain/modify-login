@@ -22,7 +22,7 @@ Secure WordPress login with custom URL, protect wp-admin, and design beautiful l
 
 ### 🔒 Security Features
 
-* **Custom Login URL**: Replace the standard wp-login.php with your custom endpoint (e.g., yourdomain.com/your-secret-login)
+* **Custom Login URL**: Replace the standard wp-login.php with your custom endpoint (e.g., yourdomain.com/setup)
 * **Login Protection**: Block direct access to wp-login.php and wp-admin for non-logged in users
 * **Redirect Protection**: Redirect unauthorized access attempts to a URL of your choice
 * **Google reCAPTCHA Integration**: Add CAPTCHA verification to prevent bot attacks
@@ -59,7 +59,7 @@ Secure WordPress login with custom URL, protect wp-admin, and design beautiful l
 
 ### How It Works
 
-1. Set a custom login URL endpoint in the plugin settings
+1. Set a custom login URL endpoint in the plugin settings (default is "setup")
 2. Optionally enable redirect protection to block direct access to wp-login.php
 3. Customize the login page appearance using the visual builder
 4. Add optional reCAPTCHA verification for enhanced security
@@ -75,7 +75,7 @@ Secure WordPress login with custom URL, protect wp-admin, and design beautiful l
 1. Upload the plugin files to the `/wp-content/plugins/modify-login` directory, or install the plugin through the WordPress plugins screen directly.
 2. Activate the plugin through the 'Plugins' screen in WordPress
 3. Go to Settings > Modify Login to configure the plugin
-4. Set your custom login endpoint (e.g., "login")
+4. The default login endpoint is set to "setup", but you can change it in the settings
 5. Configure additional options as needed
 6. Use the Login Builder to customize the appearance of your login page
 
@@ -83,15 +83,15 @@ Secure WordPress login with custom URL, protect wp-admin, and design beautiful l
 
 = What is the default login endpoint? =
 
-The plugin doesn't set a default login endpoint. You need to enter your own custom endpoint in the Settings > Modify Login page. Once configured, your login URL will be in the format: yourdomain.com/your-custom-endpoint
+The plugin comes with "setup" as the default login endpoint. Your login URL will be: yourdomain.com/setup
 
-This approach allows you to choose a unique endpoint that works best for your site's security needs.
+You can easily change this to any text you prefer in the Settings > Modify Login page.
 
 = How do I access the login page after enabling the custom login URL? =
 
-After setting up your custom login endpoint (e.g., "your-custom-endpoint"), you can access your login page at: yourdomain.com/your-custom-endpoint
+After activating the plugin, you can access your login page at: yourdomain.com/setup
 
-Remember to replace "yourdomain.com" with your actual domain and "your-custom-endpoint" with whatever custom endpoint you've configured in the plugin settings.
+If you've changed the default endpoint to something else, you'll need to use that instead (e.g., yourdomain.com/your-custom-endpoint).
 
 = Will this plugin work on my multisite WordPress installation? =
 
@@ -101,7 +101,7 @@ Yes, Modify Login is fully compatible with WordPress multisite installations. Th
 
 If you can't access your admin dashboard, try these steps:
 
-1. Append your custom login endpoint to your site URL (e.g., yourdomain.com/your-custom-endpoint)
+1. Append the default endpoint to your site URL (e.g., yourdomain.com/setup)
 2. Check your .htaccess file for any conflicting rules
 3. Temporarily disable any security plugins that might be interfering
 4. If all else fails, rename the plugin folder in /wp-content/plugins/ via FTP to deactivate the plugin
@@ -159,19 +159,21 @@ If your custom login URL stops working, try these troubleshooting steps:
 2. Flush your permalink structure (Settings > Permalinks > Save Changes)
 3. Check for plugin conflicts by temporarily disabling other plugins
 4. Verify your .htaccess file is correctly configured
-5. Reset the login endpoint in the plugin settings
+5. Reset the login endpoint to the default "setup" in the plugin settings
 
 = What should I do if I forget my custom login endpoint? =
 
 If you forget your custom login endpoint, you have several options to regain access:
 
-1. **Check the database**: Your login endpoint is stored in the WordPress options table. If you have database access, you can find it in the `modify_login_settings` option or `modify_login_login_endpoint` option.
+1. **Try the default endpoint**: First, try using the default "setup" endpoint (yourdomain.com/setup) as it may still work if you haven't changed it.
 
-2. **Access via FTP/SFTP**: If you have FTP/SFTP access to your server, you can temporarily rename the plugin folder (from 'modify-login' to something like 'modify-login-disabled') to deactivate the plugin. This will restore the default wp-login.php access.
+2. **Check the database**: Your login endpoint is stored in the WordPress options table. If you have database access, you can find it in the `modify_login_settings` option or `modify_login_login_endpoint` option.
 
-3. **Use WP-CLI**: If you have WP-CLI access, you can run `wp option get modify_login_settings` to view your stored settings including the endpoint.
+3. **Access via FTP/SFTP**: If you have FTP/SFTP access to your server, you can temporarily rename the plugin folder (from 'modify-login' to something like 'modify-login-disabled') to deactivate the plugin. This will restore the default wp-login.php access.
 
-4. **Edit wp-config.php**: As a last resort, you can add this line to your wp-config.php file to temporarily disable all plugins:
+4. **Use WP-CLI**: If you have WP-CLI access, you can run `wp option get modify_login_settings` to view your stored settings including the endpoint.
+
+5. **Edit wp-config.php**: As a last resort, you can add this line to your wp-config.php file to temporarily disable all plugins:
    ```php
    define('WP_PLUGIN_DIR', '/tmp/disabled-plugins');
    ```
