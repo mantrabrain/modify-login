@@ -27,7 +27,7 @@ final class Modify_Login
      *
      * @var string
      */
-    public $version = '2.0.0';
+    public $version = MODIFY_LOGIN_VERSION;
 
     /**
      * Admin instance.

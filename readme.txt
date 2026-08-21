@@ -3,9 +3,9 @@ Contributors: MantraBrain
 Donate link: https://mantrabrain.com
 Tags: custom login, hide wp-login, login security, login page, login customizer
 Requires at least: 5.8
-Tested up to: 6.8
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.1
+Stable tag: 2.0.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -191,6 +191,14 @@ Always remember to keep a secure record of your custom login endpoint in a passw
 
 == Changelog ==
 
+= 2.0.2 - 2026/08/21 =
+* Fixed: The 2.0.1 release never reached anyone. WordPress.org reads the version from the `Version:` header in the main plugin file, and that header was still 2.0.0, so the directory kept advertising 2.0.0 and no installation was ever offered the update. The header is now correct, and the version is defined in one place so it cannot drift again.
+* Update: WordPress 7.1 compatibility. Every WordPress function the plugin calls was cross-checked against the 7.1 codebase; none are deprecated or removed.
+* Fixed: The Login Logs screen requested `assets/dist/admin/js/logs.min.js`, which has never existed, producing a 404 on every visit.
+* Fixed: The login page builder appended a timestamp to its asset URLs, so its CSS and JavaScript were re-downloaded on every page load instead of being cached.
+* Fixed: Added the translation template the plugin's `Domain Path` has always pointed at.
+* Update: Raw sources and source maps are no longer shipped in the plugin package.
+
 = 2.0.1 - 2025-04-24 =
 * Added: Complete UI redesign with modern interface
 * Added: Visual login page builder with live preview
@@ -207,3 +215,8 @@ Always remember to keep a secure record of your custom login endpoint in a passw
 * Improved: Documentation and user guidance
 * Fixed: Various bugs and compatibility issues
 * Fixed: Plain permalink issue resolved
+
+== Upgrade Notice ==
+
+= 2.0.2 =
+Important if you are still on 2.0.0: this is the update that finally delivers the 2.0.1 redesign. A stale version header meant 2.0.1 was published but never offered to any site. Also tested up to WordPress 7.1.

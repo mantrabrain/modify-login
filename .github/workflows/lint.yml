@@ -1,0 +1,53 @@
+name: Lint
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  php-syntax:
+    name: PHP ${{ matrix.php }} syntax
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lowest supported version (Requires PHP: 7.4) and a current one.
+        php: ['7.4', '8.4']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+
+      - name: Check syntax
+        run: |
+          find . -path ./node_modules -prune -o -name '*.php' -print0 \
+            | xargs -0 -n1 -P4 php -l
+
+  version-consistency:
+    name: Version headers agree
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # A stale Version header silently stopped the 2.0.1 release from ever being
+      # offered to users, because WordPress.org reads the version from there.
+      - name: Compare plugin header, constant and readme stable tag
+        run: |
+          header=$(sed -n 's/^ \* Version: *//p' modify-login.php | head -1 | tr -d '\r')
+          const=$(sed -n "s/.*MODIFY_LOGIN_VERSION', *'\([^']*\)'.*/\1/p" modify-login.php | head -1)
+          stable=$(sed -n 's/^Stable tag: *//p' readme.txt | head -1 | tr -d '\r')
+          echo "plugin header : $header"
+          echo "version const : $const"
+          echo "readme stable : $stable"
+          if [ "$header" != "$const" ] || [ "$header" != "$stable" ]; then
+            echo "::error::Version mismatch - the plugin header, MODIFY_LOGIN_VERSION and readme.txt Stable tag must all match."
+            exit 1
+          fi
+          echo "All three agree."

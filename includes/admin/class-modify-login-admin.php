@@ -42,7 +42,7 @@ class Modify_Login_Admin {
      * @param string $version The version of this plugin.
      * @return Modify_Login_Admin The singleton instance
      */
-    public static function instance($plugin_name = 'modify-login', $version = '2.0.0') {
+    public static function instance($plugin_name = 'modify-login', $version = MODIFY_LOGIN_VERSION) {
         if (is_null(self::$instance)) {
             self::$instance = new self($plugin_name, $version);
         }
@@ -139,9 +139,17 @@ class Modify_Login_Admin {
             true
         );
         
+        /*
+         * Registered with a false src on purpose: assets/dist/admin/js/logs.min.js
+         * has never existed and cannot be built - there is no src/admin/js/logs.js
+         * for webpack to compile - so pointing at it produced a 404 on every visit
+         * to the logs screen. Keeping the handle registered means the
+         * wp_localize_script() calls against it still work if a script is added
+         * later, without requesting a file that is not there.
+         */
         wp_register_script(
             'modify-login-logs',
-            MODIFY_LOGIN_URL . 'assets/dist/admin/js/logs.min.js',
+            false,
             array('jquery'),
             $this->version,
             true
@@ -324,8 +332,10 @@ class Modify_Login_Admin {
      * Display the builder page.
      */
     public function display_builder_page() {
-        // Force cache invalidation with current timestamp
-        $version = MODIFY_LOGIN_VERSION . '.' . time();
+        // Cache busting is handled by the plugin version, which changes on every
+        // release. Appending time() here meant the builder's CSS and JS were
+        // re-downloaded on every single page load.
+        $version = MODIFY_LOGIN_VERSION;
         
         // Enqueue WordPress component libraries for Gutenberg color picker
         wp_enqueue_script('wp-components');

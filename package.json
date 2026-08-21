@@ -1,6 +1,6 @@
 {
   "name": "modify-login",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "A WordPress plugin to modify login page URL and enhance security.",
   "scripts": {
     "dev": "webpack --mode development --watch",

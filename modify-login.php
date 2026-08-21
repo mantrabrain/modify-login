@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Modify Login
- * Version: 2.0.0
+ * Version: 2.0.2
  * Plugin URI: https://wordpress.org/plugins/modify-login
  * Description: Enhance and customize the default WordPress login experience with modern design, security features, and improved user experience.
  * Author: MantraBrain
@@ -9,6 +9,7 @@
  * Text Domain: modify-login
  * Domain Path: /languages/
  * Requires at least: 5.8
+ * Tested up to: 7.1
  * Requires PHP: 7.4
  */
 
@@ -17,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define plugin constants
-define('MODIFY_LOGIN_VERSION', '2.0.1');
+define('MODIFY_LOGIN_VERSION', '2.0.2');
 define('MODIFY_LOGIN_FILE', __FILE__);
 define('MODIFY_LOGIN_PATH', plugin_dir_path(__FILE__));
 define('MODIFY_LOGIN_URL', plugin_dir_url(__FILE__));

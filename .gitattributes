@@ -2,6 +2,7 @@
 /.wordpress-org export-ignore
 /.github export-ignore
 /node_modules export-ignore
+/src export-ignore
 /vendor export-ignore
 /tests export-ignore
 /bin export-ignore
@@ -40,3 +41,6 @@
 .nvmrc export-ignore
 .prettierrc export-ignore
 .prettierignore export-ignore
+
+# Build inputs and source maps do not belong in the shipped plugin
+*.map export-ignore

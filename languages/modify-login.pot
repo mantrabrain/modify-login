@@ -1,0 +1,679 @@
+# Copyright (C) 2026 MantraBrain
+# This file is distributed under the same license as the Modify Login plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: Modify Login 2.0.2\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/modify-login\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2026-08-21T14:51:02+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: modify-login\n"
+
+#. Plugin Name of the plugin
+#: modify-login.php
+#: includes/admin/class-modify-login-admin.php:215
+#: includes/admin/class-modify-login-admin.php:216
+msgid "Modify Login"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: modify-login.php
+msgid "https://wordpress.org/plugins/modify-login"
+msgstr ""
+
+#. Description of the plugin
+#: modify-login.php
+msgid "Enhance and customize the default WordPress login experience with modern design, security features, and improved user experience."
+msgstr ""
+
+#. Author of the plugin
+#: modify-login.php
+msgid "MantraBrain"
+msgstr ""
+
+#. Author URI of the plugin
+#: modify-login.php
+msgid "https://mantrabrain.com"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:226
+#: includes/admin/class-modify-login-admin.php:227
+msgid "Settings"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:235
+#: includes/admin/class-modify-login-admin.php:236
+#: templates/admin/logs.php:101
+msgid "Login Logs"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:244
+#: includes/admin/class-modify-login-admin.php:245
+msgid "Login Builder"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:292
+msgid "Settings saved successfully."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:299
+msgid "Security verification failed. Please try again."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:319
+msgid "Are you sure you want to clear all logs? This action cannot be undone."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:320
+msgid "Clearing..."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:321
+msgid "All logs have been cleared."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:322
+#: includes/admin/class-modify-login-admin.php:371
+msgid "Error"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:323
+#: includes/admin/class-modify-login-admin.php:372
+#: templates/admin/logs.php:162
+#: templates/admin/logs.php:230
+msgid "Success"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:365
+msgid "Save Changes"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:366
+msgid "Saving..."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:367
+msgid "Settings Saved!"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:368
+msgid "Reset Defaults"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:369
+msgid "Are you sure you want to reset all settings to default values?"
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:370
+msgid "Resetting..."
+msgstr ""
+
+#: includes/admin/class-modify-login-admin.php:439
+msgid "Settings Saved"
+msgstr ""
+
+#: includes/frontend/class-modify-login-frontend.php:345
+msgid "<strong>ERROR</strong>: Please verify that you are not a robot."
+msgstr ""
+
+#: includes/frontend/class-modify-login-frontend.php:371
+msgid "<strong>ERROR</strong>: reCAPTCHA verification failed. Please try again."
+msgstr ""
+
+#: templates/admin/builder.php:12
+msgid "Login Page Builder"
+msgstr ""
+
+#: templates/admin/builder.php:16
+msgid "Save"
+msgstr ""
+
+#: templates/admin/builder.php:18
+msgid "Reset Form"
+msgstr ""
+
+#: templates/admin/builder.php:29
+msgid "Links"
+msgstr ""
+
+#: templates/admin/builder.php:33
+msgid "Link Color"
+msgstr ""
+
+#: templates/admin/builder.php:37
+msgid "Link Hover Color"
+msgstr ""
+
+#: templates/admin/builder.php:47
+#: templates/admin/builder.php:225
+msgid "Background"
+msgstr ""
+
+#: templates/admin/builder.php:51
+msgid "Background Color"
+msgstr ""
+
+#: templates/admin/builder.php:55
+msgid "Background Image"
+msgstr ""
+
+#: templates/admin/builder.php:65
+msgid "Drag & drop an image here"
+msgstr ""
+
+#: templates/admin/builder.php:66
+#: templates/admin/builder.php:164
+msgid "or click to browse"
+msgstr ""
+
+#: templates/admin/builder.php:73
+msgid "Preview"
+msgstr ""
+
+#: templates/admin/builder.php:93
+msgid "Background Image Properties"
+msgstr ""
+
+#: templates/admin/builder.php:98
+msgid "Size"
+msgstr ""
+
+#: templates/admin/builder.php:100
+msgid "Auto"
+msgstr ""
+
+#: templates/admin/builder.php:101
+msgid "Cover"
+msgstr ""
+
+#: templates/admin/builder.php:102
+msgid "Contain"
+msgstr ""
+
+#: templates/admin/builder.php:106
+#: templates/admin/builder.php:204
+msgid "Position"
+msgstr ""
+
+#: templates/admin/builder.php:108
+#: templates/admin/builder.php:206
+msgid "Center"
+msgstr ""
+
+#: templates/admin/builder.php:109
+msgid "Top Left"
+msgstr ""
+
+#: templates/admin/builder.php:110
+msgid "Top Center"
+msgstr ""
+
+#: templates/admin/builder.php:111
+msgid "Top Right"
+msgstr ""
+
+#: templates/admin/builder.php:112
+msgid "Center Left"
+msgstr ""
+
+#: templates/admin/builder.php:113
+msgid "Center Right"
+msgstr ""
+
+#: templates/admin/builder.php:114
+msgid "Bottom Left"
+msgstr ""
+
+#: templates/admin/builder.php:115
+msgid "Bottom Center"
+msgstr ""
+
+#: templates/admin/builder.php:116
+msgid "Bottom Right"
+msgstr ""
+
+#: templates/admin/builder.php:120
+#: templates/admin/builder.php:123
+msgid "Repeat"
+msgstr ""
+
+#: templates/admin/builder.php:122
+msgid "No Repeat"
+msgstr ""
+
+#: templates/admin/builder.php:124
+msgid "Repeat X"
+msgstr ""
+
+#: templates/admin/builder.php:125
+msgid "Repeat Y"
+msgstr ""
+
+#: templates/admin/builder.php:129
+msgid "Opacity"
+msgstr ""
+
+#: templates/admin/builder.php:149
+#: templates/admin/builder.php:153
+msgid "Logo"
+msgstr ""
+
+#: templates/admin/builder.php:163
+msgid "Drag & drop your logo here"
+msgstr ""
+
+#: templates/admin/builder.php:171
+msgid "Logo Preview"
+msgstr ""
+
+#: templates/admin/builder.php:191
+msgid "Logo Properties"
+msgstr ""
+
+#: templates/admin/builder.php:196
+msgid "Width"
+msgstr ""
+
+#: templates/admin/builder.php:200
+msgid "Height"
+msgstr ""
+
+#: templates/admin/builder.php:207
+msgid "Left"
+msgstr ""
+
+#: templates/admin/builder.php:208
+msgid "Right"
+msgstr ""
+
+#: templates/admin/builder.php:221
+msgid "Form"
+msgstr ""
+
+#: templates/admin/builder.php:229
+msgid "Border Radius"
+msgstr ""
+
+#: templates/admin/builder.php:233
+msgid "Padding"
+msgstr ""
+
+#: templates/admin/builder.php:237
+msgid "Label Color"
+msgstr ""
+
+#: templates/admin/builder.php:247
+msgid "Button"
+msgstr ""
+
+#: templates/admin/builder.php:251
+msgid "Button Color"
+msgstr ""
+
+#: templates/admin/builder.php:255
+msgid "Button Text Color"
+msgstr ""
+
+#: templates/admin/builder.php:265
+msgid "Custom CSS"
+msgstr ""
+
+#: templates/admin/login-logs.php:5
+#: templates/admin/logs.php:178
+#: templates/admin/logs.php:189
+msgid "Date/Time"
+msgstr ""
+
+#: templates/admin/login-logs.php:6
+#: templates/admin/logs.php:179
+#: templates/admin/logs.php:192
+msgid "Username"
+msgstr ""
+
+#: templates/admin/login-logs.php:7
+#: templates/admin/logs.php:180
+#: templates/admin/logs.php:203
+msgid "IP Address"
+msgstr ""
+
+#: templates/admin/login-logs.php:8
+#: templates/admin/logs.php:159
+#: templates/admin/logs.php:182
+#: templates/admin/logs.php:224
+msgid "Status"
+msgstr ""
+
+#: templates/admin/login-logs.php:9
+#: templates/admin/logs.php:183
+#: templates/admin/logs.php:239
+msgid "User Agent"
+msgstr ""
+
+#: templates/admin/login-logs.php:23
+msgid "User not found"
+msgstr ""
+
+#: templates/admin/logs.php:102
+msgid "View and filter login attempts to your site."
+msgstr ""
+
+#: templates/admin/logs.php:114
+msgid "Total Logs"
+msgstr ""
+
+#: templates/admin/logs.php:126
+msgid "Successful Logins"
+msgstr ""
+
+#: templates/admin/logs.php:138
+msgid "Failed Logins"
+msgstr ""
+
+#: templates/admin/logs.php:149
+msgid "Start Date"
+msgstr ""
+
+#: templates/admin/logs.php:154
+msgid "End Date"
+msgstr ""
+
+#: templates/admin/logs.php:161
+msgid "All"
+msgstr ""
+
+#: templates/admin/logs.php:163
+#: templates/admin/logs.php:235
+msgid "Failed"
+msgstr ""
+
+#: templates/admin/logs.php:168
+msgid "Filter"
+msgstr ""
+
+#: templates/admin/logs.php:181
+#: templates/admin/logs.php:206
+msgid "Location"
+msgstr ""
+
+#: templates/admin/logs.php:199
+#: templates/admin/logs.php:220
+msgid "Unknown"
+msgstr ""
+
+#. translators: %s: Number of items.
+#: templates/admin/logs.php:254
+#, php-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
+#: templates/admin/logs.php:281
+msgid "No Logs Found"
+msgstr ""
+
+#: templates/admin/logs.php:282
+msgid "No login attempts match your current filters."
+msgstr ""
+
+#: templates/admin/settings.php:27
+msgid "Modify Login Settings"
+msgstr ""
+
+#: templates/admin/settings.php:30
+msgid "Secure your website by altering the login URL and restricting entry to the wp-login.php page and wp-admin directory for non-authenticated users!"
+msgstr ""
+
+#: templates/admin/settings.php:92
+msgid "Login Security"
+msgstr ""
+
+#: templates/admin/settings.php:98
+msgid "Captcha"
+msgstr ""
+
+#: templates/admin/settings.php:119
+msgid "How Login Protection Works"
+msgstr ""
+
+#: templates/admin/settings.php:124
+msgid "Set a custom login URL (e.g., \"setup\") to create an alternative to wp-login.php"
+msgstr ""
+
+#: templates/admin/settings.php:128
+msgid "When redirection is enabled, direct access to wp-login.php and wp-admin is blocked for non-logged in users"
+msgstr ""
+
+#: templates/admin/settings.php:132
+msgid "Unauthorized access attempts will be redirected to the URL you specify below"
+msgstr ""
+
+#: templates/admin/settings.php:136
+msgid "Only your custom login URL will display the WordPress login form"
+msgstr ""
+
+#: templates/admin/settings.php:147
+msgid "Custom Login URL"
+msgstr ""
+
+#: templates/admin/settings.php:152
+msgid "Login Endpoint"
+msgstr ""
+
+#: templates/admin/settings.php:186
+#, php-format
+msgid "Create a custom login URL to replace the default wp-login.php page. Your current login URL is: %s"
+msgstr ""
+
+#: templates/admin/settings.php:193
+msgid "Choose a unique, non-obvious name for better security (avoid \"login\", \"admin\", etc.)"
+msgstr ""
+
+#: templates/admin/settings.php:199
+#, php-format
+msgid "With plain permalinks, your login URL will be in the format: %s/?endpoint"
+msgstr ""
+
+#: templates/admin/settings.php:204
+#, php-format
+msgid "With pretty permalinks, your login URL will be in the format: %s/endpoint"
+msgstr ""
+
+#: templates/admin/settings.php:210
+msgid "Bookmark your new login URL to ensure you can always access it"
+msgstr ""
+
+#: templates/admin/settings.php:219
+msgid "Access Protection"
+msgstr ""
+
+#: templates/admin/settings.php:232
+msgid "Enable Redirect Protection"
+msgstr ""
+
+#: templates/admin/settings.php:235
+msgid "Block direct access to wp-login.php and wp-admin for non-logged in users, redirecting them to the URL specified below."
+msgstr ""
+
+#: templates/admin/settings.php:243
+msgid "Redirect URL for Unauthorized Access"
+msgstr ""
+
+#: templates/admin/settings.php:251
+msgid "Enter the URL where unauthorized access attempts to wp-login.php and wp-admin will be redirected. Use your 404 page or homepage for best security."
+msgstr ""
+
+#: templates/admin/settings.php:260
+msgid "Post-Authentication Redirection"
+msgstr ""
+
+#: templates/admin/settings.php:265
+msgid "Login Redirect URL"
+msgstr ""
+
+#: templates/admin/settings.php:269
+msgid "e.g., https://example.com/dashboard"
+msgstr ""
+
+#: templates/admin/settings.php:273
+msgid "Determines where users are sent after successful login. Perfect for directing users to a specific page like a members area or dashboard. Leave empty to use WordPress default (usually admin dashboard or the page they were trying to access)."
+msgstr ""
+
+#: templates/admin/settings.php:280
+msgid "Logout Redirect URL"
+msgstr ""
+
+#: templates/admin/settings.php:284
+msgid "e.g., https://example.com"
+msgstr ""
+
+#: templates/admin/settings.php:288
+msgid "Controls where users are redirected when they log out. Useful for sending users to your homepage or a custom \"logged out\" page instead of the default WordPress login screen with logout message."
+msgstr ""
+
+#: templates/admin/settings.php:297
+msgid "Login Tracking"
+msgstr ""
+
+#: templates/admin/settings.php:309
+msgid "Enable Login Tracking"
+msgstr ""
+
+#: templates/admin/settings.php:312
+msgid "Log all login attempts to your site, including successful logins and failures. This helps you monitor unauthorized access attempts."
+msgstr ""
+
+#: templates/admin/settings.php:315
+msgid "Each log entry will include username, IP address, location data, and time of the attempt."
+msgstr ""
+
+#: templates/admin/settings.php:319
+#, php-format
+msgid "View login attempts in the %s section."
+msgstr ""
+
+#: templates/admin/settings.php:338
+msgid "Important Note"
+msgstr ""
+
+#: templates/admin/settings.php:342
+msgid "After changing these settings, please verify that you can access your new login URL before logging out."
+msgstr ""
+
+#: templates/admin/settings.php:345
+msgid "If you get locked out, access your WordPress database and delete the \"modify_login_settings\" option from the wp_options table."
+msgstr ""
+
+#: templates/admin/settings.php:370
+msgid "How to Get reCAPTCHA Keys"
+msgstr ""
+
+#: templates/admin/settings.php:372
+msgid "To use Google reCAPTCHA, you need to obtain Site and Secret keys:"
+msgstr ""
+
+#: templates/admin/settings.php:374
+msgid "Go to the Google reCAPTCHA admin console: https://www.google.com/recaptcha/admin"
+msgstr ""
+
+#: templates/admin/settings.php:375
+msgid "Sign in with your Google account"
+msgstr ""
+
+#: templates/admin/settings.php:376
+msgid "Register a new site by clicking the \"+\" button"
+msgstr ""
+
+#: templates/admin/settings.php:377
+msgid "Enter a label (e.g., \"My WordPress Site\")"
+msgstr ""
+
+#: templates/admin/settings.php:378
+msgid "Select reCAPTCHA v2 \"I'm not a robot\" Checkbox"
+msgstr ""
+
+#: templates/admin/settings.php:379
+msgid "Add your domain(s) in the \"Domains\" field"
+msgstr ""
+
+#: templates/admin/settings.php:380
+msgid "Accept the Terms of Service and click \"Submit\""
+msgstr ""
+
+#: templates/admin/settings.php:381
+msgid "Copy the provided \"Site Key\" and \"Secret Key\" below"
+msgstr ""
+
+#: templates/admin/settings.php:391
+msgid "reCAPTCHA Protection"
+msgstr ""
+
+#: templates/admin/settings.php:404
+msgid "Enable reCAPTCHA"
+msgstr ""
+
+#: templates/admin/settings.php:407
+msgid "Add Google reCAPTCHA to your login form to prevent automated login attempts."
+msgstr ""
+
+#: templates/admin/settings.php:416
+msgid "Site Key"
+msgstr ""
+
+#: templates/admin/settings.php:422
+msgid "Enter your reCAPTCHA site key here."
+msgstr ""
+
+#: templates/admin/settings.php:428
+msgid "Secret Key"
+msgstr ""
+
+#: templates/admin/settings.php:434
+msgid "Enter your reCAPTCHA secret key here."
+msgstr ""
+
+#: templates/admin/settings.php:442
+#, php-format
+msgid "You can get your keys from %s"
+msgstr ""
+
+#: templates/admin/settings.php:459
+msgid "Save Settings"
+msgstr ""
+
+#: templates/frontend/login.php:26
+msgid "Login"
+msgstr ""
+
+#: templates/frontend/login.php:50
+msgid "Invalid username or password."
+msgstr ""
+
+#: templates/frontend/login.php:59
+msgid "Username or Email"
+msgstr ""
+
+#: templates/frontend/login.php:68
+msgid "Password"
+msgstr ""
+
+#: templates/frontend/login.php:83
+msgid "Remember me"
+msgstr ""
+
+#: templates/frontend/login.php:89
+msgid "Forgot your password?"
+msgstr ""
+
+#: templates/frontend/login.php:96
+msgid "Sign in"
+msgstr ""
+
+#: templates/frontend/login.php:108
+msgid "Or continue with"
+msgstr ""

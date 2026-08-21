@@ -1,3 +1,17 @@
+= 2.0.2 - 2026-08-21 =
+* Fixed: Stale Version header meant WordPress.org still advertised 2.0.0, so the 2.0.1 release was never delivered to any site
+* Update: WordPress 7.1 compatibility
+* Fixed: 404 on the Login Logs screen from a script file that does not exist
+* Fixed: Builder assets were re-downloaded on every page load instead of being cached
+* Fixed: Added the missing translation template
+* Update: Raw sources and source maps no longer ship in the plugin package
+
+= 2.0.1 - 2025-04-24 =
+* Fixed: Plain permalink issue resolved
+
+= 2.0.0 - 2025-04-24 =
+* Added: Complete UI redesign, visual login page builder, reCAPTCHA, login attempt logging and custom redirects
+
 = 1.1 - 2023-12-17 =
 * Added: Redirect URL for unauthorized access
 * Fixed: WordPress 6.4 compatibility check
