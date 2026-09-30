@@ -1,0 +1,2 @@
+lbuchs/WebAuthn v2.2.0 (MIT) - https://github.com/lbuchs/WebAuthn
+Only src/ is vendored. Loaded by inc/TwoFactor/Passkeys.php on PHP 8.0+.

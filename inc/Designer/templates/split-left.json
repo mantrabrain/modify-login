@@ -1,0 +1,17 @@
+{
+  "name": "Split image left",
+  "description": "Artwork on the left half, a clean form on the right.",
+  "backdrop": "#4338ca",
+  "design": {
+    "layout": "split-left",
+    "tokens": { "primary": "#4f46e5", "on_primary": "#ffffff", "background": "#ffffff", "surface": "#ffffff", "text": "#0f172a", "muted": "#475569", "border": "#94a3b8", "radius": 10 },
+    "background": { "type": "image", "image": "plugin:images/split-mesh.svg", "color": "#312e81", "panel": "#ffffff", "text": "#475569" },
+    "logo": { "type": "text", "text_size": 26, "text_color": "#0f172a" },
+    "form": { "card": "box", "width": 380, "padding": 8, "shadow": "none", "border_width": 0 },
+    "inputs": { "size": 16, "background": "#f8fafc", "border": "#64748b", "focus": "#4f46e5" },
+    "button": { "full_width": true },
+    "links": { "color": "#4338ca", "hover": "#312e81" },
+    "messages": { "error": "#b91c1c", "notice": "#4f46e5", "success": "#047857", "background": "#f8fafc" },
+    "text": { "font": "inter", "size": 14 }
+  }
+}

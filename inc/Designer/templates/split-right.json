@@ -1,0 +1,17 @@
+{
+  "name": "Split image right",
+  "description": "Warm sunset artwork on the right, the form on a cream panel.",
+  "backdrop": "#ea580c",
+  "design": {
+    "layout": "split-right",
+    "tokens": { "primary": "#c2410c", "on_primary": "#ffffff", "background": "#fffaf5", "surface": "#fffaf5", "text": "#1c1917", "muted": "#57534e", "border": "#a8a29e", "radius": 12 },
+    "background": { "type": "image", "image": "plugin:images/split-waves.svg", "color": "#fb923c", "panel": "#fffaf5", "text": "#57534e" },
+    "logo": { "type": "text", "text_size": 26, "text_color": "#1c1917" },
+    "form": { "card": "box", "width": 380, "padding": 8, "shadow": "none", "border_width": 0 },
+    "inputs": { "size": 16, "background": "#ffffff", "border": "#78716c", "focus": "#c2410c" },
+    "button": { "full_width": true, "hover_background": "#9a3412" },
+    "links": { "color": "#9a3412", "hover": "#7c2d12" },
+    "messages": { "error": "#b91c1c", "notice": "#c2410c", "success": "#15803d", "background": "#ffffff" },
+    "text": { "font": "nunito", "size": 15 }
+  }
+}

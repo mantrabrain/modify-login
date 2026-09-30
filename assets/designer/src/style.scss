@@ -1,0 +1,1005 @@
+// Authlify login designer (admin).
+//
+// Built on WordPress components, with the Authlify admin tokens: one indigo
+// accent, quiet 1px borders, generous and even spacing. Every section's
+// fields sit in `.al-fields` (our own wrapper), so spacing does not depend on
+// the markup of a particular @wordpress/components version.
+
+$gap: 16px;
+$side: 360px;
+$pad: 20px;
+
+.authlify-designer-page {
+	// Full admin width, like the other Authlify screens: the preview takes whatever is left.
+	margin: 0;
+
+	#wpfooter {
+		display: none;
+	}
+}
+
+.authlify-designer-loading {
+	padding: 40px;
+	color: #646970;
+}
+
+.al-designer {
+	// Components (buttons, toggles, focus rings) use the Authlify accent.
+	--wp-admin-theme-color: #4f46e5;
+	--wp-admin-theme-color--rgb: 79, 70, 229;
+	--wp-admin-theme-color-darker-10: #4338ca;
+	--wp-admin-theme-color-darker-10--rgb: 67, 56, 202;
+	--wp-admin-theme-color-darker-20: #3730a3;
+	--wp-admin-theme-color-darker-20--rgb: 55, 48, 163;
+	--al-d-accent: #4f46e5;
+	--al-d-accent-soft: #eef2ff;
+	--al-d-text: #111827;
+	--al-d-text-2: #374151;
+	--al-d-muted: #6b7280;
+	--al-d-border: #e5e7eb;
+	--al-d-border-strong: #d1d5db;
+	--al-d-hover: #f9fafb;
+	--al-d-stage: #f3f4f6;
+	display: flex;
+	flex-direction: column;
+	--wp-components-color-accent: #4f46e5;
+	--wp-components-color-accent-darker-10: #4338ca;
+	--wp-components-color-accent-darker-20: #3730a3;
+	height: calc(100vh - var(--wp-admin--admin-bar--height, 32px) - 200px);
+	min-height: 640px;
+	margin-top: 16px;
+	background: #fff;
+	border: 1px solid var(--al-d-border);
+	border-radius: 12px;
+	overflow: hidden;
+	color: var(--al-d-text);
+
+	*,
+	*::before,
+	*::after {
+		box-sizing: border-box;
+	}
+}
+
+// Top bar.
+.al-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	min-height: 60px;
+	padding: 10px $pad;
+	border-bottom: 1px solid var(--al-d-border);
+
+	h2 {
+		margin: 0;
+		font-size: 15px;
+		font-weight: 600;
+		color: var(--al-d-text);
+	}
+
+	&__title {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		min-width: 0;
+	}
+
+	&__dirty {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		color: #92400e;
+		font-size: 12px;
+
+		&::before {
+			content: "";
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: #d97706;
+		}
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+
+		.components-toggle-control {
+			margin: 0 12px 0 0;
+		}
+
+		.components-toggle-control .components-base-control__field {
+			margin: 0;
+		}
+
+		#authlify-designer-save {
+			margin-left: 8px;
+			min-width: 72px;
+			justify-content: center;
+		}
+	}
+}
+
+.al-notices:empty {
+	display: none;
+}
+
+.al-notices {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 12px $pad 0;
+}
+
+.al-notice.components-notice {
+	margin: 0;
+	padding: 8px 12px;
+	border-radius: 8px;
+	font-size: 13px;
+
+	.components-notice__content {
+		margin: 2px 12px 2px 0;
+		line-height: 1.5;
+	}
+
+	.components-notice__actions {
+		margin-top: 6px;
+	}
+
+	.components-notice__action.components-button.is-link,
+	.components-notice__action.components-button {
+		margin: 0 12px 0 0;
+	}
+}
+
+.al-main {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+	margin-top: 12px;
+	border-top: 1px solid var(--al-d-border);
+}
+
+.al-notices:empty + .al-main {
+	margin-top: 0;
+	border-top: 0;
+}
+
+// Sidebar.
+.al-side {
+	width: $side;
+	flex: 0 0 $side;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	border-right: 1px solid var(--al-d-border);
+	background: #fff;
+
+	.components-panel {
+		border: 0;
+	}
+
+	.components-panel__body {
+		padding: 0;
+		border-top: 0;
+		border-bottom: 1px solid var(--al-d-border);
+
+		// Whatever wrapper the components version adds, only our fields get padding.
+		> .components-panel__body-title {
+			margin: 0;
+		}
+
+		&.is-opened {
+			padding: 0 0 $pad;
+		}
+	}
+
+	.components-panel__body-title {
+		margin: 0;
+	}
+
+	.components-panel__body-toggle.components-button {
+		padding: 16px $pad;
+		height: auto;
+		min-height: 52px;
+		font-size: 13px;
+		font-weight: 600;
+		color: var(--al-d-text);
+
+		&:hover {
+			background: var(--al-d-hover);
+		}
+
+		&:focus {
+			box-shadow: none;
+		}
+
+		&:focus-visible {
+			box-shadow: inset 0 0 0 2px var(--al-d-accent);
+		}
+
+		.components-panel__arrow {
+			right: $pad - 4px;
+			color: var(--al-d-muted);
+		}
+	}
+}
+
+.al-fields {
+	display: flex;
+	flex-direction: column;
+	gap: $gap;
+	padding: 0 $pad;
+
+	// Controls bring no outer margins of their own.
+	> *,
+	.components-base-control,
+	.components-base-control__field {
+		margin-top: 0;
+		margin-bottom: 0;
+	}
+
+	.components-base-control__help {
+		margin-top: 6px;
+	}
+}
+
+.al-label,
+.al-subhead {
+	display: block;
+	margin: 0 0 8px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.4;
+	text-transform: uppercase;
+	color: var(--al-d-text);
+}
+
+.al-subhead {
+	margin: 4px 0 -4px;
+	padding-top: $gap + 4px;
+	border-top: 1px solid var(--al-d-border);
+	font-size: 13px;
+	text-transform: none;
+	color: var(--al-d-text);
+}
+
+.al-unit {
+	text-transform: none;
+	font-weight: 400;
+	color: var(--al-d-muted);
+}
+
+.al-help {
+	margin: 6px 0 0;
+	color: var(--al-d-muted);
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.al-fields > .al-help {
+	margin-top: -8px;
+}
+
+.al-badge {
+	display: inline-flex;
+	align-items: center;
+	height: 18px;
+	margin-left: 8px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--al-d-accent-soft);
+	color: #4338ca;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	vertical-align: middle;
+}
+
+.al-tag {
+	padding: 1px 6px;
+	border-radius: 4px;
+	background: #f3f4f6;
+	color: var(--al-d-muted);
+	font-size: 11px;
+	line-height: 18px;
+	white-space: nowrap;
+}
+
+.al-row-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+}
+
+.al-toggles {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+// Template gallery.
+.al-match {
+	.components-button {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.al-help {
+		margin-top: 8px;
+		text-align: center;
+	}
+}
+
+.al-chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.al-chip {
+	height: 28px;
+	padding: 0 10px;
+	border: 1px solid var(--al-d-border-strong);
+	border-radius: 999px;
+	background: #fff;
+	color: var(--al-d-text-2);
+	font-size: 12px;
+	cursor: pointer;
+
+	&:hover {
+		border-color: #9ca3af;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--al-d-accent);
+		outline-offset: 1px;
+	}
+
+	&.is-selected {
+		border-color: var(--al-d-text);
+		background: var(--al-d-text);
+		color: #fff;
+	}
+}
+
+.al-gallery {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+
+	&__item {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		min-width: 0;
+		padding: 6px 6px 10px;
+		border: 1px solid var(--al-d-border);
+		border-radius: 10px;
+		background: #fff;
+		color: inherit;
+		cursor: pointer;
+		text-align: left;
+		transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+		&:hover {
+			border-color: #9ca3af;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--al-d-accent);
+			outline-offset: 2px;
+		}
+
+		&.is-active {
+			border-color: var(--al-d-accent);
+			box-shadow: 0 0 0 1px var(--al-d-accent);
+		}
+	}
+
+	&__meta {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		padding: 0 4px;
+		min-width: 0;
+	}
+
+	&__name {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 6px;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 1.35;
+		color: var(--al-d-text);
+
+		.al-badge {
+			flex: none;
+			margin-left: 0;
+		}
+	}
+
+	&__desc {
+		display: -webkit-box;
+		overflow: hidden;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		color: var(--al-d-muted);
+		font-size: 11.5px;
+		line-height: 1.4;
+	}
+}
+
+.al-thumb {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 88px;
+	border-radius: 6px;
+	overflow: hidden;
+	background-size: cover;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+
+	&__art {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 50%;
+	}
+
+	&--split-left .al-thumb__card {
+		margin-left: 50%;
+	}
+
+	&--split-right .al-thumb__art {
+		left: auto;
+		right: 0;
+	}
+
+	&--split-right .al-thumb__card {
+		margin-right: 50%;
+	}
+
+	&__side {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		width: 45%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	&__card {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		width: 44%;
+		padding: 7px 6px;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+	}
+
+	&__line {
+		height: 3px;
+		border-radius: 2px;
+	}
+
+	&__field {
+		height: 7px;
+		border: 1px solid;
+		border-radius: 2px;
+	}
+
+	&__btn {
+		height: 8px;
+		border-radius: 2px;
+	}
+}
+
+// Layout picker.
+.al-layouts {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+
+	&__item {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 6px;
+		border: 1px solid var(--al-d-border);
+		border-radius: 8px;
+		background: #fff;
+		color: var(--al-d-text-2);
+		font-size: 12px;
+		line-height: 1.3;
+		text-align: center;
+		cursor: pointer;
+
+		&:hover {
+			border-color: #9ca3af;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--al-d-accent);
+			outline-offset: 2px;
+		}
+
+		&.is-active {
+			border-color: var(--al-d-accent);
+			box-shadow: 0 0 0 1px var(--al-d-accent);
+			color: var(--al-d-text);
+		}
+	}
+}
+
+.al-layout-icon {
+	position: relative;
+	display: block;
+	width: 56px;
+	height: 36px;
+	border-radius: 4px;
+	background: #e5e7eb;
+	overflow: hidden;
+
+	span {
+		position: absolute;
+		top: 9px;
+		left: 20px;
+		width: 16px;
+		height: 18px;
+		border-radius: 2px;
+		background: #fff;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	}
+
+	&--split-left {
+		background: linear-gradient(90deg, #a5b4fc 50%, #f3f4f6 50%);
+
+		span {
+			left: 34px;
+		}
+	}
+
+	&--split-right {
+		background: linear-gradient(90deg, #f3f4f6 50%, #a5b4fc 50%);
+
+		span {
+			left: 6px;
+		}
+	}
+
+	&--sidebar-left {
+		background: linear-gradient(90deg, #fff 36%, #a7f3d0 36%);
+
+		span {
+			left: 3px;
+			box-shadow: none;
+			background: #e5e7eb;
+		}
+	}
+
+	&--sidebar-right {
+		background: linear-gradient(90deg, #a7f3d0 64%, #fff 64%);
+
+		span {
+			left: 37px;
+			box-shadow: none;
+			background: #e5e7eb;
+		}
+	}
+
+	&--full {
+		background: linear-gradient(135deg, #a5b4fc, #fbcfe8);
+
+		span {
+			background: transparent;
+			box-shadow: none;
+			border: 1px dashed #fff;
+		}
+	}
+
+	&--classic span {
+		top: 4px;
+	}
+}
+
+// Colours: rows in one bordered group, every row the full width.
+.al-color-group {
+	border: 1px solid var(--al-d-border-strong);
+	border-radius: 8px;
+	overflow: hidden;
+
+	> .al-color + .al-color {
+		border-top: 1px solid var(--al-d-border);
+	}
+
+	.al-color__toggle {
+		border: 0;
+		border-radius: 0;
+	}
+}
+
+.al-color {
+	display: block;
+	width: 100%;
+
+	.components-dropdown,
+	&__dropdown {
+		display: block;
+		width: 100%;
+	}
+
+	&__toggle {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		min-height: 40px;
+		margin: 0;
+		padding: 6px 12px;
+		border: 1px solid var(--al-d-border-strong);
+		border-radius: 8px;
+		background: #fff;
+		color: var(--al-d-text);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+		text-align: left;
+
+		&:hover {
+			background: var(--al-d-hover);
+		}
+
+		&:focus-visible {
+			position: relative;
+			z-index: 1;
+			outline: 2px solid var(--al-d-accent);
+			outline-offset: -2px;
+		}
+
+		&[aria-expanded="true"] {
+			background: var(--al-d-accent-soft);
+		}
+	}
+
+	&__swatch {
+		position: relative;
+		flex: 0 0 20px;
+		height: 20px;
+		border-radius: 50%;
+		overflow: hidden;
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+		background: repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 50% / 8px 8px;
+
+		span {
+			display: block;
+			width: 100%;
+			height: 100%;
+			box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+			border-radius: 50%;
+		}
+
+		&.is-none span {
+			background: linear-gradient(135deg, transparent 46%, #d63638 46%, #d63638 54%, transparent 54%) !important;
+		}
+	}
+
+	&__label {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__value {
+		flex: none;
+		max-width: 120px;
+		overflow: hidden;
+		color: var(--al-d-muted);
+		font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+		font-size: 11px;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+
+		&.is-default {
+			padding: 1px 6px;
+			border-radius: 4px;
+			background: #f3f4f6;
+			font-family: inherit;
+		}
+	}
+
+	&__popover {
+		padding: 8px;
+	}
+
+	&__actions {
+		display: flex;
+		justify-content: flex-end;
+		padding: 0 8px 8px;
+	}
+}
+
+// Numbers: label, default tag or reset, then the slider.
+.al-number {
+	.al-field-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		min-height: 20px;
+		margin-bottom: 4px;
+
+		.al-label {
+			margin: 0;
+		}
+	}
+
+	.al-reset.components-button.is-link {
+		font-size: 12px;
+		text-decoration: none;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+
+	// The slider handle and number sit at the value really used; soften them while it is the default.
+	&.is-default .components-range-control__thumb-wrapper,
+	&.is-default .components-range-control__track,
+	&.is-default .components-input-control__input {
+		opacity: 0.55;
+	}
+}
+
+.al-image {
+	&__preview {
+		height: 96px;
+		margin-bottom: 8px;
+		border: 1px solid var(--al-d-border);
+		border-radius: 8px;
+		background: #f9fafb center / contain no-repeat;
+	}
+
+	&__file {
+		margin-bottom: 8px;
+		padding: 8px 10px;
+		border: 1px solid var(--al-d-border);
+		border-radius: 8px;
+		background: #f9fafb;
+		font-size: 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__buttons {
+		display: flex;
+		gap: 8px;
+	}
+}
+
+// Segmented choice, like WordPress's toggle group.
+.al-segmented {
+	&__buttons {
+		display: flex;
+		gap: 2px;
+		padding: 2px;
+		border: 1px solid var(--al-d-border-strong);
+		border-radius: 8px;
+		background: #fff;
+	}
+
+	&__button {
+		flex: 1;
+		min-width: 0;
+		height: 32px;
+		padding: 0 8px;
+		border: 0;
+		border-radius: 6px;
+		background: transparent;
+		color: var(--al-d-text-2);
+		font: inherit;
+		font-size: 13px;
+		cursor: pointer;
+		white-space: nowrap;
+
+		&:hover {
+			background: #f3f4f6;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--al-d-accent);
+			outline-offset: 1px;
+		}
+
+		&.is-selected {
+			background: var(--al-d-text);
+			color: #fff;
+			font-weight: 500;
+		}
+	}
+}
+
+.al-code textarea {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+}
+
+// Preview stage.
+.al-stage {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	background: var(--al-d-stage);
+
+	&__bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px 12px;
+		min-height: 52px;
+		padding: 8px 16px;
+		border-bottom: 1px solid var(--al-d-border);
+		background: #fff;
+
+		.components-base-control {
+			min-width: 180px;
+		}
+
+		.components-button.al-zoom {
+			margin-left: auto;
+			font-size: 12px;
+			font-weight: 500;
+		}
+
+		.components-button.al-zoom.is-pressed {
+			background: var(--al-d-text);
+			color: #fff;
+		}
+	}
+
+	&__off {
+		flex-basis: 100%;
+		color: var(--al-d-muted);
+		font-size: 12px;
+	}
+
+	.al-contrast.components-notice {
+		margin: 12px 16px 0;
+		padding: 6px 12px;
+		border-radius: 8px;
+		font-size: 12px;
+	}
+}
+
+.al-devices {
+	display: flex;
+	gap: 2px;
+	padding: 2px;
+	border: 1px solid var(--al-d-border-strong);
+	border-radius: 8px;
+
+	.components-button.is-pressed {
+		background: var(--al-d-text);
+		color: #fff;
+	}
+}
+
+.al-preview {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 16px;
+	overflow: hidden;
+
+	&.is-actual {
+		justify-content: flex-start;
+		overflow: auto;
+	}
+
+	&__device {
+		position: relative;
+		flex: none;
+		overflow: hidden;
+		border-radius: 8px;
+		background: #fff;
+		box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 28px rgba(15, 23, 42, 0.1);
+
+		iframe {
+			display: block;
+			border: 0;
+			transform-origin: 0 0;
+		}
+	}
+
+	&--phone &__device,
+	&--tablet &__device {
+		border-radius: 20px;
+		box-shadow: 0 0 0 8px #1f2937, 0 12px 32px rgba(15, 23, 42, 0.22);
+		margin-top: 8px;
+	}
+
+	&--interim &__device {
+		margin-top: 24px;
+		border: 1px solid var(--al-d-border-strong);
+	}
+
+	&__loading {
+		position: absolute;
+		top: 24px;
+		right: 24px;
+	}
+}
+
+// Wide screens: a roomier sidebar; the preview takes the rest.
+@media (min-width: 1600px) {
+	.al-side {
+		width: 380px;
+		flex-basis: 380px;
+	}
+}
+
+// Laptops: a slimmer sidebar leaves the preview more room.
+@media (max-width: 1279px) {
+	.al-side {
+		width: 320px;
+		flex-basis: 320px;
+	}
+
+	.al-bar__actions .components-toggle-control__label {
+		white-space: nowrap;
+	}
+
+	.al-stage__bar .components-base-control {
+		min-width: 150px;
+	}
+}
+
+@media (max-width: 960px) {
+	.al-designer {
+		height: auto;
+	}
+
+	.al-main {
+		flex-direction: column;
+	}
+
+	.al-side {
+		width: auto;
+		flex: none;
+		max-height: 60vh;
+		border-right: 0;
+		border-bottom: 1px solid var(--al-d-border);
+	}
+
+	.al-stage {
+		min-height: 70vh;
+	}
+}
+
+@media (max-width: 600px) {
+	.al-bar {
+		padding: 10px 12px;
+	}
+
+	.al-bar__actions {
+		flex-wrap: wrap;
+		width: 100%;
+	}
+}

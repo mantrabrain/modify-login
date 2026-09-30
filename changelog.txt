@@ -1,3 +1,16 @@
+= 3.0.0 - 2026-09-29 =
+* Renamed to Authlify; settings, login URL and log carry over from Modify Login 1.x/2.x
+* Security: fixed two ways to reach the login page without the custom URL, a reCAPTCHA fatal error, and third-party IP lookups
+* Rebuilt hidden login (PHP routing, no rewrite rules) closing /wp-admin, /login, signup, Customizer, privacy-email and encoded-path leaks
+* Added Leak Check, confirm-before-apply login URLs, login-URL email, WP-CLI and wp-config recovery
+* Added brute-force lockouts (IP, network, targeted account), trusted-proxy IPs, allow/block lists, email unlock
+* Added Turnstile, hCaptcha, reCAPTCHA v3, ALTCHA and honeypot on core and WooCommerce forms
+* Added two-factor login, backup codes, passkeys and a breached-password check
+* Added the login page designer with 12 templates and Match my site
+* Added activity log with CSV, retention, anonymization and privacy tools
+* Added per-role redirects, XML-RPC/username/app-password controls, force login, settings import/export and importers
+* Added built-in searchable documentation (Authlify → Docs)
+
 = 2.0.2 - 2026-08-21 =
 * Fixed: Stale Version header meant WordPress.org still advertised 2.0.0, so the 2.0.1 release was never delivered to any site
 * Update: WordPress 7.1 compatibility

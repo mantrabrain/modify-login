@@ -1,0 +1,17 @@
+{
+  "name": "Sidebar",
+  "description": "A full-height white sidebar holds the form; green hills fill the rest.",
+  "backdrop": "#6ee7b7",
+  "design": {
+    "layout": "sidebar-left",
+    "tokens": { "primary": "#047857", "on_primary": "#ffffff", "background": "#d1fae5", "surface": "#ffffff", "text": "#111827", "muted": "#4b5563", "border": "#9ca3af", "radius": 8 },
+    "background": { "type": "image", "image": "plugin:images/sidebar-hills.svg", "color": "#a7f3d0", "panel": "#ffffff", "text": "#4b5563" },
+    "logo": { "type": "text", "text_size": 26, "text_color": "#064e3b" },
+    "form": { "card": "box", "width": 340, "padding": 0, "shadow": "none", "border_width": 0, "background": "transparent" },
+    "inputs": { "size": 16, "background": "#f9fafb", "border": "#6b7280", "focus": "#047857" },
+    "button": { "full_width": true, "hover_background": "#065f46" },
+    "links": { "color": "#065f46", "hover": "#022c22" },
+    "messages": { "error": "#b91c1c", "notice": "#047857", "success": "#047857", "background": "#f9fafb" },
+    "text": { "font": "humanist", "size": 14 }
+  }
+}

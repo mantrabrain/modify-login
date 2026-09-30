@@ -1,0 +1,542 @@
+/**
+ * Authlify: "Two-factor login" section on the profile screen.
+ *
+ * The profile screen is core WordPress, so the Authlify tokens are scoped to
+ * this section. Buttons keep the core classes (and the admin colour scheme).
+ *
+ * @since 3.0.0
+ */
+
+.authlify-2fa-profile {
+	--al2-text: #111827;
+	--al2-text-2: #374151;
+	--al2-muted: #6b7280;
+	--al2-border: #e5e7eb;
+	--al2-divider: #f1f2f4;
+	--al2-soft: #f9fafb;
+	--al2-green: #047857;
+	--al2-green-soft: #ecfdf5;
+	--al2-amber: #b45309;
+	--al2-amber-soft: #fffbeb;
+	--al2-accent: #4f46e5;
+	--al2-accent-soft: #eef2ff;
+	--al2-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	max-width: 760px;
+	margin: 24px 0 32px;
+}
+
+/* `hidden` must win over `.button { display: inline-block }`. */
+.authlify-2fa-profile [hidden] {
+	display: none !important;
+}
+
+.authlify-2fa-profile__app > .description {
+	margin: 12px 0;
+}
+
+/* Card ------------------------------------------------------------------ */
+
+.authlify-2fa-card {
+	margin: 12px 0 0;
+	overflow: hidden;
+	border: 1px solid var(--al2-border);
+	border-radius: 12px;
+	background: #fff;
+	color: var(--al2-text-2);
+}
+
+/* Status summary at the top of the card. */
+.authlify-2fa-summary {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 18px 20px;
+	border-bottom: 1px solid var(--al2-border);
+	background: var(--al2-soft);
+}
+
+.authlify-2fa-summary:focus {
+	outline: none;
+}
+
+.authlify-2fa-summary__icon {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: var(--al2-amber-soft);
+	color: var(--al2-amber);
+}
+
+.authlify-2fa-summary.is-on .authlify-2fa-summary__icon {
+	background: var(--al2-green-soft);
+	color: var(--al2-green);
+}
+
+.authlify-2fa-summary__text {
+	flex: 1;
+	min-width: 0;
+}
+
+.authlify-2fa-summary__text strong {
+	display: block;
+	color: var(--al2-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.authlify-2fa-summary__text span {
+	display: block;
+	margin-top: 2px;
+	color: var(--al2-muted);
+	font-size: 13px;
+}
+
+/* Pills. */
+.authlify-2fa-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px 9px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 500;
+	line-height: 1.6;
+	white-space: nowrap;
+}
+
+.authlify-2fa-pill.is-on {
+	background: var(--al2-green-soft);
+	color: var(--al2-green);
+}
+
+.authlify-2fa-pill.is-off {
+	background: var(--al2-amber-soft);
+	color: var(--al2-amber);
+}
+
+.authlify-2fa-summary .authlify-2fa-pill.is-off {
+	background: #f3f4f6;
+	color: var(--al2-text-2);
+}
+
+/* Method rows ------------------------------------------------------------ */
+
+.authlify-2fa-method {
+	display: grid;
+	grid-template-columns: 36px minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 4px 14px;
+	padding: 18px 20px;
+	border-top: 1px solid var(--al2-divider);
+}
+
+.authlify-2fa-summary + .authlify-2fa-method {
+	border-top: 0;
+}
+
+.authlify-2fa-method__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: var(--al2-accent-soft);
+	color: var(--al2-accent);
+}
+
+.authlify-2fa-method h3 {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	color: var(--al2-text);
+	font-size: 14px;
+	font-weight: 600;
+	line-height: 1.5;
+}
+
+.authlify-2fa-method h3:focus {
+	outline: none;
+}
+
+.authlify-2fa-method h3:focus-visible {
+	outline: 2px solid var(--al2-accent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+.authlify-2fa-method__help {
+	margin: 2px 0 0;
+	color: var(--al2-muted);
+	font-size: 13px;
+	line-height: 1.5;
+}
+
+.authlify-2fa-method__action {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	justify-content: flex-end;
+	align-self: center;
+}
+
+.authlify-2fa-method__action:empty {
+	display: none;
+}
+
+.authlify-2fa-method__body {
+	grid-column: 2 / -1;
+}
+
+.authlify-2fa-method__body:empty {
+	display: none;
+}
+
+.authlify-2fa-method.is-open .authlify-2fa-method__body {
+	margin-top: 12px;
+}
+
+.authlify-2fa-method--plain {
+	display: block;
+}
+
+.authlify-2fa-note {
+	margin: 8px 0 0;
+	color: var(--al2-muted);
+	font-size: 13px;
+}
+
+.authlify-2fa-note.is-warn {
+	color: var(--al2-amber);
+}
+
+/* Authenticator setup ------------------------------------------------------ */
+
+.authlify-2fa-setup {
+	display: grid;
+	grid-template-columns: 168px minmax(0, 1fr);
+	gap: 20px 24px;
+	padding: 16px;
+	border: 1px solid var(--al2-border);
+	border-radius: 10px;
+	background: var(--al2-soft);
+}
+
+.authlify-2fa-qr {
+	align-self: start;
+	width: 168px;
+	padding: 8px;
+	box-sizing: border-box;
+	border: 1px solid var(--al2-border);
+	border-radius: 8px;
+	background: #fff;
+	line-height: 0;
+}
+
+.authlify-2fa-qr svg {
+	width: 100%;
+	height: auto;
+}
+
+.authlify-2fa-steps {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.authlify-2fa-step {
+	display: flex;
+	gap: 12px;
+	margin: 0 0 16px;
+}
+
+.authlify-2fa-step:last-child {
+	margin-bottom: 0;
+}
+
+.authlify-2fa-step__num {
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	background: var(--al2-text);
+	color: #fff;
+	font-size: 12px;
+	font-weight: 600;
+}
+
+.authlify-2fa-step__main {
+	flex: 1;
+	min-width: 0;
+}
+
+.authlify-2fa-step__main > strong {
+	display: block;
+	color: var(--al2-text);
+	font-size: 13px;
+	line-height: 22px;
+}
+
+.authlify-2fa-step__main p {
+	margin: 4px 0 0;
+	color: var(--al2-muted);
+	font-size: 13px;
+}
+
+.authlify-2fa-keyline {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	margin-top: 10px !important;
+}
+
+.authlify-2fa-keyline__label {
+	color: var(--al2-muted);
+	font-size: 12px;
+}
+
+.authlify-2fa-key {
+	padding: 4px 8px;
+	border: 1px solid var(--al2-border);
+	border-radius: 6px;
+	background: #fff;
+	color: var(--al2-text);
+	font-family: var(--al2-mono);
+	font-size: 13px;
+	letter-spacing: 0.06em;
+	word-break: break-all;
+	user-select: all;
+}
+
+.authlify-2fa-verify {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px 10px;
+	margin-top: 8px !important;
+}
+
+.authlify-2fa-profile input.authlify-2fa-code {
+	width: 9.5em;
+	min-height: 36px;
+	padding: 4px 10px;
+	font-family: var(--al2-mono);
+	font-size: 18px;
+	letter-spacing: 0.2em;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+}
+
+/* Backup codes ------------------------------------------------------------- */
+
+.authlify-2fa-codes-box > .authlify-2fa-note {
+	margin-top: 0;
+}
+
+.authlify-2fa-codes {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px 24px;
+	max-width: 420px;
+	margin: 12px 0;
+	padding: 16px 20px 16px 44px;
+	border: 1px dashed #d1d5db;
+	border-radius: 10px;
+	background: var(--al2-soft);
+	color: var(--al2-muted);
+	font-size: 12px;
+}
+
+.authlify-2fa-codes:focus {
+	outline: none;
+	border-color: var(--al2-accent);
+}
+
+.authlify-2fa-codes code {
+	padding: 0;
+	background: none;
+	color: var(--al2-text);
+	font-family: var(--al2-mono);
+	font-size: 14px;
+	letter-spacing: 0.06em;
+}
+
+.authlify-2fa-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	max-width: 420px;
+	margin: 0;
+}
+
+.authlify-2fa-actions__spacer {
+	flex: 1;
+}
+
+/* Passkeys ------------------------------------------------------------------ */
+
+.authlify-2fa-passkeys {
+	margin: 0 0 12px;
+	border: 1px solid var(--al2-border);
+	border-radius: 10px;
+}
+
+.authlify-2fa-passkeys li {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	padding: 10px 14px;
+	border-top: 1px solid var(--al2-divider);
+}
+
+.authlify-2fa-passkeys li:first-child {
+	border-top: 0;
+}
+
+.authlify-2fa-passkeys__main {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	min-width: 0;
+}
+
+.authlify-2fa-passkeys__main strong {
+	color: var(--al2-text);
+	font-weight: 600;
+}
+
+.authlify-2fa-passkeys__meta {
+	color: var(--al2-muted);
+	font-size: 12px;
+}
+
+.authlify-2fa-passkeys__actions {
+	display: flex;
+	flex: none;
+	gap: 12px;
+}
+
+.authlify-2fa-add > label {
+	display: block;
+	margin-bottom: 4px;
+	color: var(--al2-text);
+	font-size: 13px;
+	font-weight: 500;
+}
+
+.authlify-2fa-add__row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.authlify-2fa-add__row input {
+	flex: 1;
+	min-width: 180px;
+	max-width: 320px;
+}
+
+/* Another user's methods. */
+.authlify-2fa-methods {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.authlify-2fa-methods li {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 8px;
+}
+
+.authlify-2fa-methods li:last-child {
+	margin-bottom: 0;
+}
+
+.authlify-2fa-methods__icon {
+	display: inline-flex;
+	color: var(--al2-muted);
+}
+
+/* Footer: turn off / reset. */
+.authlify-2fa-footer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px 16px;
+	padding: 14px 20px;
+	border-top: 1px solid var(--al2-border);
+	background: var(--al2-soft);
+}
+
+.authlify-2fa-footer__text {
+	flex: 1;
+	min-width: 220px;
+}
+
+.authlify-2fa-footer__text strong {
+	display: block;
+	color: var(--al2-text);
+}
+
+.authlify-2fa-footer__text span {
+	color: var(--al2-muted);
+	font-size: 13px;
+}
+
+.authlify-2fa-off .button-link {
+	font-size: 13px;
+}
+
+/* Live region. */
+.authlify-2fa-profile__live:empty {
+	display: none;
+}
+
+.authlify-2fa-profile__live.notice {
+	margin: 12px 0;
+}
+
+@media (max-width: 600px) {
+	.authlify-2fa-method {
+		grid-template-columns: 36px minmax(0, 1fr);
+		padding: 16px;
+	}
+
+	.authlify-2fa-method__action {
+		grid-column: 2;
+		justify-content: flex-start;
+		margin-top: 8px;
+	}
+
+	.authlify-2fa-method__body {
+		grid-column: 1 / -1;
+	}
+
+	.authlify-2fa-setup {
+		grid-template-columns: 1fr;
+	}
+
+	.authlify-2fa-codes {
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		padding-left: 36px;
+	}
+
+	.authlify-2fa-summary {
+		flex-wrap: wrap;
+		padding: 16px;
+	}
+}

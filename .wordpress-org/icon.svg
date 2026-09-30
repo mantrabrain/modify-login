@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Authlify</title>
+  <defs>
+    <linearGradient id="al-bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6366F1"/>
+      <stop offset="1" stop-color="#4338CA"/>
+    </linearGradient>
+    <linearGradient id="al-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".16"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <mask id="al-hole" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256">
+      <rect width="256" height="256" fill="#fff"/>
+      <circle cx="128" cy="112" r="23" fill="#000"/>
+      <path d="M118.5 124h19l6.5 42.5a6 6 0 0 1-5.9 6.9h-20.2a6 6 0 0 1-5.9-6.9Z" fill="#000"/>
+    </mask>
+  </defs>
+  <rect width="256" height="256" rx="58" fill="url(#al-bg)"/>
+  <rect width="256" height="256" rx="58" fill="url(#al-sheen)"/>
+  <g transform="translate(128 129) scale(1.06) translate(-128 -129)" mask="url(#al-hole)"><path fill="#fff" stroke="#fff" stroke-width="10" stroke-linejoin="round"
+        d="M128 47C149 59 170 65 191 67V123C191 164 166 195 128 211C90 195 65 164 65 123V67C86 65 107 59 128 47Z"/></g>
+</svg>

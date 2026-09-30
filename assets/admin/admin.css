@@ -1,0 +1,3071 @@
+/**
+ * Authlify admin design system
+ *
+ * One app shell for every Authlify screen (free and Pro), in the same design
+ * language as MatrixMap: a dark header bar with the primary navigation, a page
+ * head, a grouped section navigation for pages with several sections, white
+ * cards with setting rows, choice cards, stat cards and a save card.
+ *
+ * The token roles match MatrixMap's (--mm-*); Authlify keeps its own indigo
+ * accent so the products stay distinct. Scoped to body.authlify-admin.
+ *
+ * @package Authlify
+ * @since   3.0.0
+ */
+
+.authlify-admin {
+    /* Accent (indigo) in MatrixMap's roles: accent, accent-strong, accent-soft. */
+    --al-accent: #4f46e5;
+    --al-accent-strong: #4338ca;
+    --al-accent-hover: #4338ca;
+    --al-accent-soft: #eef2ff;
+    --al-accent-line: #c7d2fe;
+    --al-accent-ring: rgba(79, 70, 229, 0.18);
+    /* Slate text, lines and surfaces. */
+    --al-ink: #0f172a;
+    --al-text: #0f172a;
+    --al-text-2: #334155;
+    --al-muted: #556274;
+    --al-faint: #94a3b8;
+    --al-line: #dfe5ee;
+    --al-border: #dfe5ee;
+    --al-line-strong: #c7d0dc;
+    --al-border-strong: #c7d0dc;
+    --al-divider: #f1f5f9;
+    --al-bg: #eef1f6;
+    --al-surface: #ffffff;
+    --al-card: #ffffff;
+    --al-subtle: #f8fafc;
+    /* Status. */
+    --al-green: #047857;
+    --al-green-soft: #ecfdf5;
+    --al-amber: #b45309;
+    --al-amber-soft: #fffbeb;
+    --al-red: #b91c1c;
+    --al-red-soft: #fef2f2;
+    --al-blue: #1d4ed8;
+    --al-blue-soft: #eff6ff;
+    --al-pro: #7c3aed;
+    --al-pro-soft: #f5f3ff;
+    /* Shape. */
+    --al-radius: 12px;
+    --al-radius-sm: 8px;
+    --al-shadow: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+    --al-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+    --al-gutter: 32px;
+    --al-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --al-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    background: var(--al-bg);
+    color: var(--al-text-2);
+}
+
+/* --------------------------------------------------------------------------
+   Canvas
+   -------------------------------------------------------------------------- */
+
+.authlify-admin #wpcontent {
+    padding-left: 0;
+    background: var(--al-bg);
+}
+
+.authlify-admin #wpbody-content {
+    padding-bottom: 40px;
+}
+
+.authlify-admin #wpfooter {
+    padding: 16px var(--al-gutter);
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-admin #wpfooter p {
+    font-size: 13px;
+}
+
+.authlify-foot a,
+.authlify-admin #wpfooter a {
+    color: var(--al-accent);
+}
+
+.authlify-admin .wrap {
+    margin: 0;
+}
+
+.authlify-admin #screen-meta-links {
+    margin-right: var(--al-gutter);
+}
+
+/* Core admin notices from other plugins keep a tidy gutter. */
+.authlify-admin #wpbody-content > .notice,
+.authlify-admin #wpbody-content > .updated,
+.authlify-admin #wpbody-content > .error {
+    margin: 16px var(--al-gutter) 0;
+}
+
+.authlify-icon {
+    flex: none;
+}
+
+@media (max-width: 782px) {
+    .authlify-admin {
+        --al-gutter: 16px;
+    }
+
+    /* WordPress pads #wpbody for its phone toolbar; the header sits before it. */
+    .authlify-admin #wpbody {
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .authlify-admin #wpcontent {
+        padding-top: 46px;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Header bar (dark, frames the page with the WordPress menu)
+   -------------------------------------------------------------------------- */
+
+.authlify-top {
+    position: sticky;
+    z-index: 90;
+    top: var(--wp-admin--admin-bar--height, 32px);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 60px;
+    padding: 0 var(--al-gutter);
+    background: #111827;
+    background: linear-gradient(90deg, #0f172a, #1a1f3d);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04), 0 4px 16px rgba(15, 23, 42, 0.18);
+    font-family: var(--al-font);
+}
+
+@media (max-width: 600px) {
+    .authlify-top {
+        position: static;
+        gap: 12px;
+    }
+}
+
+.authlify-top__brand {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+}
+
+.authlify-top__brand:hover,
+.authlify-top__brand:focus {
+    color: #fff;
+}
+
+.authlify-top__logo {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.45);
+}
+
+.authlify-top__logo svg,
+.authlify-top__logo img {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+}
+
+.authlify-top__initial {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #6366f1, #4338ca);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.authlify-top .authlify-badge--pro {
+    background: rgba(167, 139, 250, 0.18);
+    color: #c4b5fd;
+}
+
+.authlify-top__nav {
+    position: relative;
+    display: flex;
+    flex: 1 1 auto;
+    align-self: stretch;
+    gap: 2px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.authlify-top__nav::-webkit-scrollbar {
+    display: none;
+}
+
+/* A soft edge where the navigation continues off-screen (set by admin.js). */
+.authlify-top__nav.is-clipped {
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+}
+
+.authlify-top__nav.is-clipped.is-scrolled {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+}
+
+.authlify-top__nav.is-clipped.is-end {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px);
+    mask-image: linear-gradient(90deg, transparent, #000 40px);
+}
+
+.authlify-top__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 12px 0;
+    padding: 0 12px;
+    border-radius: 8px;
+    color: rgba(226, 232, 240, 0.8);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.authlify-top__link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.authlify-top__link:focus {
+    box-shadow: none;
+    color: #fff;
+}
+
+.authlify-top__link.is-active {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-weight: 600;
+}
+
+.authlify-top__end {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.authlify-top__icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--al-radius-sm);
+    color: rgba(226, 232, 240, 0.8);
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.authlify-top__icon:hover,
+.authlify-top__icon:focus,
+.authlify-top__icon.is-active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.authlify-top .authlify-top__action.button-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 12px;
+    border-color: var(--al-accent);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.authlify-top .authlify-top__action.button-primary:hover,
+.authlify-top .authlify-top__action.button-primary:focus {
+    border-color: #6366f1;
+    background: #6366f1;
+    color: #fff;
+}
+
+/* Keyboard focus on the dark bar: a light, solid ring. */
+.authlify-admin .authlify-top :is(a, .button):focus-visible {
+    outline: 2px solid #a5b4fc;
+    outline-offset: 0;
+    box-shadow: none;
+}
+
+@media (max-width: 1100px) {
+    .authlify-top__icon span,
+    .authlify-top__action span:not(.screen-reader-text) {
+        display: none;
+    }
+
+    .authlify-top .authlify-top__action.button-primary {
+        padding: 0 9px;
+    }
+}
+
+@media (max-width: 600px) {
+    /* Visually hidden, still the link's accessible name. */
+    .authlify-top__brand .authlify-brand__name,
+    .authlify-top__brand .authlify-badge {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Page and page head
+   -------------------------------------------------------------------------- */
+
+.authlify-page {
+    max-width: none;
+    margin: 0;
+    padding: 28px var(--al-gutter) 0;
+    color: var(--al-text-2);
+    font-family: var(--al-font);
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.authlify-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.authlify-page-head h1 {
+    margin: 0;
+    padding: 0;
+    color: var(--al-ink);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.authlify-page-head p {
+    max-width: 760px;
+    margin: 6px 0 0;
+    color: var(--al-muted);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.authlify-page-head__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.authlify-page .wp-header-end {
+    display: none;
+}
+
+/* Notices inside Authlify pages look like the rest of the page. */
+.authlify-page .notice {
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border: 1px solid var(--al-line);
+    border-left-width: 4px;
+    border-radius: var(--al-radius-sm);
+    background: var(--al-surface);
+    box-shadow: var(--al-shadow);
+}
+
+.authlify-page .notice p {
+    margin: 0;
+    padding: 0;
+    color: var(--al-ink);
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.authlify-page .notice p + p {
+    margin-top: 8px;
+}
+
+.authlify-page .notice-success { border-left-color: var(--al-green); }
+.authlify-page .notice-error { border-left-color: var(--al-red); }
+.authlify-page .notice-warning { border-left-color: #d97706; }
+.authlify-page .notice-info { border-left-color: var(--al-accent); }
+
+/* --------------------------------------------------------------------------
+   Section navigation (grouped, on the left) and settings search
+   -------------------------------------------------------------------------- */
+
+/* The page becomes a two-column grid: the page head spans both columns, the
+   section navigation sits in the first, and everything else in the second. */
+.authlify-admin--split .authlify-page {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    column-gap: 32px;
+    align-items: start;
+}
+
+.authlify-admin--split .authlify-page > * {
+    grid-column: 2;
+    min-width: 0;
+}
+
+.authlify-admin--split .authlify-page > .authlify-page-head {
+    grid-column: 1 / -1;
+}
+
+.authlify-admin--split .authlify-page > .authlify-side {
+    grid-column: 1;
+    grid-row: 2 / span 99;
+    align-self: start;
+}
+
+.authlify-side {
+    position: sticky;
+    top: calc(var(--wp-admin--admin-bar--height, 32px) + 84px);
+}
+
+.authlify-side__group {
+    margin: 18px 12px 6px;
+    color: var(--al-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.authlify-side__group:first-child {
+    margin-top: 0;
+}
+
+.authlify-side__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-side__list li {
+    margin: 0;
+}
+
+.authlify-page .authlify-side__link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: var(--al-radius-sm);
+    color: var(--al-text-2);
+    font-size: 14px;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.authlify-side__link .authlify-icon {
+    color: var(--al-muted);
+}
+
+.authlify-side__link .authlify-badge {
+    margin-left: auto;
+}
+
+.authlify-page .authlify-side__link:hover {
+    background: #e6eaf1;
+    color: var(--al-ink);
+}
+
+.authlify-page .authlify-side__link:focus {
+    box-shadow: none;
+}
+
+.authlify-page .authlify-side__link.is-active {
+    background: var(--al-surface);
+    color: var(--al-ink);
+    font-weight: 600;
+    box-shadow: var(--al-shadow), inset 0 0 0 1px var(--al-line);
+}
+
+.authlify-side__link.is-active .authlify-icon {
+    color: var(--al-accent);
+}
+
+.authlify-side__link.is-match {
+    background: var(--al-accent-soft);
+}
+
+.authlify-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 16px;
+    margin: 0 0 16px;
+}
+
+.authlify-section-head__text {
+    min-width: 0;
+}
+
+.authlify-section-head__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.authlify-section__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    margin: 0;
+    color: var(--al-ink);
+    font-size: 18px;
+    font-weight: 650;
+    line-height: 1.35;
+}
+
+.authlify-section__title .authlify-learn-more {
+    font-size: 13px;
+}
+
+.authlify-section__lead {
+    max-width: 760px;
+    margin: 4px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-setsearch {
+    position: relative;
+    margin: 0 0 20px;
+}
+
+.authlify-page .authlify-setsearch input[type="search"] {
+    width: 100%;
+    max-width: none;
+    min-height: 44px;
+    padding-left: 40px;
+    border-radius: 10px;
+    font-family: var(--al-font);
+    font-size: 14px;
+}
+
+.authlify-setsearch__icon {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    display: inline-flex;
+    color: var(--al-muted);
+    transform: translateY(-50%);
+}
+
+.authlify-setsearch__empty {
+    margin: 0 0 20px;
+    padding: 24px;
+    border: 1px dashed var(--al-line-strong);
+    border-radius: var(--al-radius);
+    color: var(--al-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+.authlify-setsearch__empty p {
+    margin: 0;
+}
+
+.authlify-setsearch__empty [data-authlify-search-other] {
+    margin-top: 12px;
+}
+
+.authlify-setsearch__empty ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-setsearch__empty li {
+    margin: 0;
+}
+
+.authlify-setsearch__empty li a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--al-line);
+    border-radius: 999px;
+    background: var(--al-surface);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.authlify-page .is-filtered {
+    display: none !important;
+}
+
+@media (max-width: 960px) {
+    .authlify-admin--split .authlify-page {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .authlify-admin--split .authlify-page > *,
+    .authlify-admin--split .authlify-page > .authlify-side {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .authlify-side {
+        position: static;
+        display: flex;
+        gap: 4px;
+        margin: 0 0 16px;
+        padding-bottom: 4px;
+        overflow-x: auto;
+    }
+
+    .authlify-side__group {
+        display: none;
+    }
+
+    .authlify-side__list {
+        display: contents;
+    }
+
+    .authlify-side__list li {
+        flex: none;
+    }
+
+    .authlify-page .authlify-side__link {
+        white-space: nowrap;
+    }
+}
+
+/* Segmented control: page switcher for families without a section navigation. */
+.authlify-segment {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin: 0 0 20px;
+    padding: 3px;
+    border: 1px solid var(--al-line);
+    border-radius: 10px;
+    background: #e6eaf1;
+}
+
+.authlify-page .authlify-segment__btn {
+    padding: 6px 14px;
+    border-radius: 8px;
+    color: var(--al-text-2);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none;
+}
+
+.authlify-page .authlify-segment__btn:hover {
+    color: var(--al-ink);
+}
+
+.authlify-page .authlify-segment__btn:focus {
+    box-shadow: none;
+}
+
+.authlify-page .authlify-segment__btn.is-active {
+    background: var(--al-surface);
+    color: var(--al-ink);
+    box-shadow: var(--al-shadow);
+}
+
+/* --------------------------------------------------------------------------
+   Cards (panels)
+   -------------------------------------------------------------------------- */
+
+.authlify-panel {
+    margin: 0 0 20px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: var(--al-surface);
+    box-shadow: var(--al-shadow);
+}
+
+.authlify-panel__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 24px 0;
+}
+
+.authlify-panel__head h2 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    color: var(--al-ink);
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.4;
+}
+
+.authlify-panel__head p {
+    max-width: 760px;
+    margin: 4px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.authlify-panel__body {
+    padding: 8px 24px 20px;
+}
+
+.authlify-panel__body--padded {
+    padding-top: 16px;
+}
+
+.authlify-panel__body > p:first-child {
+    margin-top: 12px;
+}
+
+.authlify-panel__note {
+    margin: 12px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-panel__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 14px 24px;
+    border-top: 1px solid var(--al-line);
+    border-radius: 0 0 var(--al-radius) var(--al-radius);
+    background: #fafbfd;
+}
+
+.authlify-panel__body > .authlify-panel__foot {
+    margin: 16px -24px -20px;
+}
+
+/* --------------------------------------------------------------------------
+   Setting rows: label and help on the left, control on the right
+   -------------------------------------------------------------------------- */
+
+.authlify-field {
+    display: grid;
+    grid-template-columns: minmax(200px, 2fr) minmax(0, 3fr);
+    gap: 8px 40px;
+    padding: 18px 0;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-panel__body > .authlify-field:first-child,
+.authlify-panel__body > :first-child > .authlify-field:first-child,
+.authlify-panel__body > .authlify-field.is-first,
+.authlify-panel__body > [hidden] + .authlify-field {
+    border-top: 0;
+}
+
+.authlify-field__label > label,
+.authlify-field__label > span {
+    display: block;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.authlify-field__help {
+    margin: 4px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.authlify-field__control {
+    min-width: 0;
+    color: var(--al-text-2);
+    font-size: 14px;
+}
+
+.authlify-field__control > p:first-child {
+    margin-top: 0;
+}
+
+.authlify-field__control .description {
+    margin: 8px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-field__error {
+    margin: 6px 0 0;
+    color: var(--al-red);
+    font-size: 13px;
+}
+
+/* A row whose control needs the full width (choice cards). */
+.authlify-field--stack {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+}
+
+.authlify-field--stack .authlify-field__help {
+    max-width: 760px;
+}
+
+/* Rows shown only for one choice of another setting. */
+.authlify-field[hidden] {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Controls
+   -------------------------------------------------------------------------- */
+
+.authlify-page input[type="text"],
+.authlify-page input[type="url"],
+.authlify-page input[type="email"],
+.authlify-page input[type="number"],
+.authlify-page input[type="password"],
+.authlify-page input[type="search"],
+.authlify-page input[type="date"],
+.authlify-page input[type="time"],
+.authlify-page input[type="tel"],
+.authlify-page select,
+.authlify-page textarea {
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid var(--al-line-strong);
+    border-radius: var(--al-radius-sm);
+    background-color: #fff;
+    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.03);
+    color: var(--al-ink);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.authlify-page select {
+    padding-right: 32px;
+    background-position: right 10px top 55%;
+}
+
+.authlify-page textarea {
+    min-height: 96px;
+    padding: 10px 12px;
+    font-family: var(--al-mono);
+    font-size: 13px;
+}
+
+.authlify-page input:focus,
+.authlify-page select:focus,
+.authlify-page textarea:focus {
+    border-color: var(--al-accent);
+    box-shadow: 0 0 0 3px var(--al-accent-ring);
+    outline: none;
+}
+
+.authlify-page input::placeholder,
+.authlify-page textarea::placeholder {
+    /* Placeholders carry example values: normal text contrast. */
+    color: var(--al-muted);
+}
+
+.authlify-page .regular-text {
+    width: 100%;
+    max-width: 440px;
+}
+
+.authlify-page .large-text {
+    width: 100%;
+    max-width: 640px;
+}
+
+.authlify-page .small-text {
+    width: 96px;
+}
+
+.authlify-page .code {
+    font-family: var(--al-mono);
+}
+
+.authlify-page input[type="checkbox"],
+.authlify-page input[type="radio"] {
+    border-color: var(--al-line-strong);
+}
+
+.authlify-page input[type="checkbox"]:checked,
+.authlify-page input[type="radio"]:checked {
+    border-color: var(--al-accent);
+}
+
+.authlify-page input[type="checkbox"]:checked {
+    background: var(--al-accent);
+}
+
+.authlify-page input[type="checkbox"]:checked::before {
+    /* White tick on the accent box. */
+    content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23ffffff%27%2F%3E%3C%2Fsvg%3E");
+}
+
+.authlify-page input[type="radio"]:checked::before {
+    background-color: var(--al-accent);
+}
+
+/* Buttons follow the accent colour. */
+.authlify-page .button {
+    min-height: 36px;
+    padding: 0 14px;
+    border-radius: var(--al-radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 34px;
+}
+
+.authlify-page .button-small {
+    min-height: 30px;
+    padding: 0 11px;
+    font-size: 12px;
+    line-height: 28px;
+}
+
+.authlify-page .button:not(.button-primary):not(.button-link):not(.button-link-delete) {
+    border-color: var(--al-line-strong);
+    background: #fff;
+    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.04);
+    color: var(--al-ink);
+}
+
+.authlify-page .button:not(.button-primary):not(.button-link):not(.button-link-delete):hover {
+    border-color: var(--al-faint);
+    background: var(--al-subtle);
+    color: var(--al-ink);
+}
+
+.authlify-page .button-primary {
+    border-color: var(--al-accent);
+    background: var(--al-accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.authlify-page .button-primary:hover,
+.authlify-page .button-primary:focus {
+    border-color: var(--al-accent-strong);
+    background: var(--al-accent-strong);
+    color: #fff;
+}
+
+.authlify-page .button:focus {
+    box-shadow: 0 0 0 3px var(--al-accent-ring);
+    outline: none;
+}
+
+.authlify-page .button-link {
+    color: var(--al-accent);
+}
+
+.authlify-page .button-link-delete {
+    color: var(--al-red);
+}
+
+.authlify-page a.button-link-delete.button {
+    border-color: #fecaca;
+    background: #fff;
+}
+
+.authlify-page a.button-link-delete.button:hover {
+    border-color: #fca5a5;
+    background: var(--al-red-soft);
+    color: var(--al-red);
+}
+
+/* Ghost button: a quiet text action in card headers. */
+.authlify-page .button.authlify-button-ghost:not(.button-primary):not(.button-link):not(.button-link-delete) {
+    border-color: transparent;
+    background: transparent;
+    box-shadow: none;
+    color: var(--al-accent);
+    font-weight: 600;
+}
+
+.authlify-page .button.authlify-button-ghost:not(.button-primary):not(.button-link):not(.button-link-delete):hover {
+    border-color: transparent;
+    background: var(--al-accent-soft);
+    color: var(--al-accent-strong);
+}
+
+.authlify-page a {
+    color: var(--al-accent);
+}
+
+.authlify-page a:hover {
+    color: var(--al-accent-strong);
+}
+
+.authlify-page code {
+    padding: 2px 6px;
+    border-radius: 5px;
+    background: #eef2f7;
+    color: var(--al-text-2);
+    font-family: var(--al-mono);
+    font-size: 12px;
+}
+
+/* Inline groups: prefix + input, input + suffix. */
+.authlify-inline {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    max-width: 100%;
+}
+
+.authlify-inline > code {
+    padding: 9px 10px;
+    white-space: nowrap;
+}
+
+.authlify-sublabel {
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-inline-form {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+/* Radio / checkbox lists. */
+.authlify-radios,
+.authlify-checklist,
+.authlify-choices {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.authlify-radios label,
+.authlify-checklist label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 10px;
+    color: var(--al-ink);
+    font-size: 14px;
+}
+
+/* Checkbox rows at least 24px tall, so each box has a 24px target area (WCAG 2.5.8). */
+.authlify-checklist label {
+    min-height: 24px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.authlify-checklist label:has(.authlify-option) {
+    align-items: flex-start;
+}
+
+.authlify-radios label input,
+.authlify-checklist label input {
+    margin-top: 2px;
+}
+
+.authlify-radios br,
+.authlify-checklist br {
+    display: none;
+}
+
+/* Toggle switch. */
+.authlify-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.authlify-toggle input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+}
+
+.authlify-toggle__track {
+    position: relative;
+    flex-shrink: 0;
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    transition: background 0.15s ease;
+}
+
+.authlify-toggle__track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.3);
+    transition: transform 0.15s ease;
+}
+
+.authlify-toggle input:checked + .authlify-toggle__track {
+    background: var(--al-accent);
+}
+
+.authlify-toggle input:checked + .authlify-toggle__track::after {
+    transform: translateX(16px);
+}
+
+.authlify-toggle input:disabled + .authlify-toggle__track {
+    opacity: 0.5;
+}
+
+.authlify-toggle__label {
+    color: var(--al-ink);
+    font-size: 14px;
+}
+
+/* Choice cards: a radio group that looks like cards. */
+.authlify-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
+    gap: 12px;
+    max-width: 1100px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.authlify-choice {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border: 1px solid var(--al-line-strong);
+    border-radius: var(--al-radius);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.authlify-page .authlify-choice input[type="radio"] {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    margin: 0;
+}
+
+.authlify-choice:hover {
+    border-color: #a5b4fc;
+}
+
+.authlify-choice:has(input:checked) {
+    border-color: var(--al-accent);
+    background: var(--al-accent-soft);
+    box-shadow: 0 0 0 1px var(--al-accent);
+}
+
+.authlify-choice:has(input:focus-visible) {
+    outline: 2px solid var(--al-accent);
+    outline-offset: 2px;
+}
+
+.authlify-choice__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: var(--al-accent);
+}
+
+.authlify-choice:has(input:checked) .authlify-choice__icon {
+    background: #fff;
+}
+
+.authlify-choice__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding-right: 24px;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.authlify-choice__text {
+    color: var(--al-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+/* --------------------------------------------------------------------------
+   Save card (sticks to the bottom while the form is on screen)
+   -------------------------------------------------------------------------- */
+
+.authlify-form {
+    margin: 0;
+}
+
+.authlify-savebar {
+    position: sticky;
+    z-index: 20;
+    bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 4px 0 24px;
+    padding: 12px 16px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: rgba(255, 255, 255, 0.97);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    backdrop-filter: blur(6px);
+}
+
+.authlify-page .authlify-savebar .button-primary {
+    min-width: 128px;
+    min-height: 40px;
+    padding: 0 16px;
+    font-size: 14px;
+    line-height: 38px;
+}
+
+.authlify-savebar p.submit {
+    margin: 0;
+    padding: 0;
+}
+
+.authlify-savebar__hint {
+    color: var(--al-amber);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.authlify-savebar__hint::before {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    content: "";
+}
+
+.authlify-savebar__hint[hidden] {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Status: pills, dots, badges
+   -------------------------------------------------------------------------- */
+
+.authlify-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--al-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.authlify-pill--ok { background: var(--al-green-soft); color: var(--al-green); }
+.authlify-pill--warning { background: var(--al-amber-soft); color: var(--al-amber); }
+.authlify-pill--error { background: var(--al-red-soft); color: var(--al-red); }
+.authlify-pill--info { background: var(--al-accent-soft); color: var(--al-accent-strong); }
+.authlify-pill--neutral { background: #f1f5f9; color: var(--al-text-2); } /* "Off" and other non-states. */
+
+.authlify-dot {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--al-faint);
+}
+
+.authlify-dot--ok { background: #10b981; }
+.authlify-dot--warning { background: #f59e0b; }
+.authlify-dot--error { background: #ef4444; }
+.authlify-dot--info { background: #6366f1; }
+
+.authlify-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: var(--al-text-2);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.authlify-badge--xs,
+.authlify-pro-tag {
+    padding: 0 6px;
+    font-size: 10px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.authlify-badge--pro,
+.authlify-pro-tag {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    background: var(--al-pro-soft);
+    color: var(--al-pro);
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+
+.authlify-badge--accent {
+    background: var(--al-accent-soft);
+    color: var(--al-accent-strong);
+}
+
+.authlify-badge--ok {
+    background: var(--al-green-soft);
+    color: var(--al-green);
+}
+
+.authlify-badge--warning {
+    background: var(--al-amber-soft);
+    color: var(--al-amber);
+}
+
+.authlify-choice__title .authlify-badge {
+    font-size: 11px;
+}
+
+/* --------------------------------------------------------------------------
+   Stat cards with icon tiles
+   -------------------------------------------------------------------------- */
+
+.authlify-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(170px, 100%), 1fr));
+    gap: 16px;
+    margin: 0 0 24px;
+}
+
+.authlify-stat {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: center;
+    padding: 18px 20px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: var(--al-surface);
+    box-shadow: var(--al-shadow);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.authlify-page a.authlify-stat {
+    color: inherit;
+    text-decoration: none;
+}
+
+.authlify-page a.authlify-stat:hover {
+    border-color: var(--al-accent-line);
+    box-shadow: var(--al-shadow-lg);
+    color: inherit;
+}
+
+.authlify-stat__icon {
+    display: inline-flex;
+    grid-row: span 2;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: var(--al-accent-soft);
+    color: var(--al-accent);
+}
+
+.authlify-stat--warning .authlify-stat__icon {
+    background: var(--al-amber-soft);
+    color: var(--al-amber);
+}
+
+.authlify-stat--error .authlify-stat__icon {
+    background: var(--al-red-soft);
+    color: var(--al-red);
+}
+
+.authlify-stat--ok .authlify-stat__icon {
+    background: var(--al-green-soft);
+    color: var(--al-green);
+}
+
+.authlify-stat__value {
+    color: var(--al-ink);
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+
+.authlify-stat__label {
+    color: var(--al-muted);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.authlify-stat__meta {
+    color: var(--al-muted);
+}
+
+/* --------------------------------------------------------------------------
+   Lists and rows
+   -------------------------------------------------------------------------- */
+
+.authlify-checks {
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    padding: 14px 0;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-row:first-child {
+    border-top: 0;
+}
+
+.authlify-row__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.authlify-row__main strong {
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-row__main .authlify-sublabel {
+    display: block;
+    margin-top: 2px;
+}
+
+.authlify-row > .button {
+    flex-shrink: 0;
+}
+
+/* Status icon used in checklists. */
+.authlify-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--al-amber-soft);
+    color: var(--al-amber);
+}
+
+.authlify-status-icon--ok {
+    background: var(--al-green-soft);
+    color: var(--al-green);
+}
+
+.authlify-status-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+.authlify-empty {
+    margin: 16px 0 4px;
+    padding: 28px 24px;
+    border: 1px dashed var(--al-line-strong);
+    border-radius: var(--al-radius-sm);
+    color: var(--al-muted);
+    font-size: 14px;
+    text-align: center;
+}
+
+.authlify-steps-list {
+    margin: 12px 0 4px 18px;
+    padding: 0;
+}
+
+.authlify-steps-list li {
+    margin: 0 0 10px;
+    padding-left: 4px;
+    color: var(--al-text-2);
+    font-size: 14px;
+}
+
+.authlify-status-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 12px 0 4px;
+}
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+
+.authlify-page .authlify-table {
+    margin: 12px 0 4px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius-sm);
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    box-shadow: none;
+}
+
+.authlify-page > .authlify-table,
+.authlify-page > .authlify-table-wrap > .authlify-table {
+    margin-top: 0;
+    border-radius: var(--al-radius);
+    background: var(--al-surface);
+    box-shadow: var(--al-shadow);
+}
+
+.authlify-page .authlify-table thead th,
+.authlify-page .authlify-table thead td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--al-line);
+    background: var(--al-subtle);
+    color: var(--al-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+.authlify-page .authlify-table td,
+.authlify-page .authlify-table tbody th {
+    padding: 12px 14px;
+    border-top: 1px solid var(--al-divider);
+    color: var(--al-text-2);
+    font-size: 13px;
+    vertical-align: middle;
+}
+
+.authlify-page .authlify-table tbody tr:first-child td,
+.authlify-page .authlify-table tbody tr:first-child th {
+    border-top: 0;
+}
+
+.authlify-page .authlify-table.striped > tbody > :nth-child(odd) {
+    background: #fff;
+}
+
+.authlify-page .authlify-table tbody tr:hover {
+    background: #fbfcfe;
+}
+
+.authlify-table__sub {
+    display: block;
+    color: var(--al-muted);
+    font-size: 12px;
+}
+
+.authlify-page .authlify-table code {
+    padding: 0;
+    background: transparent;
+}
+
+/* Filter toolbar above a table. */
+.authlify-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+}
+
+.authlify-page .authlify-toolbar select {
+    max-width: 220px;
+}
+
+.authlify-toolbar__spacer {
+    flex: 1;
+}
+
+.authlify-page .tablenav {
+    height: auto;
+    margin: 12px 0 0;
+}
+
+/* Horizontal scroll for wide tables on small screens. */
+.authlify-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.authlify-table-wrap > .authlify-table {
+    min-width: 640px;
+}
+
+.authlify-page .authlify-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Result count and pager under a table. */
+.authlify-pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin: 12px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-pager__links {
+    display: flex;
+    gap: 8px;
+}
+
+.authlify-pager__page {
+    align-self: center;
+}
+
+/* --------------------------------------------------------------------------
+   Grids and feature cards
+   -------------------------------------------------------------------------- */
+
+.authlify-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.authlify-pillars {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+    gap: 16px;
+    margin: 0 0 20px;
+}
+
+.authlify-pillar {
+    padding: 20px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: var(--al-surface);
+    box-shadow: var(--al-shadow);
+}
+
+.authlify-pillar h3 {
+    margin: 0 0 6px;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.authlify-pillar p {
+    margin: 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-pillar__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: var(--al-accent-soft);
+    color: var(--al-accent);
+}
+
+.authlify-trust {
+    margin: 8px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-freelist {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+    gap: 10px 24px;
+    margin: 16px 0 4px;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-freelist li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--al-text-2);
+    font-size: 14px;
+}
+
+/* Collapsible sections (<details class="authlify-details">). */
+.authlify-details {
+    margin: 12px 0 0;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-surface);
+}
+
+.authlify-details > summary {
+    padding: 12px 16px;
+    color: var(--al-ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.authlify-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.authlify-details > summary::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin: 0 10px 2px 2px;
+    border-right: 1.5px solid var(--al-muted);
+    border-bottom: 1.5px solid var(--al-muted);
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+}
+
+.authlify-details[open] > summary::before {
+    transform: rotate(45deg);
+}
+
+.authlify-details > div {
+    padding: 0 16px 14px;
+}
+
+.authlify-details > div > .authlify-field:first-child {
+    border-top: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Dashboard
+   -------------------------------------------------------------------------- */
+
+.authlify-dash__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 24px;
+    align-items: start;
+}
+
+.authlify-dash__main,
+.authlify-dash__aside {
+    min-width: 0;
+}
+
+.authlify-progress {
+    overflow: hidden;
+    height: 6px;
+    margin: 14px 0 6px;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.authlify-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #6366f1, var(--al-accent));
+}
+
+.authlify-steps {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    padding: 14px 0;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-step:first-child {
+    border-top: 0;
+}
+
+.authlify-step__mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1.5px solid var(--al-line-strong);
+    border-radius: 50%;
+    color: var(--al-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.authlify-step.is-done .authlify-step__mark {
+    border-color: var(--al-green);
+    background: var(--al-green);
+    color: #fff;
+}
+
+.authlify-step.is-done .authlify-step__text strong {
+    color: var(--al-muted);
+}
+
+.authlify-step__text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.authlify-step__text strong {
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-step__text > span {
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-step > .button {
+    flex: none;
+}
+
+.authlify-health {
+    margin: 12px 0 0;
+}
+
+.authlify-health__line {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0;
+    padding: 12px;
+    border-radius: var(--al-radius-sm);
+    background: var(--al-amber-soft);
+}
+
+.authlify-health__line .authlify-icon {
+    margin-top: 1px;
+    color: var(--al-amber);
+}
+
+.authlify-health__line.is-ok {
+    padding: 0;
+    background: transparent;
+}
+
+.authlify-health__line.is-ok .authlify-icon {
+    color: var(--al-green);
+}
+
+.authlify-health__line.is-error {
+    background: var(--al-red-soft);
+}
+
+.authlify-health__line.is-error .authlify-icon {
+    color: var(--al-red);
+}
+
+.authlify-health__text {
+    flex: 1;
+    min-width: 0;
+}
+
+.authlify-health__text strong {
+    display: block;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-health__line.is-ok .authlify-health__text strong {
+    color: var(--al-green);
+}
+
+.authlify-health__text span {
+    display: block;
+    margin-top: 2px;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-health__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 14px 0 0;
+}
+
+.authlify-health .authlify-details {
+    margin-top: 14px;
+}
+
+.authlify-health .authlify-row {
+    padding: 10px 0;
+}
+
+.authlify-links {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-links li {
+    margin: 0;
+}
+
+.authlify-page .authlify-links a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-top: 1px solid var(--al-divider);
+    color: var(--al-text-2);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.authlify-links a > span:not(.screen-reader-text) {
+    flex: 1 1 auto;
+}
+
+.authlify-links a .authlify-icon {
+    color: var(--al-muted);
+}
+
+.authlify-page .authlify-links a:hover {
+    color: var(--al-accent);
+}
+
+.authlify-links li:first-child a {
+    border-top: 0;
+}
+
+.authlify-checks-list {
+    margin: 12px 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-checks-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 8px;
+    color: var(--al-text-2);
+    font-size: 14px;
+}
+
+.authlify-checks-list .authlify-icon {
+    margin-top: 2px;
+    color: var(--al-green);
+}
+
+/* The one Authlify Pro card (free) and the licence card (Pro). */
+.authlify-upsell-card {
+    border-color: #ddd6fe;
+    background:
+        radial-gradient(circle at 100% 0, rgba(139, 92, 246, 0.12), transparent 50%),
+        #fff;
+}
+
+.authlify-upsell-card .authlify-panel__body {
+    padding-top: 20px;
+}
+
+.authlify-upsell-card__title {
+    margin: 10px 0 0;
+    color: var(--al-ink);
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.authlify-page .button.authlify-button-pro {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border-color: transparent;
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: #fff;
+    font-weight: 600;
+}
+
+.authlify-page .button.authlify-button-pro:hover,
+.authlify-page .button.authlify-button-pro:focus {
+    border-color: transparent;
+    background: linear-gradient(135deg, #7c3aed, #5b21b6);
+    color: #fff;
+}
+
+/* Activity feed. */
+.authlify-feed {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-feed li {
+    display: grid;
+    grid-template-columns: 170px minmax(0, 1fr) 130px 110px;
+    align-items: center;
+    gap: 16px;
+    margin: 0;
+    padding: 11px 0;
+    border-top: 1px solid var(--al-divider);
+    font-size: 13px;
+}
+
+.authlify-feed li:first-child {
+    border-top: 0;
+}
+
+.authlify-feed__who {
+    overflow: hidden;
+    color: var(--al-ink);
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.authlify-page .authlify-feed__ip {
+    padding: 0;
+    background: none;
+    color: var(--al-muted);
+}
+
+.authlify-feed__when {
+    color: var(--al-muted);
+    font-size: 12px;
+    text-align: right;
+}
+
+/* Legacy dashboard score (kept for add-ons that print it). */
+.authlify-score__meter {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.authlify-score__meter span {
+    display: block;
+    height: 100%;
+    background: var(--al-accent);
+}
+
+/* --------------------------------------------------------------------------
+   Inputs with a prefix, copyable values, strips, summaries
+   -------------------------------------------------------------------------- */
+
+/* Joined prefix + input ("https://site.com/" + slug). */
+.authlify-input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    max-width: 580px;
+}
+
+.authlify-page .authlify-input-group > code {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid var(--al-line-strong);
+    border-right: 0;
+    border-radius: var(--al-radius-sm) 0 0 var(--al-radius-sm);
+    background: var(--al-subtle);
+    color: var(--al-muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.authlify-page .authlify-input-group > input {
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    border-radius: 0 var(--al-radius-sm) var(--al-radius-sm) 0;
+}
+
+/* Copyable value. */
+.authlify-copyable {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.authlify-page .authlify-copyable code {
+    padding: 8px 10px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-subtle);
+    color: var(--al-ink);
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+/* Compact status strip (e.g. Leak Check on the Login URL screen). */
+.authlify-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin: 0 0 20px;
+    padding: 14px 20px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: var(--al-surface);
+    box-shadow: var(--al-shadow);
+}
+
+.authlify-strip__text {
+    flex: 1;
+    min-width: 220px;
+    margin: 0;
+    color: var(--al-text-2);
+    font-size: 14px;
+}
+
+.authlify-strip__text strong {
+    color: var(--al-ink);
+}
+
+/* Radio with a title and one line of explanation. */
+.authlify-radios label > span {
+    min-width: 0;
+}
+
+.authlify-option {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.authlify-option__title {
+    color: var(--al-ink);
+    font-weight: 500;
+}
+
+.authlify-option__desc {
+    color: var(--al-muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.authlify-radios label:has(.authlify-option),
+.authlify-checklist label:has(.authlify-option) {
+    margin-bottom: 12px;
+}
+
+.authlify-checklist label > .authlify-sublabel {
+    margin-left: 2px;
+}
+
+.authlify-checklist--columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+    gap: 0 16px;
+    max-width: 560px;
+}
+
+/* Rows whose content wraps to several lines: align to the top. */
+.authlify-row--top {
+    align-items: flex-start;
+}
+
+.authlify-row--top > .authlify-dot {
+    margin-top: 7px;
+}
+
+.authlify-row__fix {
+    display: block;
+    margin-top: 6px;
+    color: var(--al-text-2);
+    font-size: 13px;
+}
+
+.authlify-row__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 8px;
+}
+
+/* Summary line at the top of a card: icon, headline + meta, action. */
+.authlify-summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    margin: 12px 0 4px;
+    padding: 14px 16px;
+    border-radius: var(--al-radius-sm);
+    background: var(--al-subtle);
+}
+
+.authlify-summary__text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.authlify-summary__text strong {
+    display: block;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-summary__text .authlify-sublabel {
+    display: block;
+    margin-top: 2px;
+}
+
+/* List of rows that each expand to an editor. */
+.authlify-expand-list {
+    margin: 12px 0 4px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius-sm);
+}
+
+.authlify-expand + .authlify-expand {
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-expand > summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 16px;
+    padding: 12px 16px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.authlify-expand > summary::-webkit-details-marker {
+    display: none;
+}
+
+.authlify-expand > summary::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    margin-left: auto;
+    border-right: 1.5px solid var(--al-muted);
+    border-bottom: 1.5px solid var(--al-muted);
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.authlify-expand[open] > summary::after {
+    transform: rotate(-135deg);
+}
+
+.authlify-expand > summary:hover {
+    background: #fbfcfe;
+}
+
+.authlify-expand__title {
+    min-width: 140px;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-expand__meta {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--al-muted);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.authlify-expand__body {
+    padding: 4px 16px 16px;
+}
+
+.authlify-expand__body .authlify-field:first-child {
+    border-top: 0;
+}
+
+.authlify-expand__body .authlify-field {
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 3fr);
+    padding: 10px 0;
+}
+
+/* Native file input matching the buttons. */
+.authlify-page input[type="file"] {
+    max-width: 100%;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-page input[type="file"]::file-selector-button {
+    min-height: 36px;
+    margin-right: 10px;
+    padding: 0 14px;
+    border: 1px solid var(--al-line-strong);
+    border-radius: var(--al-radius-sm);
+    background: #fff;
+    color: var(--al-ink);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.authlify-page input[type="file"]::file-selector-button:hover {
+    border-color: var(--al-faint);
+    background: var(--al-subtle);
+}
+
+/* One muted line under the cards (e.g. the single mention of Pro). */
+.authlify-footnote {
+    margin: 4px 0 24px;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+/* Search box + button that stay on one line. */
+.authlify-search {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    max-width: 520px;
+    margin: 12px 0 4px;
+}
+
+.authlify-search input[type="search"] {
+    flex: 1;
+    min-width: 180px;
+}
+
+/* Activity log. */
+.authlify-page .authlify-log td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.authlify-log__when {
+    color: var(--al-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.authlify-page .authlify-log__user a {
+    color: var(--al-ink);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.authlify-page .authlify-log__user a:hover {
+    color: var(--al-accent);
+}
+
+.authlify-page .authlify-log__ip {
+    text-decoration: none;
+}
+
+.authlify-page .authlify-log__ip code {
+    color: var(--al-text-2);
+}
+
+.authlify-page .authlify-log__ip:hover code {
+    color: var(--al-accent);
+}
+
+/* Settings import form (Tools). */
+.authlify-import {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 16px;
+    margin: 12px 0 0;
+}
+
+.authlify-import__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+/* Onboarding notices inside Authlify pages. */
+.authlify-page .authlify-notice__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+}
+
+.authlify-field__control select {
+    max-width: 100%;
+}
+
+/* Quiet, contextual pointer to Authlify Pro (at most one per screen). */
+.authlify-upsell {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+    margin: 0 0 20px;
+    padding: 12px 16px;
+    border: 1px solid #ddd6fe;
+    border-radius: var(--al-radius-sm);
+    background: #fcfbff;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-panel__body .authlify-upsell {
+    margin: 14px 0 0;
+}
+
+.authlify-upsell__text {
+    flex: 1 1 320px;
+    margin: 0;
+    color: var(--al-muted);
+}
+
+.authlify-upsell__text strong {
+    color: var(--al-text-2);
+    font-weight: 600;
+}
+
+.authlify-upsell__links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+.authlify-page .authlify-upsell a {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+}
+
+.authlify-page .authlify-upsell__links a {
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.authlify-page a.authlify-learn-more {
+    color: var(--al-accent);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+    white-space: nowrap;
+}
+
+.authlify-page a.authlify-learn-more:hover {
+    color: var(--al-accent-strong);
+    text-decoration-thickness: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Shared Authlify Pro patterns (expandable rows, feature tiles, helpers)
+   -------------------------------------------------------------------------- */
+
+.authlify-xlist {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-xlist > li {
+    margin: 0;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-xlist > li:first-child {
+    border-top: 0;
+}
+
+.authlify-xrow > summary {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    cursor: pointer;
+    list-style: none;
+}
+
+.authlify-xrow > summary::-webkit-details-marker {
+    display: none;
+}
+
+.authlify-xrow > summary:focus {
+    outline: none;
+}
+
+.authlify-admin .authlify-page .authlify-xrow > summary:focus-visible {
+    outline: none;
+}
+
+.authlify-xrow > summary:focus-visible .authlify-xrow__action {
+    outline: 2px solid var(--al-accent);
+    outline-offset: 2px;
+}
+
+.authlify-xrow__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f1f5f9;
+    color: var(--al-ink);
+}
+
+.authlify-xrow__icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.authlify-xrow__main {
+    flex: 1;
+    min-width: 0;
+}
+
+.authlify-xrow__main strong {
+    display: block;
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-xrow__main .authlify-sublabel {
+    display: block;
+    overflow: hidden;
+    margin-top: 1px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Looks like .button.button-small; it is the summary's visible affordance. */
+.authlify-xrow__action {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 6px;
+    min-height: 30px;
+    padding: 0 11px;
+    border: 1px solid var(--al-line-strong);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-surface);
+    box-shadow: 0 1px 1px rgba(15, 23, 42, 0.04);
+    color: var(--al-ink);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 28px;
+    white-space: nowrap;
+}
+
+.authlify-xrow > summary:hover .authlify-xrow__action {
+    border-color: var(--al-faint);
+    background: var(--al-subtle);
+}
+
+.authlify-xrow__action::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    margin-top: -3px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: rotate(45deg);
+    transition: transform 0.15s ease;
+}
+
+.authlify-xrow[open] .authlify-xrow__action::after {
+    margin-top: 2px;
+    transform: rotate(-135deg);
+}
+
+.authlify-xrow__action .is-close,
+.authlify-xrow[open] .authlify-xrow__action .is-open {
+    display: none;
+}
+
+.authlify-xrow[open] .authlify-xrow__action .is-close {
+    display: inline;
+}
+
+.authlify-xrow__body {
+    margin: 0 0 18px 52px;
+    padding: 4px 20px 8px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius-sm);
+    background: #fafbfd;
+}
+
+.authlify-xrow__body > .authlify-field:first-child,
+.authlify-xrow__body > .authlify-details:first-child + .authlify-field {
+    border-top: 0;
+}
+
+.authlify-xrow__body .authlify-field {
+    grid-template-columns: minmax(160px, 2fr) minmax(0, 3fr);
+    gap: 8px 32px;
+}
+
+.authlify-xrow__body > .authlify-details {
+    margin: 14px 0 6px;
+}
+
+.authlify-xrow__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 14px 0 8px;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-xrow__foot .authlify-spacer {
+    flex: 1;
+}
+
+.authlify-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
+    gap: 12px;
+    margin: 12px 0 4px;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding: 16px;
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: var(--al-surface);
+}
+
+.authlify-tile__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    background: var(--al-accent-soft);
+    color: var(--al-accent);
+}
+
+.authlify-tile__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.authlify-tile__head strong {
+    color: var(--al-ink);
+    font-size: 14px;
+    font-weight: 650;
+}
+
+.authlify-tile p {
+    flex: 1;
+    margin: 0;
+    color: var(--al-muted);
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.authlify-page .authlify-tile a {
+    align-self: flex-start;
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.authlify-page .authlify-tile a:hover {
+    text-decoration: underline;
+}
+
+/* Role checkboxes in columns instead of one long stack. */
+.authlify-checklist--grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(150px, 100%), 1fr));
+    gap: 0 16px;
+    max-width: 580px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.authlify-checklist--grid label {
+    margin-bottom: 8px;
+}
+
+/* Longer checkbox lists (events) in two columns where there is room. */
+.authlify-checklist--cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+    gap: 0 16px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* Wide tables scroll inside their card on small screens. */
+.authlify-scroll-x {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* A row of secondary actions. */
+.authlify-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Result line after an async action (aria-live region). */
+.authlify-result {
+    margin: 10px 0 0;
+    padding: 10px 12px;
+    border: 1px solid var(--al-line);
+    border-left: 4px solid var(--al-accent);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-surface);
+    font-size: 13px;
+}
+
+.authlify-result.is-ok {
+    border-left-color: var(--al-green);
+}
+
+.authlify-result.is-error {
+    border-left-color: var(--al-red);
+}
+
+.authlify-result p {
+    margin: 2px 0;
+}
+
+/* --------------------------------------------------------------------------
+   Designer page: the app keeps its own layout; align its surface.
+   -------------------------------------------------------------------------- */
+
+.authlify-designer-page .authlify-segment {
+    margin-bottom: 16px;
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1200px) {
+    .authlify-dash__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 960px) {
+    .authlify-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 782px) {
+    .authlify-page {
+        padding-top: 20px;
+    }
+
+    .authlify-page-head {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 20px;
+    }
+
+    .authlify-page-head h1 {
+        font-size: 24px;
+    }
+
+    .authlify-field,
+    .authlify-expand__body .authlify-field,
+    .authlify-xrow__body .authlify-field {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .authlify-panel__head,
+    .authlify-panel__body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .authlify-panel__foot {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .authlify-panel__body > .authlify-panel__foot {
+        margin-left: -16px;
+        margin-right: -16px;
+    }
+
+    .authlify-row {
+        flex-wrap: wrap;
+    }
+
+    .authlify-step {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 8px 14px;
+        align-items: start;
+    }
+
+    .authlify-step > .button {
+        grid-column: 2;
+        justify-self: start;
+    }
+
+    .authlify-feed li {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 6px 12px;
+    }
+
+    .authlify-feed__ip {
+        display: none;
+    }
+
+    .authlify-choices {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .authlify-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .authlify-stat {
+        padding: 14px;
+        column-gap: 12px;
+    }
+
+    .authlify-stat__icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .authlify-stat__value {
+        font-size: 20px;
+    }
+
+    .authlify-expand__meta {
+        flex-basis: 100%;
+        white-space: normal;
+    }
+
+    .authlify-expand > summary {
+        position: relative;
+        padding-right: 36px;
+    }
+
+    .authlify-expand > summary::after {
+        position: absolute;
+        right: 16px;
+    }
+
+    .authlify-xrow__body {
+        margin-left: 0;
+        padding: 4px 14px 8px;
+    }
+
+    .authlify-xrow > summary {
+        display: grid;
+        grid-template-columns: 38px minmax(0, 1fr) auto;
+        grid-template-areas: "icon main main" "icon pill action";
+        gap: 6px 12px;
+        align-items: center;
+    }
+
+    .authlify-xrow__icon { grid-area: icon; align-self: start; }
+    .authlify-xrow__main { grid-area: main; }
+    .authlify-xrow > summary > .authlify-pill { grid-area: pill; justify-self: start; }
+    .authlify-xrow__action { grid-area: action; }
+
+    .authlify-xrow__main .authlify-sublabel {
+        white-space: normal;
+    }
+
+    .authlify-tiles {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .authlify-tile {
+        padding: 12px;
+    }
+
+    .authlify-tile p {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .authlify-toggle__track,
+    .authlify-toggle__track::after,
+    .authlify-details > summary::before,
+    .authlify-expand > summary::after,
+    .authlify-xrow__action::after,
+    .authlify-choice,
+    .authlify-stat {
+        transition: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Keyboard focus (WCAG 2.4.7 / 1.4.11): a solid, high-contrast outline on
+   every focusable element, only for keyboard focus.
+   -------------------------------------------------------------------------- */
+
+.authlify-admin .authlify-page :is(a, button, .button, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--al-accent);
+    outline-offset: 2px;
+    box-shadow: none;
+    border-radius: 4px;
+}
+
+.authlify-admin .authlify-page .authlify-side__link:focus-visible {
+    outline-offset: -2px;
+    border-radius: var(--al-radius-sm);
+}
+
+.authlify-admin .authlify-page :is(input, select, textarea):focus-visible {
+    outline: 2px solid var(--al-accent);
+    outline-offset: 1px;
+    box-shadow: none;
+}
+
+.authlify-admin .authlify-page :is(input[type="checkbox"], input[type="radio"]):focus-visible {
+    outline-offset: 2px;
+}
+
+.authlify-admin .authlify-toggle input:focus-visible + .authlify-toggle__track {
+    outline: 2px solid var(--al-accent);
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+/* The choice card draws the ring; the radio itself does not. */
+.authlify-admin .authlify-page .authlify-choice input[type="radio"]:focus-visible {
+    outline: none;
+}
+
+@media (forced-colors: active) {
+    .authlify-admin .authlify-page :focus-visible,
+    .authlify-admin .authlify-top :focus-visible {
+        outline: 2px solid CanvasText;
+    }
+
+    .authlify-choice:has(input:checked) {
+        outline: 2px solid Highlight;
+    }
+}

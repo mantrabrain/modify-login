@@ -1,0 +1,17 @@
+{
+  "name": "Warm sand",
+  "description": "Desert dunes, a cream card and serif type.",
+  "backdrop": "#ecd3a8",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#9a3412", "on_primary": "#ffffff", "background": "#f3dcb5", "surface": "#fffaf0", "text": "#292524", "muted": "#57534e", "border": "#a8a29e", "radius": 16 },
+    "background": { "type": "image", "image": "plugin:images/sand-dunes.svg", "color": "#f3dcb5", "text": "#44311f" },
+    "logo": { "type": "text", "text_size": 30, "text_color": "#44311f" },
+    "form": { "card": "box", "width": 400, "padding": 34, "shadow": "md", "border_width": 0 },
+    "inputs": { "size": 16, "background": "#ffffff", "border": "#8a7f74", "focus": "#9a3412", "radius": 10 },
+    "button": { "full_width": true, "hover_background": "#7c2d12" },
+    "links": { "color": "#7c2d12", "hover": "#431407" },
+    "messages": { "error": "#b91c1c", "notice": "#9a3412", "success": "#166534", "background": "#ffffff" },
+    "text": { "font": "lora", "size": 15 }
+  }
+}

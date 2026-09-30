@@ -1,0 +1,191 @@
+/**
+ * Authlify: Free vs Pro screen.
+ *
+ * @package Authlify
+ * @since   3.0.0
+ */
+
+/* Plans */
+
+.authlify-plans {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 0 0 20px;
+}
+
+.authlify-plan {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 22px;
+    border: 1px solid var(--al-border);
+    border-radius: var(--al-radius);
+    background: var(--al-card);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.authlify-plan.is-featured {
+    border-color: var(--al-accent);
+    box-shadow: 0 0 0 1px var(--al-accent), 0 6px 20px rgba(79, 70, 229, 0.10);
+}
+
+.authlify-plan__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.authlify-page .authlify-plan h2 {
+    margin: 0;
+    padding: 0;
+    color: var(--al-text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.authlify-plan__tag {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--al-accent-soft);
+    color: var(--al-accent);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.authlify-page .authlify-plan__sites {
+    margin: 4px 0 0;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-page .authlify-plan__price {
+    margin: 14px 0 16px;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-plan__price strong {
+    margin-right: 2px;
+    color: var(--al-text);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.authlify-page .authlify-plan .authlify-plan__buy {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+}
+
+.authlify-plan__alt {
+    margin-top: 10px;
+    color: var(--al-muted);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.authlify-plan__alt:hover,
+.authlify-plan__alt:focus {
+    color: var(--al-accent);
+    text-decoration: underline;
+}
+
+/* Comparison table */
+
+.authlify-compare__scroll {
+    overflow-x: auto;
+}
+
+.authlify-page .authlify-compare__table {
+    width: 100%;
+    margin: 0;
+}
+
+.authlify-page .authlify-compare__table thead th:first-child {
+    text-align: left;
+}
+
+.authlify-page .authlify-compare__table tbody th[scope="row"] {
+    color: var(--al-text-2);
+    font-weight: 400;
+    text-align: left;
+}
+
+.authlify-page .authlify-compare__col {
+    width: 190px;
+    text-align: center;
+}
+
+.authlify-page .authlify-compare__col--pro {
+    background: var(--al-accent-soft);
+}
+
+.authlify-page .authlify-compare__table thead .authlify-compare__col--pro {
+    background: var(--al-accent-soft);
+    color: var(--al-accent);
+    font-weight: 600;
+}
+
+.authlify-page .authlify-compare__group th {
+    padding-top: 18px;
+    background: #fafafa;
+    color: var(--al-text);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: left;
+    text-transform: uppercase;
+}
+
+.authlify-compare__group svg {
+    margin-right: 6px;
+    color: var(--al-accent);
+    vertical-align: -3px;
+}
+
+.authlify-compare__yes {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--al-green-soft);
+    color: var(--al-green);
+}
+
+.authlify-compare__no {
+    color: var(--al-faint);
+}
+
+.authlify-compare__text {
+    color: var(--al-text-2);
+    font-size: 12px;
+}
+
+@media (max-width: 960px) {
+    .authlify-plans {
+        grid-template-columns: 1fr;
+    }
+
+    .authlify-page .authlify-compare__col {
+        width: 110px;
+    }
+}
+
+@media (max-width: 600px) {
+    .authlify-page .authlify-compare__col {
+        width: 72px;
+    }
+
+    .authlify-page .authlify-compare__table td,
+    .authlify-page .authlify-compare__table tbody th {
+        padding-right: 8px;
+        padding-left: 8px;
+    }
+}

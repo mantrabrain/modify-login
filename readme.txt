@@ -1,195 +1,237 @@
-=== Modify Login - Custom WordPress Login URL & Login Page Designer ===
+=== Authlify – Custom Login URL, Login Security, 2FA & Login Page Designer ===
 Contributors: MantraBrain
 Donate link: https://mantrabrain.com
-Tags: custom login, hide wp-login, login security, login page, login customizer
-Requires at least: 5.8
+Tags: hide login, limit login attempts, two factor, passkeys, login customizer
+Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 2.0.2
+Stable tag: 3.0.0
 License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Secure WordPress login with custom URL, protect wp-admin, and design beautiful login pages with drag & drop builder. No code required.
+Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, and design your login page. Built so you never get locked out.
 
 == Description ==
 
-**Modify Login** transforms the default WordPress login experience with enhanced security features and a modern, customizable login page design.
+**Authlify** (formerly Modify Login) is an all-in-one WordPress login security plugin. It hides your login page properly, stops brute-force attacks, adds CAPTCHA, two-factor login and passkeys, and lets you design every login screen. All of that is free, on as many sites as you like.
 
-✅ Prevent brute force attacks by hiding your login page
-✅ Create a beautiful branded login experience in minutes
-✅ No coding required - easy drag and drop builder
-✅ Redirect unauthorized users to any page
+[Website](https://matrixaddons.com/plugins/authlify/) | [All features](https://matrixaddons.com/plugins/authlify/#features) | [Free vs Pro](https://matrixaddons.com/plugins/authlify/#compare) | [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) | [Support](https://wordpress.org/support/plugin/modify-login/)
 
-### 🔒 Security Features
+= Why Authlify =
 
-* **Custom Login URL**: Replace the standard wp-login.php with your custom endpoint (e.g., yourdomain.com/setup)
-* **Login Protection**: Block direct access to wp-login.php and wp-admin for non-logged in users
-* **Redirect Protection**: Redirect unauthorized access attempts to a URL of your choice
-* **Google reCAPTCHA Integration**: Add CAPTCHA verification to prevent bot attacks
-* **Login Attempt Tracking**: Monitor and log all login attempts with IP addresses and location data
+* **One plugin instead of four.** A custom login URL (like WPS Hide Login), login lockouts (like Limit Login Attempts Reloaded), two-factor login (like Two Factor or WP 2FA) and a login page designer (like LoginPress), all built to work together.
+* **A hidden login that is actually hidden.** Most hide-login setups leak the secret address through /wp-admin/, /login, password-reset links or emails. Authlify closes those routes, and its built-in **Leak Check** proves it on your own site.
+* **Built so you never lock yourself out.** A new login URL must be confirmed before it applies, the address is emailed to you, and there are wp-config.php and WP-CLI recovery options for every setting.
+* **Modern sign-in, free.** Passkeys (Face ID, Touch ID, Windows Hello, security keys), authenticator apps and backup codes, with a two-factor step that matches your login design.
+* **Private by design.** The activity log stays on your server, the self-hosted ALTCHA CAPTCHA needs no third party, and nothing is sent anywhere unless you switch on a service that needs it.
+* **Calm to use.** A clear dashboard checklist, built-in documentation, no nag banners, and no features switched on behind your back by an update.
 
-### 🎨 Design Features
+= Custom login URL and hide wp-admin =
 
-* **Visual Login Builder**: Modern drag-and-drop interface to customize your login page appearance
-* **Background Customization**: Set custom background colors, images, and opacity
-* **Logo Control**: Upload your own logo with full control over dimensions and positioning
-* **Form Styling**: Customize the login form with custom colors, borders, and padding
-* **Button Styling**: Style login buttons with custom colors and hover effects
-* **Custom CSS**: Add your own CSS for unlimited customization possibilities
+* **Change the WordPress login URL** to something like yoursite.com/my-door. It works on Apache, Nginx and managed hosts, with no .htaccess edits.
+* **Hide wp-login.php and wp-admin** from logged-out visitors: they see your theme's "page not found" page, an "access denied" message, or a redirect of your choice.
+* **Leak Check** requests your own site about 40 times, the way a visitor would, and tells you exactly what, if anything, gives the address away. It can re-check weekly and after every change.
+* **Confirm before it applies.** A new login URL works alongside the old one until you open it once, so a typo can't lock you out.
+* Safe with page caches: the login page is never cached, and WP Rocket, LiteSpeed, SiteGround and Breeze exclusions are added automatically.
+* Links to the login page from WooCommerce, membership and LMS plugins are rewritten to your custom address.
 
-### 🔄 Redirect Options
+= Limit login attempts and brute-force protection =
 
-* **Login Redirect**: Send users to a specific URL after successful login
-* **Logout Redirect**: Redirect users to a custom URL after logging out
+* **Lockouts after too many failed logins**, per IP address and optionally per network. Repeat lockouts get longer: 15 minutes, 1 hour, 4 hours, 1 day.
+* **Attackers can't lock out the real admin.** A targeted account asks for a CAPTCHA instead of being locked, and its owner can always use an email unlock link.
+* Lockouts also cover **XML-RPC, the REST API and application passwords**, not just the login form.
+* **Correct visitor IPs behind Cloudflare or your own proxy.** Faked forwarding headers are ignored, so lockouts can't be dodged or pinned on someone else. Authlify detects your setup and suggests the right option.
+* Allow and block lists (IP addresses and CIDR ranges).
+* **Hardening:** switch off XML-RPC or its multi-password requests, hide usernames from the REST API and ?author= scans, limit application passwords, show generic login errors, and make the site private (force login) with public exceptions.
 
-### 👨‍💻 Developer Friendly
+= CAPTCHA on login, registration, comments and WooCommerce =
 
-* **Clean Code**: Well-organized, documented code following WordPress best practices
-* **Filter Hooks**: Extensive filter hooks for developers to extend functionality
-* **Performance Optimized**: Lightweight implementation with minimal impact on site speed
+* **Cloudflare Turnstile, hCaptcha, Google reCAPTCHA v2 and v3**, and **ALTCHA**, a self-hosted, privacy-friendly CAPTCHA with no third party at all. Plus an invisible honeypot.
+* On login, registration, lost password, comments and WooCommerce login, registration and lost-password forms.
+* Show it always, or only after failed logins.
+* Key checks before you switch it on, and a test mode that logs instead of blocking.
 
-### Perfect For:
+= Two-factor authentication (2FA) and passkeys =
 
-* Membership sites
-* Client websites
-* E-commerce stores
-* Educational platforms
-* Business websites
-* Any WordPress site needing improved security
+* **Authenticator apps** (Google Authenticator, Microsoft Authenticator, 1Password, Authy and others) with one-time **backup codes**.
+* **Passkeys:** sign in with Face ID, Touch ID, Windows Hello or a security key, plus a "Sign in with a passkey" button on the login page (PHP 8.0 or later).
+* Each user sets up two-factor login on their own profile. Admins can reset it, and users can recover by email.
+* The two-factor step uses your login page design.
+* **Breached-password check:** optionally refuse passwords found in known data breaches, using the privacy-preserving Have I Been Pwned range API.
 
-### How It Works
+= Login page customizer and designer =
 
-1. Set a custom login URL endpoint in the plugin settings (default is "setup")
-2. Optionally enable redirect protection to block direct access to wp-login.php
-3. Customize the login page appearance using the visual builder
-4. Add optional reCAPTCHA verification for enhanced security
+* A visual designer with a live preview of your real login page on desktop, tablet and phone.
+* **12 ready-made templates**, including split-screen, glass and dark, all checked for readable contrast.
+* **Match my site** builds a design from your theme's colours, fonts and logo in one click.
+* Logo, background image, colours, fonts, form and button styles, and custom CSS.
+* Every login screen is styled: login, lost password, reset, registration, two-factor and lockout.
+* Import an existing design from LoginPress or Colorlib Login Customizer.
 
-### Get Help
+= Login activity log =
 
-* [Documentation](https://mantrabrain.com/docs-category/modify-login/)
-* [Support Forum](https://wordpress.org/support/plugin/modify-login/)
-* [Contact Us](https://mantrabrain.com/contact/)
+* Every login, failed login, lockout and security change, with IP address and country (from your CDN's country header when it sends one).
+* Filter, search and export to CSV.
+* Stored only on your site, with a retention period, optional IP anonymization, and the WordPress privacy export and erase tools.
+* Optional email to the admin when an administrator account is locked out.
+
+= Redirects, recovery and tools =
+
+* **Login and logout redirects** for everyone or per role.
+* **Never locked out:** the login URL is emailed to the site admin whenever it changes; `define( 'AUTHLIFY_DISABLE_HIDE', true );` in wp-config.php brings wp-login.php back; locked-out users get an "email me an unlock link" option.
+* **WP-CLI:** `wp authlify url get|set|reset`, `wp authlify unlock`, `wp authlify lockouts`, `wp authlify reset_2fa` and `wp authlify leak-check`.
+* **Switch in one click** from WPS Hide Login, Limit Login Attempts Reloaded, Admin and Site Enhancements (ASE) and LoginPress: Authlify detects them and imports their settings.
+* Settings export and import between sites, Site Health checks, and multisite support.
+* **Built-in documentation** under Authlify → Docs, with a "Learn more" link on every settings screen.
+
+= Our promise =
+
+No free feature will ever move into Pro. No nag banners. No emails switched on by an update. Upgraded Modify Login sites keep their login URL and settings, and new protections stay off until you turn them on.
+
+= Authlify Pro =
+
+Authlify is complete on its own. [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) is an add-on for sites with staff, customers or clients: rules instead of requests, more ways to sign in, and a warning when something looks wrong. It needs the free plugin, and every plan includes every Pro feature.
+
+* **[Require two-factor login by role](https://matrixaddons.com/plugins/authlify/#pro-2fa-rules):** a grace period and setup wizard, email codes, trusted devices, passkey-only roles and a coverage report for each role.
+* **[Social login and single sign-on](https://matrixaddons.com/plugins/authlify/#pro-social-login):** Google, Microsoft, Apple, GitHub and any OpenID Connect provider (Okta, Auth0, Keycloak, Entra ID), limited to your email domains if you like.
+* **[Passwordless and temporary access](https://matrixaddons.com/plugins/authlify/#pro-passwordless):** magic login links and sign-in codes by role, and temporary logins for support staff and clients that expire on their own.
+* **[Login alerts](https://matrixaddons.com/plugins/authlify/#pro-alerts):** new-device and new-country emails with a "This wasn't me" link, and admin alerts by email, Slack, Discord, Telegram, Microsoft Teams or signed webhooks.
+* **[Login by country, hours and a honeypot](https://matrixaddons.com/plugins/authlify/#pro-access-rules):** allow or refuse logins by country (with a local country database), limit roles to set days and hours, and ban IPs that keep trying the old login addresses.
+* **[22 premium login designs](https://matrixaddons.com/plugins/authlify/#pro-designs):** animated, video and seasonal backgrounds, branded emails, login and registration blocks, a popup login, a Site Editor login page and a WooCommerce My Account skin.
+* **[Session control](https://matrixaddons.com/plugins/authlify/#pro-sessions):** maximum session length and devices per role, idle logout with a warning, and "log out everywhere".
+* **[Password policy](https://matrixaddons.com/plugins/authlify/#pro-password-policy):** length, character rules, no reuse and expiry for chosen roles, plus a breached-password check at login.
+* **[Sudo mode](https://matrixaddons.com/plugins/authlify/#pro-sudo-mode):** people confirm it is them before plugin, theme, user and security changes.
+* **[WooCommerce](https://matrixaddons.com/plugins/authlify/#pro-woocommerce):** the two-factor step inside My Account, and a Security tab where customers manage two-factor login, passkeys and devices.
+* **[Insights and scheduled exports](https://matrixaddons.com/plugins/authlify/#pro-insights):** failed attempts by country, top IP addresses and targeted usernames, a weekly digest and scheduled CSV exports of the log.
+* **[Agency and multisite](https://matrixaddons.com/plugins/authlify/#pro-agency):** white-label, client handoff, network settings with per-site locks, and design sync between sites.
+* **[REST API and WP-CLI](https://matrixaddons.com/plugins/authlify/#pro-api-cli):** settings, the activity log, lockouts and the design over `/wp-json/authlify-pro/v1/`, plus bulk WP-CLI commands.
+
+Plans: Personal (1 site), Plus (5 sites) and Agency (25 sites), yearly or lifetime, with a 14-day money-back guarantee. If a licence lapses, Pro keeps working; the licence brings updates and support. [Compare Free and Pro](https://matrixaddons.com/plugins/authlify/#compare) · [See pricing](https://matrixaddons.com/plugins/authlify/#pricing)
+
+== External services ==
+
+Authlify works without any external service. The services below are contacted only when you switch the matching feature on, and only from the forms or screens listed.
+
+**Cloudflare Turnstile** (when you choose Turnstile as the CAPTCHA provider). The visitor's browser loads the Turnstile script from challenges.cloudflare.com on the protected forms, and your server sends the visitor's answer token, your secret key and the visitor's IP address to challenges.cloudflare.com to verify it when the form is submitted. [Terms](https://www.cloudflare.com/website-terms/), [privacy policy](https://www.cloudflare.com/privacypolicy/), [Turnstile privacy addendum](https://www.cloudflare.com/turnstile-privacy-policy/).
+
+**hCaptcha** (when you choose hCaptcha). The browser loads the script from js.hcaptcha.com on the protected forms, and your server sends the answer token, your secret key and the visitor's IP address to api.hcaptcha.com on submit. [Terms](https://www.hcaptcha.com/terms), [privacy policy](https://www.hcaptcha.com/privacy).
+
+**Google reCAPTCHA** v2 or v3 (when you choose reCAPTCHA). The browser loads the script from www.google.com on the protected forms, and your server sends the answer token, your secret key and the visitor's IP address to www.google.com/recaptcha/api/siteverify on submit. [Terms](https://policies.google.com/terms), [privacy policy](https://policies.google.com/privacy).
+
+**Have I Been Pwned – Pwned Passwords** (when you switch on the breached-password check). When someone sets or resets a password, your server sends the first 5 characters of the password's SHA-1 hash to api.pwnedpasswords.com. The password and its full hash never leave your site. [About Pwned Passwords](https://haveibeenpwned.com/Passwords), [privacy policy](https://haveibeenpwned.com/Privacy).
+
+ALTCHA and the honeypot run entirely on your own server. Leak Check only requests your own site. The optional Authlify Pro add-on contacts store.mantrabrain.com for licences and updates; that is described in its own readme.
 
 == Installation ==
 
-1. Upload the plugin files to the `/wp-content/plugins/modify-login` directory, or install the plugin through the WordPress plugins screen directly.
-2. Activate the plugin through the 'Plugins' screen in WordPress
-3. Go to Settings > Modify Login to configure the plugin
-4. The default login endpoint is set to "setup", but you can change it in the settings
-5. Configure additional options as needed
-6. Use the Login Builder to customize the appearance of your login page
+1. Install and activate Authlify from Plugins → Add New.
+2. Open **Authlify → Login URL**, choose a private address and open the confirmation link. Nothing is hidden until you do this.
+3. Review the protections under **Authlify → Security**. Brute-force lockouts are on for new installs; CAPTCHA and hardening options are yours to switch on.
+4. Follow the checklist on the **Authlify** dashboard: it shows what is protected and what to set up next.
+5. Optional: set up two-factor login or a passkey on your profile, and pick a design under **Authlify → Designer**.
+6. Stuck? **Authlify → Docs** has a getting-started guide and a troubleshooting section.
 
 == Frequently Asked Questions ==
 
-= What is the default login endpoint? =
+= Is Authlify free? =
 
-The plugin comes with "setup" as the default login endpoint. Your login URL will be: yourdomain.com/setup or yourdomain.com/?setup [ Depend Upon your permalink]
+Yes. Everything described above, including the custom login URL, lockouts, every CAPTCHA provider, two-factor login, passkeys, the designer and the activity log, is free with no limits and no expiry. [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) is an optional add-on for teams, stores and agencies.
 
-You can easily change this to any text you prefer in the Settings > Modify Login page.
+= I forgot my custom login URL. How do I get in? =
 
-= How do I access the login page after enabling the custom login URL? =
+Check your email: Authlify sends the login address to the site admin email every time it changes. You can also add `define( 'AUTHLIFY_DISABLE_HIDE', true );` to wp-config.php to bring back wp-login.php, or run `wp authlify url get` with WP-CLI.
 
-After activating the plugin, you can access your login page at: yourdomain.com/setup or yourdomain.com/?setup [ Depend upon your permalink structure ]
+= I'm locked out after too many failed logins. What now? =
 
-If you've changed the default endpoint to something else, you'll need to use that instead (e.g., yourdomain.com/your-custom-endpoint).
+Wait for the lockout to end, or use the "email me an unlock link" option on the lockout screen. With WP-CLI, `wp authlify unlock --all` lifts every lockout. Add your own IP address to the "Never lock out" list to avoid it in future.
 
-= Will this plugin work on my multisite WordPress installation? =
+= How is this different from WPS Hide Login? =
 
-Yes, Modify Login is fully compatible with WordPress multisite installations. The login URL customization works across all sites in your network.
+Both change the login URL without touching .htaccess. Authlify also closes the routes that commonly leak the secret address (such as /wp-admin/, /login, password-reset and signup links, the Customizer and privacy emails), proves it with Leak Check, asks you to confirm a new address before it applies, and adds lockouts, CAPTCHA, two-factor login, passkeys and a login designer. It can import your WPS Hide Login address in one click.
 
-= I enabled the custom login URL but now I can't access my admin dashboard. What should I do? =
+= Can it replace Limit Login Attempts Reloaded? =
 
-If you can't access your admin dashboard, try these steps:
+Yes for most sites: lockouts per IP and network, escalating lockout lengths, allow and block lists, lockout emails, a log with CSV export, and correct IPs behind Cloudflare or a proxy, all free. It can import your Limit Login Attempts Reloaded settings.
 
-1. Append the default endpoint to your site URL (e.g., yourdomain.com/setup)
-2. Check your .htaccess file for any conflicting rules
-3. Temporarily disable any security plugins that might be interfering
-4. If all else fails, rename the plugin folder in /wp-content/plugins/ via FTP to deactivate the plugin
+= Does hiding the login page make my site secure? =
 
-= Does this plugin modify core WordPress files? =
+It stops the huge volume of automated attacks on wp-login.php, which saves server resources and log noise. Pair it with lockouts, CAPTCHA and two-factor login for real protection. Leak Check also shows what a hidden URL does not cover, such as XML-RPC and application passwords.
 
-No, Modify Login doesn't modify any core WordPress files. It uses WordPress hooks and filters to change the login URL and customize the login page appearance. This makes it safer and more compatible with WordPress updates.
+= Which CAPTCHA should I use? =
 
-= Can I customize the redirects after login/logout? =
+Cloudflare Turnstile is free and invisible for most visitors. ALTCHA runs entirely on your own server, so no visitor data goes to a third party. hCaptcha and reCAPTCHA v2/v3 are also supported. You can show the CAPTCHA only after failed logins.
 
-Yes, you can set custom URLs for both login and logout redirects in the plugin settings. This is useful for directing users to specific pages after they log in or out of your site.
+= Do passkeys replace passwords? =
 
-= How does the Login Builder work? =
+They can. Once a user adds a passkey on their profile, they can sign in with the "Sign in with a passkey" button and Face ID, Touch ID, Windows Hello or a security key, or use it as their second step. Passkeys need PHP 8.0 or later.
 
-The Login Builder provides a visual interface where you can customize your login page appearance. You can:
-- Change background colors and images
-- Upload and position your custom logo
-- Style the login form and buttons
-- Add custom CSS for advanced styling
+= Does it work with WooCommerce, membership and LMS plugins? =
 
-The builder shows you a live preview of your changes, making it easy to design the perfect login page.
+Yes. WooCommerce My Account login keeps working and gets the same lockouts and CAPTCHA. Links to the login page from other plugins are rewritten to your custom address automatically.
 
-= Is reCAPTCHA required to use this plugin? =
+= Does it work behind Cloudflare or a load balancer? =
 
-No, reCAPTCHA integration is optional. You can enable or disable it in the plugin settings. If enabled, you'll need to provide your own reCAPTCHA site key and secret key from Google.
+Yes. Choose "Through Cloudflare" or "Through my own proxy" under Security → Brute force, so lockouts use each visitor's real IP address. Authlify detects your setup and suggests the right option.
 
-= Will this plugin conflict with other security plugins? =
+= Does it work with caching plugins? =
 
-Modify Login is designed to be compatible with most WordPress security plugins. However, plugins that also modify the login URL might conflict. If you experience issues, try disabling one of the conflicting plugins or adjust their settings to avoid overlap.
+Yes. The login page is never cached, and exclusions for WP Rocket, LiteSpeed Cache, SiteGround Optimizer and Breeze are added automatically. Site Health tells you if another cache needs a manual exclusion.
 
-= Can I add my own logo to the login page? =
+= Is it GDPR friendly? =
 
-Yes, the Login Builder includes full logo customization. You can upload your own logo and control its size and position. This is perfect for adding your brand identity to the login experience.
+The activity log stays on your site, is deleted after the retention period you choose, can store anonymized IPs, and is covered by the WordPress personal-data export and erase tools. ALTCHA and the honeypot need no third-party service at all. Suggested privacy-policy text is added to Settings → Privacy. The external services a feature may use are listed under "External services" above.
 
-= Is the custom login URL compatible with caching plugins? =
+= Will it conflict with other security plugins? =
 
-Yes, the plugin is designed to work with popular caching plugins. If you experience issues after changing login settings, try clearing your cache.
+Turn off login-URL or lockout features in other plugins that do the same job. If another two-factor plugin (Two Factor, WP 2FA or Wordfence) is active, Authlify leaves two-factor login to it and tells you.
 
-= What happens to the default wp-login.php page when this plugin is active? =
+= Does it support multisite? =
 
-When redirect protection is enabled, the plugin will redirect anyone trying to access wp-login.php directly to your specified redirect URL (or the homepage if no URL is specified). This adds an extra layer of security by concealing the standard login path.
+Yes. When network-activated, one set of settings, one login URL and one activity log cover the whole network.
 
-= Can I track login attempts to my site? =
+= I was upgraded from Modify Login. What changed? =
 
-Yes, version 2.0.0 includes a login attempt tracking feature that logs all login attempts. You can view IP addresses, user agents, and geographic location of login attempts from the plugin's admin area.
+Your login URL, redirect settings, reCAPTCHA keys and login log carry over unchanged. New protections (lockouts, new CAPTCHA providers, two-factor login) stay off until you switch them on. The old settings stay in the database in case you roll back.
 
-= Is there a way to migrate from version 1.x to 2.0.0 safely? =
+= What is the difference between Authlify and Authlify Pro? =
 
-Yes, your existing settings will be preserved when upgrading from previous versions. However, as with any major update, we recommend backing up your website before upgrading. The new visual login builder will allow you to take advantage of all the new customization features.
+Free covers everything one site needs to protect its login. Pro adds two-factor rules by role, social login and single sign-on, passwordless and temporary access, login alerts, country and hours rules, session and password policies, 22 premium designs and agency tools. See the [full comparison](https://matrixaddons.com/plugins/authlify/#compare), or **Authlify → Free vs Pro** in your dashboard.
 
-= What should I do if my custom login URL stops working? =
+= Where do I get help? =
 
-If your custom login URL stops working, try these troubleshooting steps:
-1. Clear your site cache completely
-2. Flush your permalink structure (Settings > Permalinks > Save Changes)
-3. Check for plugin conflicts by temporarily disabling other plugins
-4. Verify your .htaccess file is correctly configured
-5. Reset the login endpoint to the default "setup" in the plugin settings
-
-= What should I do if I forget my custom login endpoint? =
-
-If you forget your custom login endpoint, you have several options to regain access:
-
-1. **Try the default endpoint**: First, try using the default "setup" endpoint (yourdomain.com/setup or yourdomain.com/?setup [As per your permalink structure]) as it may still work if you haven't changed it.
-
-2. **Check the database**: Your login endpoint is stored in the WordPress options table. If you have database access, you can find it in the `modify_login_settings` option or `modify_login_login_endpoint` option.
-
-3. **Access via FTP/SFTP**: If you have FTP/SFTP access to your server, you can temporarily rename the plugin folder (from 'modify-login' to something like 'modify-login-disabled') to deactivate the plugin. This will restore the default wp-login.php access.
-
-4. **Use WP-CLI**: If you have WP-CLI access, you can run `wp option get modify_login_settings` to view your stored settings including the endpoint.
-
-5. **Edit wp-config.php**: As a last resort, you can add this line to your wp-config.php file to temporarily disable all plugins:
-   ```php
-   define('WP_PLUGIN_DIR', '/tmp/disabled-plugins');
-   ```
-   After logging in with the standard wp-login.php, remember to remove this line immediately.
-
-Always remember to keep a secure record of your custom login endpoint in a password manager or other secure location.
+Start with **Authlify → Docs** in your dashboard. For free support, open a topic in the [support forum](https://wordpress.org/support/plugin/modify-login/). Authlify Pro customers get email support; see [the Authlify page](https://matrixaddons.com/plugins/authlify/) for details.
 
 == Screenshots ==
 
-1. Settings page with login security options
-2. Login builder interface
-3. Customized WordPress login page
-4. reCAPTCHA integration on login form
-5. Login attempt logs and tracking
+1. Dashboard with the protection checklist and this week's logins, failed attempts and lockouts.
+2. Custom login URL with Leak Check, which proves the hidden address is not revealed anywhere.
+3. Brute-force protection with escalating lockouts and real visitor IP detection behind Cloudflare or a proxy.
+4. CAPTCHA providers: Cloudflare Turnstile, hCaptcha, reCAPTCHA and self-hosted ALTCHA.
+5. Two-factor login on each user's profile: authenticator app, passkeys and backup codes.
+6. Sign in with a passkey, and a two-factor step that uses your login page design.
+7. Login page designer with templates, Match my site and a live preview.
+8. Free login page templates: Glass over photo, Split image right and Soft gradient.
+9. Activity log of logins, failed attempts and lockouts, with filters and CSV export.
+10. Built-in documentation, including how to get back in if you are ever locked out.
+11. Switch from WPS Hide Login, Limit Login Attempts Reloaded, ASE or LoginPress in one click.
+12. Free vs Pro: every core protection is free. Authlify Pro adds team, store and agency features.
 
 == Changelog ==
+
+= 3.0.0 - 2026/09/29 =
+* New name: Modify Login is now **Authlify**. Your settings, login URL and log carry over.
+* Security: closed two ways to reach the login page without the custom URL, fixed a fatal error when reCAPTCHA could not be reached, and stopped sending visitor IPs to a third-party location service.
+* Rebuilt login URL hiding: WordPress no longer reveals the secret address through /wp-admin/, /login, /admin, /dashboard, wp-signup.php, the Customizer, privacy emails or encoded paths. Works on Nginx and managed hosts (no rewrite rules).
+* New: Leak Check self-test, confirm-before-apply for new login URLs, login-URL email, WP-CLI commands and wp-config recovery constants.
+* New: brute-force lockouts per IP, network and targeted account, escalating lockouts, trusted-proxy IP detection, allow/block lists and email unlock links.
+* New: Cloudflare Turnstile, hCaptcha, reCAPTCHA v3 and self-hosted ALTCHA CAPTCHAs on core and WooCommerce forms, plus a honeypot.
+* New: two-factor login (authenticator apps, backup codes) and passkeys.
+* New: breached-password check (Have I Been Pwned, privacy-preserving).
+* New: login page designer with 12 templates, "Match my site", live preview and full coverage of every login screen.
+* New: activity log with filters, CSV export, retention, IP anonymization and privacy tools. No more third-party IP lookups.
+* New: per-role redirects, XML-RPC, username-discovery and application-password controls, private-site mode, settings import/export and importers from WPS Hide Login, Limit Login Attempts Reloaded, Admin and Site Enhancements and LoginPress.
+* New: built-in, searchable documentation under Authlify → Docs.
+* Requires WordPress 6.4 or later.
 
 = 2.0.2 - 2026/08/21 =
 * Fixed: The 2.0.1 release never reached anyone. WordPress.org reads the version from the `Version:` header in the main plugin file, and that header was still 2.0.0, so the directory kept advertising 2.0.0 and no installation was ever offered the update. The header is now correct, and the version is defined in one place so it cannot drift again.
@@ -217,6 +259,9 @@ Always remember to keep a secure record of your custom login endpoint in a passw
 * Fixed: Plain permalink issue resolved
 
 == Upgrade Notice ==
+
+= 3.0.0 =
+Modify Login is now Authlify: a rebuilt hidden login, brute-force lockouts, modern CAPTCHAs, two-factor login, passkeys and a new designer. Your login URL and settings carry over, and new protections stay off until you turn them on. Requires WordPress 6.4+.
 
 = 2.0.2 =
 Important if you are still on 2.0.0: this is the update that finally delivers the 2.0.1 redesign. A stale version header meant 2.0.1 was published but never offered to any site. Also tested up to WordPress 7.1.

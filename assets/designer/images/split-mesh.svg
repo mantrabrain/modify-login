@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1200" preserveAspectRatio="xMidYMid slice">
+<defs>
+<linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#312e81"/><stop offset="1" stop-color="#4f46e5"/></linearGradient>
+<filter id="b" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="60"/></filter>
+</defs>
+<rect width="1000" height="1200" fill="url(#g)"/>
+<g filter="url(#b)"><circle cx="180" cy="220" r="260" fill="#06b6d4" opacity=".75"/><circle cx="820" cy="420" r="300" fill="#a855f7" opacity=".7"/><circle cx="360" cy="980" r="320" fill="#6366f1" opacity=".9"/><circle cx="900" cy="1100" r="220" fill="#14b8a6" opacity=".6"/></g>
+<g fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="2"><circle cx="500" cy="600" r="180"/><circle cx="500" cy="600" r="280"/><circle cx="500" cy="600" r="380"/><circle cx="500" cy="600" r="480"/></g>
+<g fill="#fff" fill-opacity=".9"><rect x="440" y="540" width="120" height="120" rx="28" fill-opacity=".14"/><path d="M500 566 l38 15 v30 c0 24-17 42-38 50 c-21-8-38-26-38-50 v-30z" fill-opacity=".85"/></g>
+</svg>

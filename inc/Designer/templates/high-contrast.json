@@ -1,0 +1,17 @@
+{
+  "name": "High contrast",
+  "description": "Black on white, thick borders and outlines. Meets WCAG AAA (7:1).",
+  "aaa": true,
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#000000", "on_primary": "#ffffff", "background": "#ffffff", "surface": "#ffffff", "text": "#000000", "muted": "#000000", "border": "#000000", "radius": 4 },
+    "logo": { "type": "text", "text_size": 28, "text_color": "#000000" },
+    "form": { "card": "form", "width": 400, "padding": 28, "shadow": "none", "border_width": 3, "border_color": "#000000" },
+    "inputs": { "size": 18, "background": "#ffffff", "text": "#000000", "border": "#000000", "focus": "#0033a0", "radius": 4 },
+    "button": { "full_width": true, "hover_background": "#0033a0", "hover_text": "#ffffff" },
+    "links": { "color": "#0033a0", "hover": "#000000" },
+    "messages": { "error": "#a00000", "notice": "#0033a0", "success": "#005a00", "background": "#ffffff", "text": "#000000" },
+    "text": { "font": "system", "size": 16 },
+    "custom_css": "body.login.authlify-designed #login a{text-decoration:underline;text-underline-offset:3px}\nbody.login.authlify-designed #login input.input,body.login.authlify-designed #login input[type=\"text\"],body.login.authlify-designed #login input[type=\"password\"]{border-width:2px}\nbody.login.authlify-designed #login :focus{outline:3px solid #0033a0 !important;outline-offset:2px}"
+  }
+}

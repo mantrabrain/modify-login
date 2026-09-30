@@ -1,0 +1,17 @@
+{
+  "name": "Corporate blue",
+  "description": "Deep blue grid, a crisp white card and a confident blue button.",
+  "backdrop": "#0b3c8f",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#0a58ca", "on_primary": "#ffffff", "background": "#0b3c8f", "surface": "#ffffff", "text": "#1f2937", "muted": "#4b5563", "border": "#9ca3af", "radius": 6 },
+    "background": { "type": "image", "image": "plugin:images/corporate-grid.svg", "color": "#0a2f73", "text": "#ffffff" },
+    "logo": { "type": "text", "text_size": 24 },
+    "form": { "card": "box", "width": 400, "padding": 36, "shadow": "lg", "border_width": 0 },
+    "inputs": { "size": 16, "background": "#ffffff", "border": "#6b7280", "radius": 4 },
+    "button": { "full_width": true, "hover_background": "#084298" },
+    "links": { "color": "#0a58ca", "hover": "#084298" },
+    "messages": { "error": "#b02a37", "notice": "#0a58ca", "success": "#146c43", "background": "#f8fafc" },
+    "text": { "font": "humanist", "size": 14 }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Soft gradient",
+  "description": "Pastel pink-to-blue gradient with a rounded, translucent card.",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#6d28d9", "on_primary": "#ffffff", "background": "#e9d5ff", "surface": "rgba(255, 255, 255, 0.86)", "text": "#1f2937", "muted": "#4b5563", "border": "#9ca3af", "radius": 22 },
+    "background": { "type": "gradient", "gradient_from": "#fbc2eb", "gradient_to": "#a6c1ee", "gradient_angle": 135, "color": "#dcc6ec", "text": "#1f2937" },
+    "logo": { "type": "text", "text_size": 28, "text_color": "#4c1d95" },
+    "form": { "card": "box", "width": 400, "padding": 34, "blur": 12, "shadow": "md", "border_width": 1, "border_color": "rgba(255, 255, 255, 0.7)" },
+    "inputs": { "size": 16, "background": "#ffffff", "border": "#767b90", "focus": "#6d28d9", "radius": 14 },
+    "button": { "full_width": true, "radius": 40, "hover_background": "#5b21b6" },
+    "links": { "color": "#5b21b6", "hover": "#4c1d95" },
+    "messages": { "error": "#be123c", "notice": "#6d28d9", "success": "#047857", "background": "#ffffff" },
+    "text": { "font": "nunito", "size": 15 }
+  }
+}

@@ -1,0 +1,11 @@
+{
+    "login_redirect_url": "https://example.com/welcome/{username}",
+    "logout_redirect_url": "https://example.com/bye",
+    "login_endpoint": "members-door",
+    "enable_redirect": true,
+    "redirect_url": "https://example.com/go-away",
+    "enable_recaptcha": "yes",
+    "recaptcha_site_key": "6Lc-site",
+    "recaptcha_secret_key": "6Lc-secret",
+    "enable_tracking": "yes"
+}

@@ -1,84 +1,70 @@
 <?php
 /**
- * Plugin Name: Modify Login
- * Version: 2.0.2
- * Plugin URI: https://wordpress.org/plugins/modify-login
- * Description: Enhance and customize the default WordPress login experience with modern design, security features, and improved user experience.
- * Author: MantraBrain
- * Author URI: https://mantrabrain.com
- * Text Domain: modify-login
- * Domain Path: /languages/
- * Requires at least: 5.8
- * Tested up to: 7.1
- * Requires PHP: 7.4
- */
-
-if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
-}
-
-// Define plugin constants
-define('MODIFY_LOGIN_VERSION', '2.0.2');
-define('MODIFY_LOGIN_FILE', __FILE__);
-define('MODIFY_LOGIN_PATH', plugin_dir_path(__FILE__));
-define('MODIFY_LOGIN_URL', plugin_dir_url(__FILE__));
-define('MODIFY_LOGIN_BASENAME', plugin_basename(__FILE__));
-
-// Autoloader
-spl_autoload_register(function ($class) {
-    $prefix = 'ModifyLogin\\';
-    $base_dir = MODIFY_LOGIN_PATH . 'includes/';
-
-    $len = strlen($prefix);
-    if (strncmp($prefix, $class, $len) !== 0) {
-        return;
-    }
-
-    $relative_class = substr($class, $len);
-    $file = $base_dir . str_replace('\\', '/', $relative_class) . '.php';
-
-    if (file_exists($file)) {
-        require $file;
-    }
-});
-
-// Include required files
-require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login.php';
-require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login-rewrite.php';
-
-/**
- * Initialize the plugin
+ * Plugin Name:       Authlify – Custom Login URL, Login Security, 2FA & Login Page Designer
+ * Plugin URI:        https://matrixaddons.com/plugins/authlify/
+ * Description:       Hide your login page properly, stop brute-force attacks, add two-factor login and passkeys, and brand every login screen. Built so you never lock yourself out.
+ * Version:           3.0.0
+ * Requires at least: 6.4
+ * Requires PHP:      7.4
+ * Tested up to:      7.1
+ * Author:            MantraBrain
+ * Author URI:        https://mantrabrain.com
+ * License:           GPLv2 or later
+ * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain:       modify-login
+ * Domain Path:       /languages
  *
- * @return ModifyLogin\Core\Modify_Login
+ * Authlify was called "Modify Login" before 3.0. The folder, main file, text
+ * domain and WordPress.org slug keep the old name so existing sites update.
+ *
+ * @package Authlify
  */
-function modify_login() {
-    return ModifyLogin\Core\Modify_Login::instance();
+
+defined('ABSPATH') || exit;
+
+// The version, in one place: MODIFY_LOGIN_VERSION (the 2.x name, which the
+// CI version check reads) holds it, and AUTHLIFY_VERSION follows.
+define('MODIFY_LOGIN_VERSION', '3.0.0');
+define('AUTHLIFY_VERSION', MODIFY_LOGIN_VERSION);
+define('AUTHLIFY_FILE', __FILE__);
+define('AUTHLIFY_DIR', plugin_dir_path(__FILE__));
+define('AUTHLIFY_URL', plugin_dir_url(__FILE__));
+define('AUTHLIFY_BASENAME', plugin_basename(__FILE__));
+
+// 2.x constants, kept for code that reads them.
+defined('MODIFY_LOGIN_FILE') || define('MODIFY_LOGIN_FILE', __FILE__);
+defined('MODIFY_LOGIN_PATH') || define('MODIFY_LOGIN_PATH', AUTHLIFY_DIR);
+defined('MODIFY_LOGIN_URL') || define('MODIFY_LOGIN_URL', AUTHLIFY_URL);
+defined('MODIFY_LOGIN_BASENAME') || define('MODIFY_LOGIN_BASENAME', AUTHLIFY_BASENAME);
+
+require_once AUTHLIFY_DIR . 'inc/Autoloader.php';
+\Authlify\Autoloader::register();
+
+register_activation_hook(__FILE__, array('\Authlify\Install\Installer', 'activate'));
+register_deactivation_hook(__FILE__, array('\Authlify\Install\Installer', 'deactivate'));
+
+if (!function_exists('authlify')) {
+    /**
+     * The plugin instance.
+     *
+     * @return \Authlify\Plugin
+     */
+    function authlify()
+    {
+        return \Authlify\Plugin::instance();
+    }
 }
 
-// Start the plugin
-$GLOBALS['modify-login'] = modify_login();
-
-// Initialize the rewrite handler
-function modify_login_rewrite() {
-    return ModifyLogin\Core\Modify_Login_Rewrite::instance();
+if (!function_exists('modify_login')) {
+    /**
+     * 2.x accessor, kept for backward compatibility.
+     *
+     * @return \Authlify\Plugin
+     */
+    function modify_login()
+    {
+        return authlify();
+    }
 }
 
-// Start the rewrite handler
-$GLOBALS['modify-login-rewrite'] = modify_login_rewrite();
-
-// Register activation hook
-register_activation_hook(__FILE__, 'modify_login_activate');
-
-/**
- * Plugin activation function
- */
-function modify_login_activate() {
-    // Make sure the install class is loaded
-    require_once MODIFY_LOGIN_PATH . 'includes/class-modify-login-install.php';
-    
-    // Run the installation
-    ModifyLogin\Core\Modify_Login_Install::install();
-    
-    // Force flush rewrite rules
-    flush_rewrite_rules();
-}
+$GLOBALS['modify-login'] = authlify();

@@ -1,0 +1,17 @@
+{
+  "name": "Glass over photo",
+  "description": "Frosted-glass card over a night-sky aurora.",
+  "backdrop": "#1b1a45",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#ffffff", "on_primary": "#1e1b4b", "background": "#1e1b4b", "surface": "rgba(255, 255, 255, 0.12)", "text": "#ffffff", "muted": "#e0e7ff", "border": "rgba(255, 255, 255, 0.35)", "radius": 18 },
+    "background": { "type": "image", "image": "plugin:images/glass-aurora.svg", "color": "#1e1b4b", "overlay": "#0b1026", "overlay_opacity": 30, "text": "#ffffff" },
+    "logo": { "type": "text", "text_size": 28, "text_color": "#ffffff" },
+    "form": { "card": "box", "width": 400, "padding": 32, "blur": 18, "shadow": "lg", "border_width": 1, "border_color": "rgba(255, 255, 255, 0.28)" },
+    "inputs": { "size": 16, "background": "rgba(255, 255, 255, 0.94)", "text": "#0f172a", "border": "rgba(255, 255, 255, 0.6)", "focus": "#a5f3fc", "radius": 12 },
+    "button": { "hover_background": "#e0e7ff", "hover_text": "#1e1b4b", "full_width": true },
+    "links": { "color": "#ffffff", "hover": "#e0e7ff" },
+    "messages": { "error": "#dc2626", "notice": "#6366f1", "success": "#059669", "background": "rgba(255, 255, 255, 0.94)", "text": "#0f172a" },
+    "text": { "font": "inter", "size": 14 }
+  }
+}

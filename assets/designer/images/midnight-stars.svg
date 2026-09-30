@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+<radialGradient id="g" cx=".5" cy="1.1" r="1"><stop offset="0" stop-color="#1e3a8a"/><stop offset=".6" stop-color="#0b1330"/><stop offset="1" stop-color="#050816"/></radialGradient>
+<pattern id="s" width="220" height="180" patternUnits="userSpaceOnUse"><circle cx="20" cy="30" r="1.2" fill="#fff" opacity=".8"/><circle cx="130" cy="20" r=".8" fill="#fff" opacity=".6"/><circle cx="90" cy="110" r="1.4" fill="#bfdbfe" opacity=".8"/><circle cx="190" cy="140" r=".9" fill="#fff" opacity=".5"/><circle cx="160" cy="80" r=".6" fill="#fff" opacity=".7"/><circle cx="40" cy="160" r=".7" fill="#fff" opacity=".5"/></pattern>
+</defs>
+<rect width="1600" height="1000" fill="url(#g)"/>
+<rect width="1600" height="1000" fill="url(#s)"/>
+<mask id="m"><rect width="1600" height="1000" fill="#fff"/><circle cx="1308" cy="172" r="62" fill="#000"/></mask>
+<circle cx="1280" cy="190" r="70" fill="#e0f2fe" opacity=".9" mask="url(#m)"/>
+</svg>

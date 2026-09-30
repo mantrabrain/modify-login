@@ -1,0 +1,15 @@
+{
+  "name": "Minimal light",
+  "description": "White page, borderless card, one strong button.",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#111827", "on_primary": "#ffffff", "background": "#ffffff", "surface": "#ffffff", "text": "#111827", "muted": "#4b5563", "border": "#9ca3af", "radius": 10 },
+    "logo": { "type": "text", "text_size": 26, "text_color": "#111827" },
+    "form": { "card": "box", "width": 380, "padding": 8, "shadow": "none", "border_width": 0 },
+    "inputs": { "size": 16, "background": "#f9fafb", "border": "#6b7280", "focus": "#111827" },
+    "button": { "full_width": true, "hover_background": "#374151" },
+    "links": { "color": "#4b5563", "hover": "#111827" },
+    "messages": { "error": "#b91c1c", "notice": "#111827", "success": "#15803d", "background": "#f9fafb" },
+    "text": { "font": "inter", "size": 14 }
+  }
+}

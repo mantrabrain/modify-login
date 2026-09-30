@@ -1,0 +1,36 @@
+{
+    "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+    "meta": {
+        "title": "Authlify live preview",
+        "description": "Try Authlify: custom login URL, brute-force protection, CAPTCHA, two-factor login, passkeys and the login page designer.",
+        "author": "mantrabrain",
+        "categories": ["Security"]
+    },
+    "landingPage": "/wp-admin/admin.php?page=modify-login",
+    "preferredVersions": {
+        "php": "8.3",
+        "wp": "latest"
+    },
+    "features": {
+        "networking": true
+    },
+    "login": true,
+    "steps": [
+        {
+            "step": "installPlugin",
+            "pluginData": {
+                "resource": "wordpress.org/plugins",
+                "slug": "modify-login"
+            },
+            "options": {
+                "activate": true
+            }
+        },
+        {
+            "step": "setSiteOptions",
+            "options": {
+                "blogname": "Authlify demo"
+            }
+        }
+    ]
+}

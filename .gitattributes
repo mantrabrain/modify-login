@@ -44,3 +44,13 @@
 
 # Build inputs and source maps do not belong in the shipped plugin
 *.map export-ignore
+/assets/designer/src export-ignore
+/package.json export-ignore
+/package-lock.json export-ignore
+/research export-ignore
+
+# Modify Login 2.x code, replaced by inc/ in 3.0 and never loaded
+/includes export-ignore
+/templates export-ignore
+/assets/dist export-ignore
+/.distignore export-ignore

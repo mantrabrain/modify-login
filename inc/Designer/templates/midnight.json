@@ -1,0 +1,17 @@
+{
+  "name": "Midnight",
+  "description": "A starry night sky, navy card and a sky-blue accent.",
+  "backdrop": "#0b1330",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#38bdf8", "on_primary": "#04111f", "background": "#050816", "surface": "#0f172a", "text": "#e2e8f0", "muted": "#94a3b8", "border": "#64748b", "radius": 12 },
+    "background": { "type": "image", "image": "plugin:images/midnight-stars.svg", "color": "#050816", "text": "#cbd5e1" },
+    "logo": { "type": "text", "text_size": 28, "text_color": "#f8fafc" },
+    "form": { "card": "box", "width": 400, "padding": 32, "shadow": "lg", "border_width": 1, "border_color": "#1e293b" },
+    "inputs": { "size": 16, "background": "#020617", "text": "#e2e8f0", "border": "#64748b", "focus": "#38bdf8", "radius": 8 },
+    "button": { "full_width": true, "hover_background": "#7dd3fc" },
+    "links": { "color": "#7dd3fc", "hover": "#e0f2fe" },
+    "messages": { "error": "#f87171", "notice": "#38bdf8", "success": "#4ade80", "background": "#020617", "text": "#e2e8f0" },
+    "text": { "font": "space-grotesk", "size": 14 }
+  }
+}

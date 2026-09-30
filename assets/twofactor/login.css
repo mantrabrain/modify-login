@@ -1,0 +1,186 @@
+/**
+ * Authlify: two-factor step and passkey button on the login page.
+ * Inherits the login design; only spacing and small details live here.
+ *
+ * @since 3.0.0
+ */
+
+/* Heading: a small shield and a short title, in the form's own colours. */
+.authlify-2fa__head {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin: 0 0 8px;
+}
+
+.authlify-2fa__icon {
+	position: relative;
+	display: inline-flex;
+	flex: none;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+}
+
+.authlify-2fa__icon::before {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: currentColor;
+	opacity: 0.08;
+}
+
+.login .authlify-2fa .authlify-2fa__title,
+#loginform.authlify-2fa .authlify-2fa__title {
+	margin: 0;
+	padding: 0;
+	color: inherit;
+	font-size: 18px;
+	font-weight: 600;
+	line-height: 1.3;
+	text-align: left;
+}
+
+.login .authlify-2fa .authlify-2fa__intro,
+#loginform.authlify-2fa .authlify-2fa__intro {
+	margin: 0 0 18px;
+	opacity: 0.8;
+	line-height: 1.5;
+}
+
+.login .authlify-2fa .description,
+#loginform.authlify-2fa .description {
+	margin: -8px 0 16px;
+	opacity: 0.8;
+	font-size: 13px;
+}
+
+.login form .authlify-2fa__code {
+	font-size: 24px;
+	letter-spacing: 0.15em;
+	text-align: center;
+	font-variant-numeric: tabular-nums;
+}
+
+.login form .authlify-2fa__code::placeholder {
+	letter-spacing: 0.15em;
+	opacity: 0.35;
+}
+
+/* The Verify button sits on its own row, full width, under any extra options. */
+.login .authlify-2fa .submit {
+	clear: both;
+	margin-top: 8px;
+}
+
+.login .authlify-2fa .submit .button-primary,
+.login .authlify-2fa__passkey .button {
+	float: none;
+	width: 100%;
+	justify-content: center;
+}
+
+.login .authlify-2fa .submit::after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+.authlify-2fa__alt {
+	clear: both;
+	margin-top: 20px;
+	padding-top: 16px;
+	border-top: 1px solid rgba(128, 128, 128, 0.35);
+}
+
+.authlify-2fa__alt-title {
+	margin-bottom: 4px;
+	opacity: 0.85;
+}
+
+.authlify-2fa__alt ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.authlify-2fa__alt li {
+	margin: 4px 0;
+}
+
+.login .authlify-2fa__alt .button-link {
+	color: inherit;
+	text-align: left;
+	text-decoration: underline;
+}
+
+.login .authlify-2fa__alt .button-link:hover,
+.login .authlify-2fa__alt .button-link:focus {
+	text-decoration-thickness: 2px;
+}
+
+.authlify-passkey-login {
+	clear: both;
+	padding-top: 16px;
+}
+
+.authlify-passkey-login__or {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 16px;
+	opacity: 0.85;
+	font-size: 13px;
+}
+
+.authlify-passkey-login__or::before,
+.authlify-passkey-login__or::after {
+	content: "";
+	flex: 1;
+	border-top: 1px solid currentColor;
+	opacity: 0.4;
+}
+
+.login .authlify-passkey-signin {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	width: 100%;
+	float: none;
+}
+
+.authlify-passkey-signin svg {
+	flex: 0 0 auto;
+}
+
+.authlify-passkey-status {
+	min-height: 1em;
+	margin-top: 8px;
+	font-size: 13px;
+}
+
+.authlify-passkey-status:empty {
+	display: none;
+}
+
+.authlify-passkey-status.is-error {
+	color: #d63638;
+}
+
+.authlify-passkey-login[hidden],
+.authlify-2fa .submit[hidden] {
+	display: none;
+}
+
+/* Recovery link confirm card. */
+.authlify-2fa-recover .authlify-2fa__title {
+	margin: 0 0 8px;
+}
+
+.authlify-2fa-recover > p:not(.submit) {
+	margin: 0 0 20px;
+}

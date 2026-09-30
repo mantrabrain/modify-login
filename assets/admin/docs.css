@@ -1,0 +1,749 @@
+/**
+ * Authlify documentation screen.
+ *
+ * Adds only what the design system (admin.css) lacks: the two-column docs
+ * layout, the search box, the article typography and code blocks.
+ *
+ * @package Authlify
+ * @since   3.0.0
+ */
+
+.authlify-docs__layout {
+    display: grid;
+    grid-template-columns: 264px minmax(0, 1fr);
+    gap: 32px;
+    align-items: start;
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar
+   -------------------------------------------------------------------------- */
+
+.authlify-docs__side {
+    position: sticky;
+    top: calc(var(--wp-admin--admin-bar--height, 32px) + 84px);
+    max-height: calc(100vh - var(--wp-admin--admin-bar--height, 32px) - 104px);
+    overflow-y: auto;
+    padding-bottom: 24px;
+}
+
+.authlify-docs__search {
+    position: relative;
+}
+
+.authlify-docs__search-icon {
+    position: absolute;
+    top: 50%;
+    left: 13px;
+    display: inline-flex;
+    color: var(--al-muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.authlify-page .authlify-docs__search input[type="search"] {
+    width: 100%;
+    min-height: 44px;
+    padding: 8px 36px 8px 40px;
+    border-radius: 10px;
+    background: var(--al-card);
+}
+
+.authlify-docs__key {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    padding: 0 6px;
+    border: 1px solid var(--al-border);
+    border-radius: 4px;
+    background: var(--al-bg);
+    color: var(--al-muted);
+    font-family: var(--al-mono);
+    font-size: 11px;
+    line-height: 18px;
+    transform: translateY(-50%);
+}
+
+.authlify-docs__search input:focus ~ .authlify-docs__key,
+.authlify-docs__search input:not(:placeholder-shown) ~ .authlify-docs__key {
+    display: none;
+}
+
+.authlify-docs__count {
+    min-height: 18px;
+    margin: 8px 2px 4px;
+    color: var(--al-muted);
+    font-size: 12px;
+}
+
+.authlify-docs__count:empty {
+    min-height: 0;
+    margin: 4px 0 0;
+}
+
+.authlify-docs__jump {
+    display: none;
+}
+
+.authlify-docs__nav {
+    margin-top: 12px;
+}
+
+.authlify-docs__home,
+.authlify-docs__nav li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: var(--al-radius-sm);
+    color: var(--al-text-2);
+    font-size: 14px;
+    line-height: 1.4;
+    text-decoration: none;
+}
+
+.authlify-docs__home .authlify-icon {
+    color: var(--al-muted);
+}
+
+.authlify-page .authlify-docs__home,
+.authlify-page .authlify-docs__nav li a {
+    color: var(--al-text-2);
+    text-decoration: none;
+}
+
+.authlify-page .authlify-docs__home:hover,
+.authlify-page .authlify-docs__nav li a:hover {
+    background: #e6eaf1;
+    color: var(--al-ink);
+}
+
+.authlify-page .authlify-docs__home:focus,
+.authlify-page .authlify-docs__nav li a:focus {
+    box-shadow: 0 0 0 2px var(--al-accent-ring);
+    outline: none;
+}
+
+.authlify-page .authlify-docs__home[aria-current="page"],
+.authlify-page .authlify-docs__nav li a[aria-current="page"] {
+    background: var(--al-surface);
+    color: var(--al-ink);
+    font-weight: 600;
+    box-shadow: var(--al-shadow), inset 0 0 0 1px var(--al-line);
+}
+
+.authlify-page .authlify-docs__home[aria-current="page"] .authlify-icon {
+    color: var(--al-accent);
+}
+
+.authlify-docs__nav .authlify-pro-tag,
+.authlify-docs__results-list .authlify-pro-tag {
+    margin-left: auto;
+    flex-shrink: 0;
+    border: 1px solid var(--al-border);
+    background: transparent;
+    color: var(--al-muted);
+    font-size: 9px;
+}
+
+.authlify-docs__results-list .authlify-pro-tag {
+    margin-left: 6px;
+    vertical-align: 2px;
+}
+
+.authlify-docs__hook-type {
+    margin-left: 6px;
+    color: var(--al-muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.authlify-docs__group {
+    margin-top: 18px;
+}
+
+.authlify-docs__group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 6px;
+    padding: 0 12px;
+    color: var(--al-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.authlify-docs__nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-docs__nav li {
+    margin: 0;
+}
+
+.authlify-docs__nav [hidden] {
+    display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Main column
+   -------------------------------------------------------------------------- */
+
+.authlify-docs__main {
+    min-width: 0;
+    max-width: 920px;
+}
+
+/* With JavaScript, one view at a time. Without it, everything is readable in order. */
+.authlify-docs.is-ready .authlify-docs__article,
+.authlify-docs.is-ready .authlify-docs__overview {
+    display: none;
+}
+
+.authlify-docs.is-ready .authlify-docs__article.is-active,
+.authlify-docs.is-ready .authlify-docs__overview.is-active {
+    display: block;
+}
+
+.authlify-docs.is-searching .authlify-docs__article.is-active,
+.authlify-docs.is-searching .authlify-docs__overview.is-active {
+    display: none;
+}
+
+.authlify-docs__article,
+.authlify-docs__results,
+.authlify-docs__overview .authlify-docs__card,
+.authlify-docs__start {
+    border: 1px solid var(--al-line);
+    border-radius: var(--al-radius);
+    background: var(--al-card);
+    box-shadow: var(--al-shadow);
+}
+
+.authlify-docs__article {
+    margin: 0 0 20px;
+    padding: 30px 36px 8px;
+}
+
+.authlify-docs__article:focus {
+    outline: none;
+}
+
+.authlify-docs__crumb {
+    margin: 0 0 6px;
+    color: var(--al-accent);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.authlify-docs__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    color: var(--al-ink);
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+}
+
+.authlify-docs__lead {
+    margin: 8px 0 0;
+    color: var(--al-muted);
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+.authlify-docs__pro {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    margin: 20px 0 0;
+    padding: 14px 16px;
+    border: 1px solid var(--al-border);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-accent-soft);
+}
+
+.authlify-docs__pro p {
+    margin: 0;
+    color: var(--al-text-2);
+}
+
+.authlify-docs__pro-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+/* Article body typography. */
+.authlify-docs__body {
+    margin-top: 8px;
+    color: var(--al-text-2);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.authlify-docs__body h3 {
+    margin: 28px 0 8px;
+    color: var(--al-text);
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.authlify-docs__body h4 {
+    margin: 20px 0 6px;
+    color: var(--al-text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-docs__body p {
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.authlify-docs__body ul,
+.authlify-docs__body ol {
+    margin: 0 0 14px 22px;
+    padding: 0;
+}
+
+.authlify-docs__body ul {
+    list-style: disc;
+}
+
+.authlify-docs__body ol {
+    list-style: decimal;
+}
+
+.authlify-docs__body li {
+    margin: 0 0 6px;
+    padding-left: 2px;
+}
+
+.authlify-docs__body li > ul,
+.authlify-docs__body li > ol {
+    margin-top: 6px;
+    margin-bottom: 4px;
+}
+
+.authlify-docs__body code {
+    padding: 1px 5px;
+    font-size: 12.5px;
+    overflow-wrap: anywhere;
+}
+
+.authlify-docs__body kbd {
+    padding: 1px 6px;
+    border: 1px solid var(--al-border-strong);
+    border-radius: 4px;
+    background: var(--al-bg);
+    font-family: var(--al-mono);
+    font-size: 12px;
+}
+
+.authlify-docs__body dl {
+    margin: 0 0 14px;
+}
+
+.authlify-docs__body dt {
+    margin-top: 10px;
+    color: var(--al-text);
+    font-weight: 600;
+}
+
+.authlify-docs__body dd {
+    margin: 2px 0 0;
+}
+
+/* Code blocks with a copy button. */
+.authlify-docs__code {
+    position: relative;
+    margin: 0 0 16px;
+}
+
+.authlify-docs__body pre {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    border: 1px solid var(--al-border);
+    border-radius: var(--al-radius-sm);
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: var(--al-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: pre;
+}
+
+.authlify-docs__code pre {
+    margin: 0;
+    padding-right: 76px;
+}
+
+.authlify-docs__body pre code {
+    padding: 0;
+    background: none;
+    color: inherit;
+    font-size: inherit;
+    overflow-wrap: normal;
+}
+
+.authlify-page .authlify-docs__copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-height: 26px;
+    padding: 0 10px;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    font-size: 12px;
+    line-height: 24px;
+}
+
+.authlify-page .authlify-docs__copy:not(.button-primary):hover,
+.authlify-page .authlify-docs__copy:not(.button-primary):focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+}
+
+/* Notes and warnings. */
+.authlify-docs__note {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border: 1px solid var(--al-border);
+    border-left: 3px solid var(--al-accent);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-card);
+}
+
+.authlify-docs__note--warning {
+    border-left-color: #d97706;
+    background: var(--al-amber-soft);
+}
+
+.authlify-docs__note p {
+    margin: 0;
+}
+
+/* Reference tables. */
+.authlify-docs__table {
+    margin: 0 0 18px;
+    overflow-x: auto;
+    border: 1px solid var(--al-border);
+    border-radius: var(--al-radius-sm);
+}
+
+.authlify-docs__table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.authlify-docs__table th,
+.authlify-docs__table td {
+    padding: 10px 12px;
+    border-top: 1px solid var(--al-divider);
+    text-align: left;
+    vertical-align: top;
+}
+
+.authlify-docs__table thead th {
+    border-top: 0;
+    background: var(--al-bg);
+    color: var(--al-muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.authlify-docs__table td:first-child {
+    min-width: 160px;
+}
+
+.authlify-docs__table code {
+    font-size: 11.5px;
+}
+
+/* Previous / next. */
+.authlify-docs__pager {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 28px -36px 0;
+    padding: 16px 36px;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-page .authlify-docs__pager a {
+    display: flex;
+    flex-direction: column;
+    max-width: 48%;
+    color: var(--al-text);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.authlify-page .authlify-docs__pager a:hover {
+    color: var(--al-accent);
+}
+
+.authlify-docs__pager a span {
+    color: var(--al-muted);
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.authlify-docs__next {
+    margin-left: auto;
+    text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   Overview and search results
+   -------------------------------------------------------------------------- */
+
+.authlify-docs__start {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin: 0 0 20px;
+    padding: 20px 24px;
+}
+
+.authlify-docs__start h3,
+.authlify-docs__card h3 {
+    margin: 0;
+    color: var(--al-text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.authlify-docs__start p,
+.authlify-docs__card p {
+    margin: 4px 0 0;
+    color: var(--al-muted);
+}
+
+.authlify-docs__cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.authlify-docs__card {
+    padding: 20px 22px 18px;
+}
+
+.authlify-docs__card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    background: var(--al-accent-soft);
+    color: var(--al-accent);
+}
+
+.authlify-docs__card h3 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.authlify-docs__card-count {
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--al-divider);
+    color: #4b5563;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 18px;
+}
+
+.authlify-docs__card ul {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-docs__card li {
+    margin: 0 0 4px;
+}
+
+.authlify-page .authlify-docs__card a,
+.authlify-page .authlify-docs__body a {
+    text-decoration: none;
+}
+
+.authlify-page .authlify-docs__card a:hover,
+.authlify-page .authlify-docs__body a:hover {
+    text-decoration: underline;
+}
+
+.authlify-page .authlify-docs__body a {
+    font-weight: 500;
+}
+
+.authlify-docs__card-more {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+}
+
+.authlify-docs__results {
+    padding: 22px 28px;
+}
+
+.authlify-docs__results-title {
+    margin: 0 0 12px;
+    color: var(--al-text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.authlify-docs__results-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-docs__results-list li {
+    margin: 0;
+    border-top: 1px solid var(--al-divider);
+}
+
+.authlify-page .authlify-docs__results-list a {
+    display: block;
+    margin: 0 -10px;
+    padding: 10px;
+    border-radius: 6px;
+    color: var(--al-text);
+    text-decoration: none;
+}
+
+.authlify-page .authlify-docs__results-list a:hover,
+.authlify-page .authlify-docs__results-list a:focus {
+    background: var(--al-accent-soft);
+    box-shadow: none;
+    outline: none;
+}
+
+.authlify-docs__results-list strong {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.authlify-docs__results-list .authlify-docs__result-meta {
+    display: block;
+    margin-top: 2px;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+.authlify-docs__results-list mark {
+    padding: 0 1px;
+    border-radius: 2px;
+    background: #fef08a;
+    color: inherit;
+}
+
+/* The "Learn more" link used on every Authlify screen is styled in admin.css. */
+
+/* --------------------------------------------------------------------------
+   Small screens: the nav becomes a select.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 960px) {
+    .authlify-docs__layout {
+        grid-template-columns: 220px minmax(0, 1fr);
+        gap: 24px;
+    }
+
+    .authlify-docs__cards {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 782px) {
+    .authlify-docs__layout {
+        display: block;
+    }
+
+    .authlify-docs__side {
+        position: static;
+        max-height: none;
+        overflow: visible;
+        margin-bottom: 16px;
+        padding-bottom: 0;
+    }
+
+    .authlify-docs__nav {
+        display: none;
+    }
+
+    .authlify-docs__jump {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .authlify-docs__jump label {
+        display: block;
+        margin-bottom: 4px;
+        color: var(--al-muted);
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .authlify-page .authlify-docs__jump select {
+        width: 100%;
+        max-width: none;
+    }
+
+    .authlify-docs__key {
+        display: none;
+    }
+
+    .authlify-docs__article {
+        padding: 20px 18px 4px;
+    }
+
+    .authlify-docs__pager {
+        margin: 24px -18px 0;
+        padding: 14px 18px;
+    }
+
+    .authlify-docs__title {
+        font-size: 20px;
+    }
+
+    .authlify-docs__start {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .authlify-docs__results {
+        padding: 18px;
+    }
+
+    .authlify-docs__table td:first-child {
+        min-width: 130px;
+    }
+}

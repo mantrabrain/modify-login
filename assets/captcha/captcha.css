@@ -1,0 +1,148 @@
+/**
+ * Authlify CAPTCHA widgets: neutral styling that inherits the form's colours,
+ * reserved height so the form does not jump, and scaling for narrow forms.
+ *
+ * @since 3.0.0
+ */
+
+.authlify-captcha {
+    position: relative;
+    margin: 0 0 16px;
+    width: 100%;
+    max-width: 100%;
+    container-type: inline-size;
+}
+
+.authlify-captcha--hp-only {
+    margin: 0;
+    height: 0;
+}
+
+.authlify-captcha__widget {
+    max-width: 100%;
+}
+
+.authlify-captcha--turnstile .authlify-captcha__widget {
+    min-height: 65px;
+}
+
+.authlify-captcha--hcaptcha .authlify-captcha__widget,
+.authlify-captcha--recaptcha_v2 .authlify-captcha__widget {
+    min-height: 78px;
+}
+
+.authlify-captcha--recaptcha_v3 {
+    margin: 0;
+}
+
+/* The wp-login.php form is 272px wide inside; the widgets need 300-304px. */
+@container (max-width: 303px) {
+    .authlify-captcha--turnstile .authlify-captcha__widget,
+    .authlify-captcha--hcaptcha .authlify-captcha__widget,
+    .authlify-captcha--recaptcha_v2 .authlify-captcha__widget {
+        width: 304px;
+        max-width: none;
+        transform: scale(0.88);
+        transform-origin: 0 0;
+        margin-bottom: -8px;
+    }
+}
+
+.authlify-captcha__error,
+.authlify-captcha__noscript {
+    margin: 4px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* ALTCHA ---------------------------------------------------------------- */
+
+.authlify-altcha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid rgba(128, 128, 128, 0.45);
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.authlify-altcha__icon {
+    position: relative;
+    flex: none;
+    box-sizing: border-box;
+    width: 20px;
+    height: 20px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    opacity: 0.55;
+}
+
+.authlify-altcha[data-state="verifying"] .authlify-altcha__icon {
+    border-right-color: transparent;
+    animation: authlify-altcha-spin 0.8s linear infinite;
+}
+
+.authlify-altcha[data-state="verified"] .authlify-altcha__icon {
+    border-color: #1a7f37;
+    background: #1a7f37;
+    opacity: 1;
+}
+
+.authlify-altcha[data-state="verified"] .authlify-altcha__icon::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 1px;
+    width: 5px;
+    height: 10px;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.authlify-altcha[data-state="error"] .authlify-altcha__icon {
+    border-color: #d63638;
+    opacity: 1;
+}
+
+.authlify-altcha__retry {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+@keyframes authlify-altcha-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .authlify-altcha[data-state="verifying"] .authlify-altcha__icon {
+        animation: none;
+    }
+}
+
+/* Settings preview. */
+.authlify-captcha-preview {
+    max-width: 320px;
+    margin-top: 12px;
+}
+
+.authlify-captcha-preview:empty {
+    display: none;
+}
+
+.authlify-captcha-preview .authlify-captcha {
+    margin: 0;
+}

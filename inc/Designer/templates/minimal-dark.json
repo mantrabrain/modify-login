@@ -1,0 +1,16 @@
+{
+  "name": "Minimal dark",
+  "description": "Near-black page, charcoal card and an indigo accent.",
+  "design": {
+    "layout": "center",
+    "tokens": { "primary": "#818cf8", "on_primary": "#0b0f19", "background": "#0b0f19", "surface": "#111827", "text": "#f3f4f6", "muted": "#9ca3af", "border": "#6b7280", "radius": 14 },
+    "logo": { "type": "text", "text_size": 26, "text_color": "#f3f4f6" },
+    "form": { "card": "box", "width": 400, "padding": 32, "shadow": "lg", "border_width": 1, "border_color": "#1f2937" },
+    "inputs": { "size": 16, "background": "#0b0f19", "text": "#f3f4f6", "border": "#6b7280", "focus": "#a5b4fc", "radius": 10 },
+    "button": { "full_width": true, "hover_background": "#a5b4fc", "hover_text": "#0b0f19" },
+    "links": { "color": "#c7d2fe", "hover": "#ffffff" },
+    "messages": { "error": "#f87171", "notice": "#818cf8", "success": "#34d399", "background": "#0b0f19", "text": "#e5e7eb" },
+    "background": { "text": "#9ca3af" },
+    "text": { "font": "inter", "size": 14 }
+  }
+}
