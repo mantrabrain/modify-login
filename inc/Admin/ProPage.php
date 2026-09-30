@@ -123,7 +123,7 @@ final class ProPage
             )),
             array('activity', __('Activity and alerts', 'modify-login'), array(
                 array(__('Activity log with filters, CSV export and privacy tools', 'modify-login'), true, true),
-                array(__('Visitor country', 'modify-login'), __('From your CDN', 'modify-login'), __('CDN or local database', 'modify-login')),
+                array(__('Visitor country', 'modify-login'), __('From Cloudflare', 'modify-login'), __('Cloudflare or local database', 'modify-login')),
                 array(__('New-device and new-country alerts with “This wasn’t me”', 'modify-login'), false, true),
                 array(__('Slack, Discord, Telegram, Teams and signed webhooks', 'modify-login'), false, true),
                 array(__('Audit events: new admins, role and plugin changes', 'modify-login'), false, true),

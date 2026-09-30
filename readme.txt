@@ -15,7 +15,7 @@ Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, an
 
 **Authlify** (formerly Modify Login) is an all-in-one WordPress login security plugin. It hides your login page properly, stops brute-force attacks, adds CAPTCHA, two-factor login and passkeys, and lets you design every login screen. All of that is free, on as many sites as you like.
 
-[Website](https://matrixaddons.com/plugins/authlify/) | [All features](https://matrixaddons.com/plugins/authlify/#features) | [Free vs Pro](https://matrixaddons.com/plugins/authlify/#compare) | [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) | [Support](https://wordpress.org/support/plugin/modify-login/)
+[Website](https://matrixaddons.com/plugins/authlify/) | [All features](https://matrixaddons.com/plugins/authlify/#features) | [Free vs Pro](https://matrixaddons.com/plugins/authlify/#compare) | [Documentation](https://matrixaddons.com/plugins/authlify/docs/) | [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) | [Support](https://wordpress.org/support/plugin/modify-login/)
 
 = Why Authlify =
 
@@ -38,7 +38,7 @@ Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, an
 = Limit login attempts and brute-force protection =
 
 * **Lockouts after too many failed logins**, per IP address and optionally per network. Repeat lockouts get longer: 15 minutes, 1 hour, 4 hours, 1 day.
-* **Attackers can't lock out the real admin.** A targeted account asks for a CAPTCHA instead of being locked, and its owner can always use an email unlock link.
+* **Attackers can't lock out the real admin.** A targeted account is never locked for everyone: it can ask for a CAPTCHA, and if the attack goes on it is paused only for addresses it has never logged in from. Its owner keeps logging in as usual and can always use an email unlock link.
 * Lockouts also cover **XML-RPC, the REST API and application passwords**, not just the login form.
 * **Correct visitor IPs behind Cloudflare or your own proxy.** Faked forwarding headers are ignored, so lockouts can't be dodged or pinned on someone else. Authlify detects your setup and suggests the right option.
 * Allow and block lists (IP addresses and CIDR ranges).
@@ -54,7 +54,7 @@ Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, an
 = Two-factor authentication (2FA) and passkeys =
 
 * **Authenticator apps** (Google Authenticator, Microsoft Authenticator, 1Password, Authy and others) with one-time **backup codes**.
-* **Passkeys:** sign in with Face ID, Touch ID, Windows Hello or a security key, plus a "Sign in with a passkey" button on the login page (PHP 8.0 or later).
+* **Passkeys:** sign in with Face ID, Touch ID, Windows Hello or a security key, plus a "Sign in with a passkey" button on the login page (PHP 8.0 or later with OpenSSL).
 * Each user sets up two-factor login on their own profile. Admins can reset it, and users can recover by email.
 * The two-factor step uses your login page design.
 * **Breached-password check:** optionally refuse passwords found in known data breaches, using the privacy-preserving Have I Been Pwned range API.
@@ -70,7 +70,7 @@ Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, an
 
 = Login activity log =
 
-* Every login, failed login, lockout and security change, with IP address and country (from your CDN's country header when it sends one).
+* Every login, failed login, lockout and security change, with IP address and country (from Cloudflare's country header, when the site is set up as behind Cloudflare).
 * Filter, search and export to CSV.
 * Stored only on your site, with a retention period, optional IP anonymization, and the WordPress privacy export and erase tools.
 * Optional email to the admin when an administrator account is locked out.
@@ -163,7 +163,7 @@ Cloudflare Turnstile is free and invisible for most visitors. ALTCHA runs entire
 
 = Do passkeys replace passwords? =
 
-They can. Once a user adds a passkey on their profile, they can sign in with the "Sign in with a passkey" button and Face ID, Touch ID, Windows Hello or a security key, or use it as their second step. Passkeys need PHP 8.0 or later.
+They can. Once a user adds a passkey on their profile, they can sign in with the "Sign in with a passkey" button and Face ID, Touch ID, Windows Hello or a security key, or use it as their second step. Passkeys need PHP 8.0 or later with the OpenSSL extension, and a site on https.
 
 = Does it work with WooCommerce, membership and LMS plugins? =
 

@@ -355,7 +355,9 @@ final class Docs
             UI::header(
                 __('Docs', 'modify-login'),
                 /* translators: %s: product name */
-                sprintf(__('How %s works, how to set it up, and how to get back in if something goes wrong.', 'modify-login'), $brand)
+                sprintf(__('How %s works, how to set it up, and how to get back in if something goes wrong.', 'modify-login'), $brand),
+                // A white-labelled site keeps the online Authlify docs out of view.
+                'Authlify' === $brand ? array(array('label' => __('Full documentation online', 'modify-login'), 'url' => 'https://matrixaddons.com/plugins/authlify/docs/', 'target' => true)) : array()
             );
             ?>
 
@@ -688,7 +690,7 @@ final class Docs
                 self::sections(array(
                     __('Requirements', 'modify-login') => self::ul(array(
                         __('WordPress 6.4 or newer.', 'modify-login'),
-                        __('PHP 7.4 or newer. Passkeys need PHP 8.0 or newer; everything else works on 7.4.', 'modify-login'),
+                        __('PHP 7.4 or newer. Passkeys need PHP 8.0 or newer with the OpenSSL extension; everything else works on 7.4.', 'modify-login'),
                         __('Passkeys also need the site to run on https (browsers only allow them in a secure context).', 'modify-login'),
                     )),
                     __('Install', 'modify-login') => self::ul(array(
@@ -697,7 +699,7 @@ final class Docs
                         __('Or with WP-CLI:', 'modify-login') . self::code('wp plugin install modify-login --activate'),
                     ), true),
                     __('What activation changes', 'modify-login') => self::p(
-                        __('On a new site, nothing about how people log in changes yet: the login page stays at wp-login.php until you choose a new address. Brute-force lockouts are on by default. Two-factor login is available but each person turns it on for themselves. CAPTCHA, the breached-password check and the hardening options are off until you switch them on.', 'modify-login'),
+                        __('On a new site, nothing about how people log in changes yet: the login page stays at wp-login.php until you choose a new address. Brute-force lockouts, the activity log and the weekly Leak Check are on by default. Two-factor login is available but each person turns it on for themselves. CAPTCHA, the honeypot, the breached-password check and the hardening options are off until you switch them on.', 'modify-login'),
                         __('Authlify creates three database tables (activity log, lockout counters and passkeys) and a daily clean-up task.', 'modify-login'),
                         sprintf(__('On a site upgraded from Modify Login 1.x or 2.x, the old login address, redirects and log carry over, and new protection starts switched off. See %s.', 'modify-login'), self::doc('faq-upgrade-from-modify-login', __('Upgrading from Modify Login', 'modify-login')))
                     ),
@@ -902,8 +904,10 @@ final class Docs
                         __('<strong>Failed attempts allowed</strong> (default 5) within the <strong>Time window</strong> (default 15 minutes), per IP address.', 'modify-login'),
                         __('<strong>Lockout length</strong> (default 15 minutes).', 'modify-login'),
                         __('<strong>Escalating lockouts</strong> (on by default): repeat lockouts last 1×, 4×, 16× and then 96× the lockout length. With the default 15 minutes that is 15 minutes, 1 hour, 4 hours, then 24 hours. The count starts again once an address has had no lockout for 24 hours.', 'modify-login'),
-                        __('<strong>Network lockouts</strong> (off by default): when addresses from one network (an IPv4 /24 or IPv6 /64) fail three times the allowed attempts in total, the whole network is locked. It stops attackers who rotate addresses, but it can also lock out an office or a mobile carrier, so add your own address to “Never lock out” first.', 'modify-login'),
-                        __('<strong>Targeted-account threshold</strong> (default 10): when one username collects this many failures from different addresses, the account is not locked (that would lock the real owner out). Instead, if a CAPTCHA is set to “Only after failed logins”, the login form asks for it for that username.', 'modify-login'),
+                        __('<strong>Network lockouts</strong> (off by default): when addresses from one network (an IPv4 /24 or IPv6 /48) fail three times the allowed attempts in total, the whole network is locked. It stops attackers who rotate addresses, but it can also lock out an office or a mobile carrier, so add your own address to “Never lock out” first.', 'modify-login'),
+                        __('<strong>Targeted-account threshold</strong> (default 10): when one username collects this many failures from different addresses, the account is not locked out. Instead, if a CAPTCHA is set to “Only after failed logins”, the login form asks for it for that username.', 'modify-login'),
+                        __('<strong>Account pause</strong> (on by default): at twice the targeted-account threshold, the account is paused for addresses it has never logged in from, for the lockout length. The owner still logs in from any address they used before or on “Never lock out”, and the lockout message offers an unlock email.', 'modify-login'),
+                        __('An IPv6 visitor is counted by their /64, because one connection usually owns a whole /64.', 'modify-login'),
                     )),
                     __('What to expect', 'modify-login') => self::ul(array(
                         __('When one or two attempts remain, the error says so. (This hint is hidden when “Login error messages” is on.)', 'modify-login'),
@@ -1119,7 +1123,7 @@ final class Docs
             self::a('passkeys', $c, __('Passkeys and security keys', 'modify-login'), __('Sign in with a fingerprint, face, screen lock or hardware key, as a second step or instead of the password.', 'modify-login'),
                 self::sections(array(
                     __('Requirements', 'modify-login') => self::ul(array(
-                        __('PHP 8.0 or newer on the server. On older PHP the option is greyed out on the Two-factor screen, with the version shown.', 'modify-login'),
+                        __('PHP 8.0 or newer on the server, with the OpenSSL extension. Otherwise the option is greyed out on the Two-factor screen, with the reason shown.', 'modify-login'),
                         __('https (or localhost while developing), and a browser or device that supports passkeys.', 'modify-login'),
                     )),
                     __('Setting one up', 'modify-login') => self::p(__('Under <strong>Users → Profile → Two-factor login</strong>, click <strong>Add a passkey</strong>, confirm with the device, and give it a name such as “MacBook Touch ID”. Passkeys can be renamed or removed there.', 'modify-login')),
@@ -1218,7 +1222,7 @@ final class Docs
                         __('<strong>Activity log</strong> (on by default). Lockouts still work when it is off. Login address changes are always recorded.', 'modify-login'),
                         __('<strong>Keep entries for</strong> 90 days by default; older entries are deleted daily. 0 keeps them forever.', 'modify-login'),
                         __('<strong>Anonymize IPs</strong> (off by default): stores IPv4 addresses without their last part (203.0.113.0) and keeps only the first half of IPv6 addresses. Lockouts still use full addresses.', 'modify-login'),
-                        __('<strong>Country</strong>: “Do not record”, or use the country your CDN provides. In the free plugin a country is only recorded when the Visitor IP setting is “Through Cloudflare” (Cloudflare’s country header). It is never looked up through a third-party service.', 'modify-login'),
+                        __('<strong>Country</strong>: “Do not record”, or “Use the country Cloudflare provides”. In the free plugin a country is only recorded when the Visitor IP setting is “Through Cloudflare” (Cloudflare’s country header). It is never looked up through a third-party service.', 'modify-login'),
                         __('<strong>Lockout email</strong> (off by default): emails the site admin address when a lockout was triggered with an administrator’s username. At most one email per hour.', 'modify-login'),
                         __('<strong>Delete all entries</strong> empties the log at once. It cannot be undone.', 'modify-login'),
                     )),
@@ -1436,7 +1440,7 @@ final class Docs
     private static function config_articles()
     {
         $c = 'config';
-        $intro = __('Defaults below are read from the plugin itself, so they are always current. On sites upgraded from Modify Login 2.x, brute-force protection starts off instead.', 'modify-login');
+        $intro = __('Defaults below are read from the plugin itself, so they are always current. On sites upgraded from Modify Login 1.x or 2.x, brute-force protection, two-factor login and the weekly Leak Check start off instead.', 'modify-login');
 
         return array(
             self::a('config-login', $c, __('Login URL and redirects settings', 'modify-login'), __('Every Login URL and Redirects setting, with its default and a recommended value.', 'modify-login'),
@@ -1459,8 +1463,9 @@ final class Docs
                     array(__('Time window', 'modify-login'), 'limit_window', self::def('limit_window') . ' min', '15 min', __('How long failures are remembered. 1–1440 minutes.', 'modify-login')),
                     array(__('Lockout length', 'modify-login'), 'lockout_minutes', self::def('lockout_minutes') . ' min', '15 min', __('The first lockout. 1–10080 minutes.', 'modify-login')),
                     array(__('Escalating lockouts', 'modify-login'), 'lockout_escalate', self::def('lockout_escalate'), __('On', 'modify-login'), __('Repeat lockouts last 4×, 16×, then 96× the lockout length.', 'modify-login')),
-                    array(__('Network lockouts', 'modify-login'), 'limit_network', self::def('limit_network'), __('Off, unless attacks rotate addresses', 'modify-login'), __('Locks a /24 (IPv6 /64) after 3× the allowed failures across it. Can lock out shared offices.', 'modify-login')),
+                    array(__('Network lockouts', 'modify-login'), 'limit_network', self::def('limit_network'), __('Off, unless attacks rotate addresses', 'modify-login'), __('Locks a /24 (IPv6 /48) after 3× the allowed failures across it. Can lock out shared offices.', 'modify-login')),
                     array(__('Targeted-account threshold', 'modify-login'), 'user_attempts', self::def('user_attempts'), '10', __('Failures on one username from many addresses before its login needs a CAPTCHA (CAPTCHA “after failures” mode only). 1–1000.', 'modify-login')),
+                    array(__('Account pause', 'modify-login'), 'limit_user_lock', self::def('limit_user_lock'), __('On', 'modify-login'), __('At twice the targeted-account threshold, pauses the account for addresses it has never logged in from.', 'modify-login')),
                     array(__('Where visitors connect from', 'modify-login'), 'ip_source', self::def('ip_source'), __('Whatever “Detected setup” recommends', 'modify-login'), __('remote_addr, cloudflare or proxy. A wrong value can lock everyone out at once or let attackers fake addresses.', 'modify-login')),
                     array(__('Trusted proxies', 'modify-login'), 'trusted_proxies', self::def('trusted_proxies'), __('Your proxy addresses', 'modify-login'), __('Only used with “my own proxy”.', 'modify-login')),
                     array(__('Never lock out', 'modify-login'), 'ip_allowlist', self::def('ip_allowlist'), __('Your fixed IP', 'modify-login'), __('Never counted, locked or asked for a CAPTCHA.', 'modify-login')),
@@ -1547,7 +1552,7 @@ final class Docs
                 self::ul(array(
                     sprintf(__('Open %s. Under <strong>Visitor IP address</strong>, choose <strong>Through Cloudflare</strong> and save.', 'modify-login'), self::go('authlify-protection', __('Security → Brute force', 'modify-login'), array('tab' => 'limits'))),
                     __('Check that “Detected setup” shows <em>Matches your setting</em> and that “Your IP address as seen now” is your own public address.', 'modify-login'),
-                    __('The Activity log now records the country Cloudflare reports (keep <strong>Activity → Settings → Country</strong> on “Use the country my CDN or host provides”).', 'modify-login'),
+                    __('The Activity log now records the country Cloudflare reports (keep <strong>Activity → Settings → Country</strong> on “Use the country Cloudflare provides”).', 'modify-login'),
                     __('Authlify marks the login page as not cacheable. If you use Cloudflare APO or a “Cache Everything” rule, add a bypass rule for your login address as well; Site Health reminds you when it detects APO.', 'modify-login'),
                     __('For a CAPTCHA, Cloudflare Turnstile is a natural fit, but it does not require Cloudflare hosting.', 'modify-login'),
                 ), true) . self::note(__('Only choose “Through Cloudflare” when traffic really passes through Cloudflare (orange cloud). Otherwise Authlify ignores the header and uses the connecting address, which is safe but means the setting has no effect.', 'modify-login')),
@@ -1834,7 +1839,7 @@ final class Docs
                 self::ul(array(
                     __('The login address, the hiding and redirect behaviour, login and logout redirects, activity logging and reCAPTCHA v2 keys (on the login form) carry over. The newest 50,000 log entries are copied; the old log table is kept.', 'modify-login'),
                     __('Your old login page design is kept as a design in the Designer.', 'modify-login'),
-                    __('New protection (brute-force lockouts, the honeypot, the other CAPTCHA forms) stays off until you switch it on. The notice “Modify Login is now Authlify” links to the dashboard to review it.', 'modify-login'),
+                    __('New protection (brute-force lockouts, two-factor login, the weekly Leak Check, the honeypot, the other CAPTCHA forms) stays off until you switch it on. The notice “Modify Login is now Authlify” links to the dashboard to review it.', 'modify-login'),
                     __('If the old address had characters that are no longer allowed, the notice shows the new address.', 'modify-login'),
                     __('Old bookmarks to the Modify Login screens still open the right Authlify screens.', 'modify-login'),
                 )),
