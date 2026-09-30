@@ -5,7 +5,7 @@ Tags: hide login, limit login attempts, two factor, passkeys, login customizer
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -16,6 +16,8 @@ Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, an
 **Authlify** (formerly Modify Login) is an all-in-one WordPress login security plugin. It hides your login page properly, stops brute-force attacks, adds CAPTCHA, two-factor login and passkeys, and lets you design every login screen. All of that is free, on as many sites as you like.
 
 [Website](https://matrixaddons.com/plugins/authlify/) | [All features](https://matrixaddons.com/plugins/authlify/#features) | [Free vs Pro](https://matrixaddons.com/plugins/authlify/#compare) | [Documentation](https://matrixaddons.com/plugins/authlify/docs/) | [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) | [Support](https://wordpress.org/support/plugin/modify-login/)
+
+https://www.youtube.com/watch?v=IeHvFHwVACk
 
 = Why Authlify =
 
@@ -91,6 +93,8 @@ No free feature will ever move into Pro. No nag banners. No emails switched on b
 = Authlify Pro =
 
 Authlify is complete on its own. [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) is an add-on for sites with staff, customers or clients: rules instead of requests, more ways to sign in, and a warning when something looks wrong. It needs the free plugin, and every plan includes every Pro feature.
+
+https://www.youtube.com/watch?v=wNZVy6q90B8
 
 * **[Require two-factor login by role](https://matrixaddons.com/plugins/authlify/#pro-2fa-rules):** a grace period and setup wizard, email codes, trusted devices, passkey-only roles and a coverage report for each role.
 * **[Social login and single sign-on](https://matrixaddons.com/plugins/authlify/#pro-social-login):** Google, Microsoft, Apple, GitHub and any OpenID Connect provider (Okta, Auth0, Keycloak, Entra ID), limited to your email domains if you like.
@@ -217,6 +221,10 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 12. Free vs Pro: every core protection is free. Authlify Pro adds team, store and agency features.
 
 == Changelog ==
+
+= 3.0.1 - 2026/09/30 =
+* Improved: the built-in help and readme describe the real defaults (lockouts, the activity log and the weekly Leak Check are on for new sites, the honeypot is off), the account pause, IPv6 network lockouts (/48) and the PHP 8 requirement for passkeys.
+* Improved: a link to the online documentation on the Docs screen, and videos of Authlify and Authlify Pro in the readme.
 
 = 3.0.0 - 2026/09/29 =
 * New name: Modify Login is now **Authlify**. Your settings, login URL and log carry over.

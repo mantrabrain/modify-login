@@ -1,3 +1,6 @@
+= 3.0.1 - 2026-09-30 =
+* Built-in help and readme match the plugin's real defaults and limits; online documentation link; videos in the readme
+
 = 3.0.0 - 2026-09-29 =
 * Renamed to Authlify; settings, login URL and log carry over from Modify Login 1.x/2.x
 * Security: fixed two ways to reach the login page without the custom URL, a reCAPTCHA fatal error, and third-party IP lookups
