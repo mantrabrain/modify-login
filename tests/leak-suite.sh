@@ -143,6 +143,23 @@ probe() {
     fi
 }
 
+# login_page <label> <curl args...>: a public login page. A login form on a
+# public page has to post to the login URL, so the slug there is a warning
+# (the site chose to publish a form), not a router leak (CMPT-03).
+login_page() {
+    local label="$1"; shift
+    fetch "$@"
+    if [ "$CODE" = "000" ]; then
+        row FAIL "$label" "$CODE" "request failed (couldn't test)"
+    elif location_leaks || body_leaks; then
+        row WARN "$label" "$CODE" "public login page shows the slug (front-end login form)"
+    elif [ "${CODE:0:1}" = "5" ]; then
+        row FAIL "$label" "$CODE" "server error (couldn't test)"
+    else
+        row PASS "$label" "$CODE" "$( [ "$VERBOSE" -eq 1 ] && describe )"
+    fi
+}
+
 printf "Authlify leak suite: %s (slug: %s%s)\n\n" "$BASE" "$SLUG" "$( [ "$PLAIN" -eq 1 ] && echo ', plain permalinks')"
 printf "%-3s %-52s %-5s %-5s %s\n" "#" "Probe" "HTTP" "Result" "Note"
 printf "%s\n" "---------------------------------------------------------------------------------------------"
@@ -165,6 +182,7 @@ probe "GET //wp-login.php" "$SITE//wp-login.php"
 probe "GET /%77p-login.php" "$SITE/%77p-login.php"
 probe "GET /wp-login.php/x" "$SITE/wp-login.php/x"
 probe "GET /blah/wp-login.php" "$BASE/blah/wp-login.php"
+probe "GET /index.php/wp-login.php (canonical redirect)" "$SITE/index.php/wp-login.php"
 probe "GET wp-login.php?action=register" "$SITE/wp-login.php?action=register"
 probe "GET wp-login.php?action=lostpassword" "$SITE/wp-login.php?action=lostpassword"
 probe "GET wp-login.php?action=postpass (CVE-2024-2473)" "$SITE/wp-login.php?action=postpass"
@@ -175,11 +193,18 @@ probe "GET wp-login.php?action=confirmaction" "$SITE/wp-login.php?action=confirm
 probe "GET wp-login.php?interim-login=1" "$SITE/wp-login.php?interim-login=1"
 probe "GET wp-login.php?action=logout" "$SITE/wp-login.php?action=logout"
 probe "GET wp-register.php" "$SITE/wp-register.php"
+# Core's canonical redirect sends any path ending in wp-register.php to the
+# registration URL (CMPT-02), so try it in other folders too.
+probe "GET /blah/wp-register.php (any folder)" "$BASE/blah/wp-register.php"
+probe "GET /wp-content/wp-register.php" "$SITE/wp-content/wp-register.php"
+probe "GET /a/b/wp-register.php?x=1" "$BASE/a/b/wp-register.php?x=1"
+[ "$SITE" != "$BASE" ] && probe "GET wp-register.php (site root)" "$BASE/wp-register.php"
 if [ "$MULTISITE" -eq 1 ]; then
     row SKIP "GET wp-signup.php" "-" "multisite sign-up page"
     row SKIP "GET wp-activate.php" "-" "multisite activation page"
 else
     probe "GET wp-signup.php" "$SITE/wp-signup.php"
+    probe "GET /blah/wp-signup.php (any folder)" "$BASE/blah/wp-signup.php"
     probe "GET wp-activate.php" "$SITE/wp-activate.php"
 fi
 
@@ -204,9 +229,38 @@ probe "Homepage HTML" "$BASE/"
 fetch "$BASE/"
 POST_URL="$(grep -Eo "href=[\"']$BASE/[^\"'#?]+[\"']" "$BODY" | sed -E "s/^href=[\"']//; s/[\"']$//" | grep -Ev "/(wp-|feed|comments|category|tag|author|page/|$SLUG)" | grep -E '/[^/]+/?$' | head -1)"
 if [ -n "$POST_URL" ]; then
-    probe "A linked page (${POST_URL#$BASE})" "$POST_URL"
+    fetch "$POST_URL"
+    if has_form; then
+        # A front-end login page (membership plugins): see "Front-end login pages".
+        login_page "A linked page with a login form (${POST_URL#$BASE})" "$POST_URL"
+    else
+        probe "A linked page (${POST_URL#$BASE})" "$POST_URL"
+    fi
 else
     probe "A post (?p=1, redirects followed)" -L "$BASE/?p=1"
+fi
+# The comment form redirects to whatever redirect_to asks for. This posts one
+# comment (held for moderation, author "Authlify leak suite"): delete it afterwards.
+comment_post_id() { grep -Eo "name=[\"']comment_post_ID[\"'] value=[\"'][0-9]+" "$BODY" | grep -Eo '[0-9]+$' | head -1; }
+POST_ID="$(comment_post_id)"
+if [ -z "$POST_ID" ]; then
+    fetch -L "$BASE/?p=1"
+    POST_ID="$(comment_post_id)"
+fi
+if [ -z "$POST_ID" ]; then
+    row SKIP "POST wp-comments-post.php redirect_to=wp-login.php" "-" "no comment form found (linked page, ?p=1)"
+else
+    fetch --data "comment_post_ID=$POST_ID&author=Authlify+leak+suite&email=leak-suite%40authlify.invalid&comment=Authlify+leak+suite+$$-$(date +%s)" \
+        --data-urlencode "redirect_to=$SITE/wp-login.php" "$SITE/wp-comments-post.php"
+    if [ "$CODE" = "000" ]; then
+        row FAIL "POST wp-comments-post.php redirect_to=wp-login.php" "$CODE" "request failed (couldn't test)"
+    elif location_leaks; then
+        row LEAK "POST wp-comments-post.php redirect_to=wp-login.php" "$CODE" "slug in redirect $(describe)"
+    elif [ "${CODE:0:1}" != "3" ]; then
+        row SKIP "POST wp-comments-post.php redirect_to=wp-login.php" "$CODE" "comment not accepted (flood guard or moderation); rerun later"
+    else
+        row PASS "POST wp-comments-post.php redirect_to=wp-login.php" "$CODE" "$( [ "$VERBOSE" -eq 1 ] && describe )"
+    fi
 fi
 probe "404 page" "$BASE/authlify-leak-suite-$$-404/"
 probe "robots.txt" "$BASE/robots.txt"
@@ -217,6 +271,17 @@ if [ "$PLAIN" -eq 1 ]; then
 else
     probe "REST API index" "$BASE/wp-json/"
 fi
+
+# --- Front-end login pages (CMPT-03) ------------------------------------------------
+# A login form on a public page has to post to the login URL, so the slug there
+# is a warning (the site chose to publish a form), not a router leak.
+for p in login my-account account members register; do
+    login_page "Login page /$p/" "$BASE/$p/"
+done
+# Shop pages are public pages, never login pages: WooCommerce's block cart and
+# checkout print wcSettings.wpLoginUrl for every visitor.
+probe "WooCommerce /cart/ (if present)" "$BASE/cart/"
+probe "WooCommerce /checkout/ (if present)" -L "$BASE/checkout/"
 
 # --- Other ways in (informational: not leaks) -------------------------------------
 fetch -H 'Content-Type: text/xml' --data '<?xml version="1.0"?><methodCall><methodName>system.listMethods</methodName><params></params></methodCall>' "$SITE/xmlrpc.php"

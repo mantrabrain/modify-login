@@ -96,7 +96,7 @@ cp "$HERE/lib/harness-mu-plugin.php" "$MU"
 rm -f "$AUTHLIFY_TEST_DIR/site/wp-content/authlify-test-mail.jsonl"
 : > "$AUTHLIFY_TEST_DIR/debug.log"
 
-SETUP="$($W eval '
+SETUP="$("$W" eval '
     if (!is_plugin_active("modify-login/modify-login.php")) { activate_plugin("modify-login/modify-login.php"); }
     if (file_exists(WP_PLUGIN_DIR . "/authlify-pro/authlify-pro.php") && !is_plugin_active("authlify-pro/authlify-pro.php")) { activate_plugin("authlify-pro/authlify-pro.php"); }
     update_option("authlify_test_secret", wp_generate_password(24, false));
@@ -115,7 +115,7 @@ fi
 curl -s -o /dev/null "$AUTHLIFY_TEST_URL/"
 
 cleanup() {
-    $W eval '
+    "$W" eval '
         $base = get_option("authlify_testsuite_baseline");
         if (is_array($base)) { update_option("authlify_settings", $base); }
         delete_option("authlify_testsuite_baseline");
@@ -140,12 +140,13 @@ for entry in "${FILES[@]}"; do
     label="$(basename "$(dirname "$(dirname "$(dirname "$file")")")")/$(basename "$(dirname "$file")")/$(basename "$file" .php)"
     t0=$(date +%s)
     if [ "$kind" = "unit" ]; then
-        out="$($W eval-file "$HERE/lib/unit.php" "$file" 2>&1)"
+        out="$("$W" eval-file "$HERE/lib/unit.php" "$file" 2>&1)"
     else
         out="$("$PHP" "$HERE/lib/http.php" "$file" 2>&1)"
     fi
     # Anything that is not a result line (PHP notices, fatals) is reported as a failure.
-    stray="$(printf '%s\n' "$out" | grep -Ev '^(PASS|FAIL|SKIP)	' | grep -v '^$' || true)"
+    # Deprecations raised by the WP-CLI phar itself (newer PHP than WP-CLI supports) are not ours.
+    stray="$(printf '%s\n' "$out" | grep -Ev '^(PASS|FAIL|SKIP)	' | grep -v '^$' | grep -Ev '^(PHP )?Deprecated: .* in phar://' || true)"
     lines="$(printf '%s\n' "$out" | grep -E '^(PASS|FAIL|SKIP)	' || true)"
     if [ -z "$lines" ]; then
         lines="$(printf 'FAIL\t%s\t(no results)\t%s\t0' "$label" "$(printf '%s' "$stray" | head -3 | tr '\n\t' '  ')")"
@@ -170,7 +171,7 @@ for entry in "${FILES[@]}"; do
 done
 
 # PHP errors the plugins logged while the suite ran.
-FATALS="$(grep -E 'PHP (Fatal|Parse) error' "$AUTHLIFY_TEST_DIR/debug.log" 2>/dev/null | grep -v 'authlify-uninstall' | head -5 || true)"
+FATALS="$(grep -E 'PHP (Fatal|Parse) error' "$AUTHLIFY_TEST_DIR/debug.log" 2>/dev/null | grep -v -e 'authlify-uninstall' -e '-uninstall-' | head -5 || true)"
 if [ -n "$FATALS" ]; then
     printf 'FAIL\tsuite/debug-log\tno PHP fatal errors while the suite ran\t%s\t0\n' "$(printf '%s' "$FATALS" | head -1 | tr '\t' ' ')" >> "$RESULTS"
     printf "%-44s %sFAIL%s\n%s\n" "suite/debug-log" "$RED" "$RESET" "$FATALS"

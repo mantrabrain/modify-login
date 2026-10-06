@@ -227,11 +227,17 @@
         function edges() {
             var clipped = nav.scrollWidth > nav.clientWidth + 1;
             nav.classList.toggle('is-clipped', clipped);
-            nav.classList.toggle('is-scrolled', clipped && nav.scrollLeft > 2);
-            nav.classList.toggle('is-end', clipped && nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 2);
+            // Right-to-left pages scroll with negative values (UX2-03).
+            var left = Math.abs(nav.scrollLeft);
+            nav.classList.toggle('is-scrolled', clipped && left > 2);
+            nav.classList.toggle('is-end', clipped && left + nav.clientWidth >= nav.scrollWidth - 2);
         }
         if (active && nav.scrollWidth > nav.clientWidth) {
-            nav.scrollLeft = Math.max(0, active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2);
+            if ('rtl' === document.documentElement.dir || document.body.classList.contains('rtl')) {
+                nav.scrollLeft = -Math.max(0, (nav.scrollWidth - active.offsetLeft - active.offsetWidth) - (nav.clientWidth - active.offsetWidth) / 2);
+            } else {
+                nav.scrollLeft = Math.max(0, active.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2);
+            }
         }
         edges();
         nav.addEventListener('scroll', edges, { passive: true });

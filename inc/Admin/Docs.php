@@ -669,7 +669,7 @@ final class Docs
         return array(
             self::a('what-is-authlify', $c, __('What Authlify does', 'modify-login'), __('One plugin that protects the WordPress login, lets people prove who they are, and makes the login page look like your site.', 'modify-login'),
                 self::p(
-                    __('Authlify replaces several single-purpose login plugins. Everything below is in the free plugin, with no limits and no licence.', 'modify-login')
+                    __('Authlify replaces several single-purpose login plugins. Everything below is in the free plugin, with no limits and no license.', 'modify-login')
                 ) . self::ul(array(
                     __('<strong>A private login address.</strong> Move wp-login.php to an address only you know. Bots that request wp-login.php or /wp-admin/ get a normal “page not found”.', 'modify-login'),
                     __('<strong>Brute-force lockouts.</strong> An address that keeps guessing passwords has to wait, and the wait grows each time.', 'modify-login'),
@@ -865,6 +865,7 @@ final class Docs
                         __('It only sends requests to your own site’s address, logged out, without following redirects and without ever submitting a password. Each request carries a signed header, so the probes are not written to the activity log.', 'modify-login'),
                         __('It checks that the login address works and is not cached, then tries about forty routes: wp-login.php and disguised variants, every login action (register, lost password, logout and others), /wp-admin/ pages, the /login, /admin and /dashboard shortcuts, old Modify Login back doors, and public pages such as the homepage, a post, a 404 page, robots.txt, the sitemap, the feed and the REST index.', 'modify-login'),
                         __('A route leaks if it shows the login form, or mentions the address in a redirect or in the page.', 'modify-login'),
+                        __('It also visits front-end login pages: /login/, /my-account/, /account/, /members/ and /register/, the login, account and registration pages of WooCommerce, Easy Digital Downloads, Paid Memberships Pro, Ultimate Member and BuddyPress, the WooCommerce cart and checkout, and pages with a login form or an Authlify block. A login form on a public page has to send people to your login address, so anyone who opens that page can read it: this is reported as a warning, not a leak.', 'modify-login'),
                         __('It also reports, as warnings, things that help attackers without revealing the address: XML-RPC multi-password requests, usernames in the REST API, and <code>?author=</code> scans.', 'modify-login'),
                     )),
                     __('When it runs', 'modify-login') => self::ul(array(
@@ -874,6 +875,7 @@ final class Docs
                         __('It does nothing while no custom login address is set.', 'modify-login'),
                     )),
                     __('Reading the result', 'modify-login') => '<dl><dt>' . esc_html__('Passed', 'modify-login') . '</dt><dd>' . esc_html__('No route revealed the login address. Warnings about XML-RPC, REST usernames or author scans can still be listed; fix them on the Hardening tab.', 'modify-login') . '</dd>'
+                        . '<dt>' . esc_html__('Warning', 'modify-login') . '</dt><dd>' . esc_html__('No hidden route leaked, but a public login page (a front-end login form) shows the address, or wp-login.php is not hidden. Keep the page if you want it: brute-force limits, CAPTCHA and two-factor login still protect the login. A result older than 14 days is also marked out of date in Site Health.', 'modify-login') . '</dd>'
                         . '<dt>' . esc_html__('Failed', 'modify-login') . '</dt><dd>' . esc_html__('At least one route revealed the address. Each result names the route and how to fix it. A theme or another plugin that prints wp_login_url() on public pages is the usual cause.', 'modify-login') . '</dd>'
                         . '<dt>' . esc_html__('Incomplete or untested', 'modify-login') . '</dt><dd>' . esc_html__('Your server could not reach itself (a “loopback” request). Some hosts block this; Site Health reports the same problem.', 'modify-login') . '</dd></dl>',
                     __('Limitations', 'modify-login') => self::p(__('Leak Check tests known routes on your own site. It cannot see links to your login address posted elsewhere, and it does not test pages behind a login.', 'modify-login')),
@@ -952,10 +954,12 @@ final class Docs
                         __('<strong>Always block</strong>: these addresses can never log in. They get “Access from your network is blocked.” They can still view the site.', 'modify-login'),
                         __('One IPv4 or IPv6 address or CIDR range per line (commas also work), for example <code>203.0.113.7</code>, <code>198.51.100.0/24</code> or <code>2001:db8::/32</code>. Invalid entries are refused when you save.', 'modify-login'),
                         __('You cannot save a block list that contains your own current address.', 'modify-login'),
+                        __('<strong>Block in one click</strong>: on Authlify → Activity, each address has a <strong>Block</strong> link, and each row of <strong>Locked out right now</strong> has a <strong>Block</strong> button (<strong>Block network</strong> for a network lockout). It adds the address to Always block after you confirm, and is recorded in the activity log as “Added to block list”. It is not offered for your own current address, private or local addresses, addresses already on either list, or when the log stores anonymized addresses.', 'modify-login'),
+                        __('<strong>Block repeat offenders</strong> (0, off, by default): after this many lockouts of one address in a row, the address is added to Always block. A day without a lockout starts the count again. Addresses an administrator has logged in from, and private or local addresses, are never added; such skips are logged as “Automatic block skipped”. It stops adding once the list holds 2,000 lines.', 'modify-login'),
                     )),
-                    __('Limitations', 'modify-login') => self::p(__('Both lists only apply while brute-force protection is on. They use the address from the Visitor IP setting, so set that first.', 'modify-login')),
+                    __('Limitations', 'modify-login') => self::p(__('Both lists apply even when lockouts are switched off. They use the address from the Visitor IP setting, so set that first. Blocking is permanent until you remove the line from Always block.', 'modify-login')),
                 )),
-                array('whitelist', 'blacklist', 'allowlist', 'denylist', 'cidr', 'block ip', 'never lock out')
+                array('whitelist', 'blacklist', 'allowlist', 'denylist', 'cidr', 'block ip', 'never lock out', 'ban', 'permanent', 'repeat offenders')
             ),
 
             self::a('hardening', $c, __('Hardening', 'modify-login'), __('Close the other ways into WordPress: XML-RPC, application passwords, username discovery and revealing error messages.', 'modify-login'),
@@ -987,7 +991,7 @@ final class Docs
                         __('The login page itself, robots.txt, admin-ajax and scheduled tasks keep working. RSS feeds are redirected too.', 'modify-login'),
                     )),
                     __('Limitations', 'modify-login') => self::ul(array(
-                        __('Because every visitor is sent to the login page, the custom login address is no longer secret on a private site.', 'modify-login'),
+                        __('Because every visitor is sent to the login page, the custom login address is no longer secret on a private site. Leak Check reports those redirects as "Info", not as leaks.', 'modify-login'),
                         __('XML-RPC is not affected. Set it to Off on the same tab if you do not need it.', 'modify-login'),
                         __('Pages that other services must reach (payment callbacks, webhooks, a WooCommerce shop) need a Public pages entry.', 'modify-login'),
                     )),
@@ -1012,7 +1016,9 @@ final class Docs
                 self::sections(array(
                     __('Purpose', 'modify-login') => self::p(__('A CAPTCHA stops scripts that guess passwords, create fake accounts or post spam before they reach WordPress. Lockouts react after failures; a CAPTCHA stops many attempts from counting at all.', 'modify-login')),
                     __('Where to find it', 'modify-login') => self::p(sprintf(__('%s, with three panels: CAPTCHA provider, Where and when, and Safety.', 'modify-login'), $tab)),
-                    __('Forms', 'modify-login') => self::p(__('Login, Registration and Lost password are ticked by default once a provider is chosen. You can also protect comments from visitors who are not logged in, and, when WooCommerce is active, its login, registration, lost password and classic checkout (guest orders) forms.', 'modify-login')) . self::p(__('Logins through XML-RPC, the REST API and application passwords cannot show a CAPTCHA; the brute-force limits cover those.', 'modify-login')),
+                    __('Forms', 'modify-login') => self::p(__('Login, Registration and Lost password are ticked by default once a provider is chosen. You can also protect comments from visitors who are not logged in, and, when WooCommerce is active, its login, registration, lost password and checkout forms. The checkout switch covers guest orders on both the classic checkout and the Checkout block; with only WooCommerce registration ticked, the Checkout block asks for the CAPTCHA only when the order creates an account.', 'modify-login'))
+                        . self::p(__('Other plugins’ forms follow the same switches while the plugin is active: the login forms of Easy Digital Downloads, Ultimate Member and MemberPress follow <strong>Login</strong>; the sign-up forms of Easy Digital Downloads, Ultimate Member and BuddyPress or BuddyBoss follow <strong>Registration</strong>; the lost-password forms of Easy Digital Downloads (block) and Ultimate Member follow <strong>Lost password</strong>. The panel lists the plugins it found. MemberPress support is built on its documented hooks and has not been tested against MemberPress itself.', 'modify-login'))
+                        . self::p(__('On every login form the CAPTCHA is checked before the password, so a bot that leaves it out is refused without a password check. Lockouts, the block list and two-factor login apply to every login that goes through WordPress, whichever form it comes from; Ultimate Member and Easy Digital Downloads show the lockout message instead of their own “wrong password” text.', 'modify-login')) . self::p(__('Logins through XML-RPC, the REST API and application passwords cannot show a CAPTCHA; the brute-force limits cover those.', 'modify-login')),
                     __('When to show it', 'modify-login') => '<dl><dt>' . esc_html__('Always (default)', 'modify-login') . '</dt><dd>' . esc_html__('Every protected form shows the check.', 'modify-login') . '</dd>'
                         . '<dt>' . esc_html__('Only after failed logins', 'modify-login') . '</dt><dd>' . esc_html__('The WordPress and WooCommerce login forms show it only after “Failed logins before it appears” (default 2) failures from the visitor’s address, or when the username is under attack from many addresses (the targeted-account threshold on the Brute force tab). Other forms always show it. Honest visitors who type their password correctly never see it.', 'modify-login') . '</dd></dl>',
                     __('Safety', 'modify-login') => self::ul(array(
@@ -1028,7 +1034,7 @@ final class Docs
                     )),
                     __('Emergency switch', 'modify-login') => self::p(__('If a CAPTCHA ever stops you logging in, add this to wp-config.php, log in and fix the settings, then remove it:', 'modify-login')) . self::code("define( 'AUTHLIFY_DISABLE_CAPTCHA', true );"),
                 )) . self::p(sprintf(__('Related: %1$s, %2$s.', 'modify-login'), self::doc('captcha-providers', __('CAPTCHA providers', 'modify-login')), self::doc('howto-captcha-safely', __('Add a CAPTCHA without blocking real people', 'modify-login')))),
-                array('captcha', 'recaptcha', 'turnstile', 'hcaptcha', 'altcha', 'test mode', 'outage', 'fail open', 'after failures', 'woocommerce checkout', 'comments')
+                array('captcha', 'recaptcha', 'turnstile', 'hcaptcha', 'altcha', 'test mode', 'outage', 'fail open', 'after failures', 'woocommerce checkout', 'comments', 'block checkout', 'easy digital downloads', 'edd', 'ultimate member', 'memberpress', 'buddypress', 'buddyboss')
             ),
 
             self::a('captcha-providers', $c, __('CAPTCHA providers', 'modify-login'), __('Cloudflare Turnstile, ALTCHA, hCaptcha and Google reCAPTCHA v2 and v3: what each needs and what it sends where.', 'modify-login'),
@@ -1160,9 +1166,9 @@ final class Docs
                     __('Where to find it', 'modify-login') => self::p(self::go('modify-login-builder', __('Authlify → Designer', 'modify-login'))),
                     __('Templates and “Match my site”', 'modify-login') => self::ul(array(
                         __('Twelve templates: Default, Minimal light, Minimal dark, Glass over photo, Split image left, Split image right, Corporate blue, Soft gradient, Midnight, Warm sand, High contrast (WCAG AAA) and Sidebar.', 'modify-login'),
-                        __('<strong>Match my site</strong> builds a design from your theme’s colours, font and logo (from theme.json and the Site Editor, the Customizer, and popular themes such as Astra, GeneratePress, Kadence and Blocksy). It reads your own site only, and nothing is saved until you click Save.', 'modify-login'),
+                        __('<strong>Match my site</strong> builds a design from your theme’s colors, font and logo (from theme.json and the Site Editor, the Customizer, and popular themes such as Astra, GeneratePress, Kadence and Blocksy). It reads your own site only, and nothing is saved until you click Save.', 'modify-login'),
                     )),
-                    __('Sections', 'modify-login') => self::p(__('Colours, Layout (centred card, split image, sidebar, full bleed or the classic WordPress placement), Background, Logo, Form, Fields, Button, Links & text (font, text size, a message above the form, footer text), Messages and Custom CSS. Fonts are system fonts, bundled fonts (Inter, Nunito, Space Grotesk, Lora) or your theme’s font; nothing is loaded from a font CDN. A warning appears when text and background colours have too little contrast.', 'modify-login')),
+                    __('Sections', 'modify-login') => self::p(__('Colors, Layout (centered card, split image, sidebar, full bleed or the classic WordPress placement), Background, Logo, Form, Fields, Button, Links & text (font, text size, a message above the form, footer text), Messages and Custom CSS. Fonts are system fonts, bundled fonts (Inter, Nunito, Space Grotesk, Lora) or your theme’s font; nothing is loaded from a font CDN. A warning appears when text and background colors have too little contrast.', 'modify-login')),
                     __('Every screen', 'modify-login') => self::p(__('The preview switches between Log in, Lost password, Register, Reset password, the two-factor step, the lockout message, Confirm admin email, the log-out confirmation and the “session expired” pop-up, on desktop, tablet and phone sizes. One design styles them all.', 'modify-login')),
                     __('Saving and undo', 'modify-login') => self::ul(array(
                         __('<strong>Use this design</strong> switches your design on or off; when off, the standard WordPress login look is used. <strong>Save</strong> (or Ctrl/Cmd+S) publishes.', 'modify-login'),
@@ -1217,6 +1223,7 @@ final class Docs
                         __('Filter by event, by date range, or search for a username or IP address. Clicking an IP address searches for it (a partial match, so 1.2.3.4 also finds 1.2.3.45).', 'modify-login'),
                         __('<strong>Export CSV</strong> downloads the filtered entries (up to 100,000 rows). Cells that could be read as spreadsheet formulas are neutralised.', 'modify-login'),
                         __('50 entries per page, with Newer and Older buttons.', 'modify-login'),
+                        __('<strong>Block</strong> next to an address adds it to the block list after you confirm (see Allow and block lists).', 'modify-login'),
                     )),
                     __('Settings', 'modify-login') => self::ul(array(
                         __('<strong>Activity log</strong> (on by default). Lockouts still work when it is off. Login address changes are always recorded.', 'modify-login'),
@@ -1224,11 +1231,12 @@ final class Docs
                         __('<strong>Anonymize IPs</strong> (off by default): stores IPv4 addresses without their last part (203.0.113.0) and keeps only the first half of IPv6 addresses. Lockouts still use full addresses.', 'modify-login'),
                         __('<strong>Country</strong>: “Do not record”, or “Use the country Cloudflare provides”. In the free plugin a country is only recorded when the Visitor IP setting is “Through Cloudflare” (Cloudflare’s country header). It is never looked up through a third-party service.', 'modify-login'),
                         __('<strong>Lockout email</strong> (off by default): emails the site admin address when a lockout was triggered with an administrator’s username. At most one email per hour.', 'modify-login'),
+                        __('<strong>New sign-in email</strong> (off by default): emails a user when their account signs in from a device (browser and system) or IP address it has not used before. Choose the roles under <strong>Who gets it</strong> (Administrator when first turned on). The first sign-in after it is turned on is only remembered. At most one email per account every 15 minutes. It runs after two-factor login, and links to the password reset. When Authlify Pro’s new-device alerts cover a user, Pro sends its own alert instead, so nobody gets two.', 'modify-login'),
                         __('<strong>Delete all entries</strong> empties the log at once. It cannot be undone.', 'modify-login'),
                     )),
                     __('Limitations', 'modify-login') => self::p(__('On multisite the log is shared by the network, so each site’s Activity screen shows entries from all sites, and clearing it clears every site.', 'modify-login')),
                 )) . self::p(sprintf(__('Privacy details are in %s.', 'modify-login'), self::doc('privacy-retention', __('Retention, anonymization and personal data requests', 'modify-login')))),
-                array('log', 'audit', 'history', 'failed logins', 'csv', 'export', 'retention', 'anonymize', 'country')
+                array('log', 'audit', 'history', 'failed logins', 'csv', 'export', 'retention', 'anonymize', 'country', 'new sign-in', 'login notification', 'new device', 'block')
             ),
 
             self::a('import-export', $c, __('Import, export and switching plugins', 'modify-login'), __('Move your setup between sites, copy settings from other login plugins, and decide what happens to your data on uninstall.', 'modify-login'),
@@ -1239,7 +1247,15 @@ final class Docs
                         __('<strong>Limit Login Attempts Reloaded</strong>: allowed attempts, lockout length and the allow and block lists. It also turns brute-force protection on.', 'modify-login'),
                         __('<strong>Admin and Site Enhancements</strong>: its custom login address (applied immediately).', 'modify-login'),
                         __('<strong>LoginPress</strong> and <strong>Colorlib Login Customizer</strong>: their login page design, into the Designer.', 'modify-login'),
-                    )) . self::note(__('After importing a login address, deactivate the other plugin’s login feature at once: two plugins changing the login address can reveal it or lock you out.', 'modify-login'), 'warning'),
+                    )) . self::p(__('WPS Hide Login and Limit Login Attempts Reloaded are also listed while they run on their default settings (nothing saved yet): Limit Login Attempts Reloaded’s defaults (4 attempts, 20 minutes) are imported; WPS Hide Login’s default address, /login, is one WordPress answers itself, so Authlify asks you to choose your own under Login URL instead.', 'modify-login'))
+                    . self::note(__('After importing a login address, deactivate the other plugin’s login feature at once: two plugins changing the login address can reveal it or lock you out.', 'modify-login'), 'warning'),
+                    __('Two-factor secrets', 'modify-login') => self::p(__('When Two Factor or WP 2FA left authenticator-app data on this site, a <strong>Two-factor secrets</strong> panel appears. <strong>Preview</strong> counts who would be imported and changes nothing; <strong>Import</strong> copies the secrets, so people keep the same entry in their authenticator app. Then deactivate the other plugin: Authlify’s two-factor login only runs while no other two-factor plugin is active.', 'modify-login')) . self::ul(array(
+                        __('<strong>Two Factor</strong>: users who have the authenticator app turned on there.', 'modify-login'),
+                        __('<strong>WP 2FA</strong>: users whose method is the authenticator app. Its encrypted secrets are read with WP 2FA’s own key (the <code>WP2FA_ENCRYPT_KEY</code> constant in wp-config.php, or its stored key), so import before you remove WP 2FA’s data or that constant.', 'modify-login'),
+                        __('Skipped and counted: users who already have an authenticator app in Authlify, apps saved but not turned on, and secrets that cannot be read.', 'modify-login'),
+                        __('Backup codes and email codes are not copied. <strong>Wordfence Login Security</strong> secrets cannot be copied (the format is not documented); its users set up their app again.', 'modify-login'),
+                        __('Each imported user and each import run is recorded in the activity log.', 'modify-login'),
+                    )),
                     __('Export', 'modify-login') => self::p(__('<strong>Download</strong> saves <code>authlify-settings-YYYY-MM-DD.json</code> with your settings and login page design. The CAPTCHA secret key and any unconfirmed login address change are left out. The file does contain the login address and the CAPTCHA site key, so store it privately.', 'modify-login')),
                     __('Import', 'modify-login') => self::ul(array(
                         __('Choose a file exported by Authlify and click <strong>Import settings</strong>. Other files are refused.', 'modify-login'),
@@ -1248,7 +1264,7 @@ final class Docs
                     )),
                     __('Data on uninstall', 'modify-login') => self::p(__('<strong>On uninstall</strong> (off by default): when on, deleting the plugin from the Plugins screen removes all Authlify settings, logs, lockout counters, two-factor data, passkeys and the compiled login page styles. Deactivating never deletes anything.', 'modify-login')),
                 )),
-                array('export', 'import', 'json', 'migrate', 'wps hide login', 'limit login attempts reloaded', 'loginpress', 'colorlib', 'admin site enhancements', 'uninstall', 'delete data', 'backup')
+                array('export', 'import', 'json', 'migrate', 'wps hide login', 'limit login attempts reloaded', 'loginpress', 'colorlib', 'admin site enhancements', 'uninstall', 'delete data', 'backup', 'two factor', 'wp 2fa', 'wordfence', 'totp', 'authenticator', '2fa import')
             ),
 
             self::a('wp-cli', $c, __('WP-CLI commands', 'modify-login'), __('Recover the login address, clear lockouts, reset two-factor and run Leak Check from the command line.', 'modify-login'),
@@ -1391,7 +1407,7 @@ final class Docs
             ), __('Authlify → Designer (template gallery and Effect section).', 'modify-login'), array('templates', 'animated', 'video background', 'seasonal', 'effects', 'premium design')),
 
             self::pro('pro-emails', __('Branded emails', 'modify-login'), __('Every Pro email, and optionally WordPress’s own account emails, in a clean layout that matches your login page.', 'modify-login'), array(
-                __('HTML emails with a plain-text version, using your login design’s colours and logo.', 'modify-login'),
+                __('HTML emails with a plain-text version, using your login design’s colors and logo.', 'modify-login'),
                 __('Optional wrapping of WordPress’s password reset, new user and email change emails.', 'modify-login'),
                 __('Preview and test email.', 'modify-login'),
             ), __('Authlify → Designer → Emails & extras.', 'modify-login'), array('email template', 'branded email', 'html email', 'password reset email')),
@@ -1418,12 +1434,12 @@ final class Docs
             self::pro('pro-rest-api', __('REST API', 'modify-login'), __('A documented API to read and change settings, read the activity log, manage lockouts and sync designs.', 'modify-login'), array(
                 __('Routes under /wp-json/authlify-pro/v1/ for settings, activity (JSON or CSV), lockouts and the login design.', 'modify-login'),
                 __('Authenticated with WordPress application passwords; secrets are never returned; changes go through the same validation and lock-out guards as the admin screens.', 'modify-login'),
-                __('WP-CLI commands for licences, settings export and import, and applying settings to many sites.', 'modify-login'),
+                __('WP-CLI commands for licenses, settings export and import, and applying settings to many sites.', 'modify-login'),
             ), __('/wp-json/authlify-pro/v1/ and wp authlify-pro.', 'modify-login'), array('rest api', 'api', 'automation', 'integration', 'cli', 'devops')),
 
-            self::pro('pro-license', __('Licence and updates', 'modify-login'), __('How the Pro licence works, and why a lapsed licence never switches protection off.', 'modify-login'), array(
-                __('The licence gives you updates and support.', 'modify-login'),
-                __('Every Pro feature keeps working if the licence lapses; nothing security-related is ever turned off.', 'modify-login'),
+            self::pro('pro-license', __('License and updates', 'modify-login'), __('How the Pro license works, and why a lapsed license never switches protection off.', 'modify-login'), array(
+                __('The license gives you updates and support.', 'modify-login'),
+                __('Every Pro feature keeps working if the license lapses; nothing security-related is ever turned off.', 'modify-login'),
             ), __('Authlify → Settings → License.', 'modify-login'), array('license', 'licence', 'updates', 'renew', 'activation')),
         );
     }
@@ -1597,8 +1613,8 @@ final class Docs
             self::a('howto-brand-login', $c, __('Brand the login page', 'modify-login'), __('Make every login screen look like your site in a few minutes.', 'modify-login'),
                 self::ul(array(
                     sprintf(__('Open %s.', 'modify-login'), self::go('modify-login-builder', __('Authlify → Designer', 'modify-login'))),
-                    __('Click <strong>Match my site</strong> to start from your theme’s colours, font and logo, or pick a template.', 'modify-login'),
-                    __('Adjust the sections on the left (colours, layout, background, logo, form, fields, button, links, messages). The preview updates as you go.', 'modify-login'),
+                    __('Click <strong>Match my site</strong> to start from your theme’s colors, font and logo, or pick a template.', 'modify-login'),
+                    __('Adjust the sections on the left (colors, layout, background, logo, form, fields, button, links, messages). The preview updates as you go.', 'modify-login'),
                     __('Use the screen switcher above the preview to check the other screens, such as lost password and two-factor.', 'modify-login'),
                     __('Save. Open your login address in a private window to see the result.', 'modify-login'),
                 ), true) . self::p(sprintf(__('Details: %s.', 'modify-login'), self::doc('designer', __('Login page designer', 'modify-login')))),
@@ -1788,7 +1804,7 @@ final class Docs
 
         return array(
             self::a('faq-free-vs-pro', $c, __('What is the difference between Free and Pro?', 'modify-login'), __('Everything described under “Free features” is free for good. Pro adds tools for teams, stores and agencies.', 'modify-login'),
-                self::p(__('The free plugin includes the private login address, Leak Check, brute-force lockouts, all CAPTCHA providers and the honeypot, two-factor login with authenticator apps, backup codes and passkeys, the breached-password check, hardening, redirects, the activity log, the login page designer, import and export, and WP-CLI. There are no usage limits and no licence.', 'modify-login'))
+                self::p(__('The free plugin includes the private login address, Leak Check, brute-force lockouts, all CAPTCHA providers and the honeypot, two-factor login with authenticator apps, backup codes and passkeys, the breached-password check, hardening, redirects, the activity log, the login page designer, import and export, and WP-CLI. There are no usage limits and no license.', 'modify-login'))
                 . self::p(__('Authlify Pro adds:', 'modify-login'))
                 . self::ul(array(
                     __('Two-factor rules: required two-factor for chosen roles with a grace period, email codes, trusted devices, sudo mode and a coverage report.', 'modify-login'),
@@ -1830,14 +1846,14 @@ final class Docs
                 self::ul(array(
                     __('Updates appear under Dashboard → Updates and on the Plugins screen, and work with automatic updates.', 'modify-login'),
                     __('Settings, the log and two-factor data are kept; any database changes run on their own after the update.', 'modify-login'),
-                    __('Authlify Pro is updated separately from its own update server while its licence is active. Its features keep working when a licence lapses.', 'modify-login'),
+                    __('Authlify Pro is updated separately from its own update server while its license is active. Its features keep working when a license lapses.', 'modify-login'),
                 )),
                 array('update', 'upgrade', 'version', 'auto update')
             ),
 
             self::a('faq-upgrade-from-modify-login', $c, __('I used Modify Login. What changed?', 'modify-login'), __('Modify Login is now Authlify. Your login address, redirects and log carry over.', 'modify-login'),
                 self::ul(array(
-                    __('The login address, the hiding and redirect behaviour, login and logout redirects, activity logging and reCAPTCHA v2 keys (on the login form) carry over. The newest 50,000 log entries are copied; the old log table is kept.', 'modify-login'),
+                    __('The login address, the hiding and redirect behavior, login and logout redirects, activity logging and reCAPTCHA v2 keys (on the login form) carry over. The newest 50,000 log entries are copied; the old log table is kept.', 'modify-login'),
                     __('Your old login page design is kept as a design in the Designer.', 'modify-login'),
                     __('New protection (brute-force lockouts, two-factor login, the weekly Leak Check, the honeypot, the other CAPTCHA forms) stays off until you switch it on. The notice “Modify Login is now Authlify” links to the dashboard to review it.', 'modify-login'),
                     __('If the old address had characters that are no longer allowed, the notice shows the new address.', 'modify-login'),
@@ -1918,7 +1934,7 @@ final class Docs
                         . '<dt>' . esc_html__('Your own site (Leak Check)', 'modify-login') . '</dt><dd>' . esc_html__('Leak Check sends requests only to your own site’s address, while a custom login address is set.', 'modify-login') . '</dd>'
                         . '</dl>' . self::p(__('The free plugin loads no fonts, scripts, images or avatars from other services on its own, and sends no usage data. Emails are sent through your site’s own mail setup.', 'modify-login')),
                     __('Authlify Pro (when installed)', 'modify-login') => '<dl>'
-                        . '<dt>' . esc_html__('Licence and update server', 'modify-login') . '</dt><dd>' . esc_html__('store.mantrabrain.com. With a licence key saved: when you activate, refresh or deactivate it, and in a background update check about every 12 hours. Without a key, only when you click “Check for updates” on the License screen or “View details” on the Plugins screen. It sends the licence key (if saved), the site address, the Pro version and the environment type (production, staging and so on).', 'modify-login') . '</dd>'
+                        . '<dt>' . esc_html__('License and update server', 'modify-login') . '</dt><dd>' . esc_html__('store.mantrabrain.com. With a license key saved: when you activate, refresh or deactivate it, and in a background update check about every 12 hours. Without a key, only when you click “Check for updates” on the License screen or “View details” on the Plugins screen. It sends the license key (if saved), the site address, the Pro version and the environment type (production, staging and so on).', 'modify-login') . '</dd>'
                         . '<dt>' . esc_html__('DB-IP (only if you choose the local country database)', 'modify-login') . '</dt><dd>' . esc_html__('The free DB-IP Lite country file is downloaded from download.db-ip.com about once a month. Lookups then happen on your server; no visitor address is sent.', 'modify-login') . '</dd>'
                         . '<dt>' . esc_html__('Social and single sign-on providers (only those you enable)', 'modify-login') . '</dt><dd>' . esc_html__('Google, Microsoft, Apple, GitHub or your OpenID Connect provider, when someone signs in with them: your server exchanges the sign-in code and reads the person’s identity and email.', 'modify-login') . '</dd>'
                         . '<dt>' . esc_html__('Alert channels (only those you add)', 'modify-login') . '</dt><dd>' . esc_html__('Slack, Discord, Microsoft Teams, Telegram (api.telegram.org) or your own webhook address receive alert messages, which can include a username, IP address and country.', 'modify-login') . '</dd>'

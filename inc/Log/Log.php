@@ -46,7 +46,57 @@ final class Log
             'password_reset' => __('Password reset', 'modify-login'),
             'slug_changed' => __('Login URL changed', 'modify-login'),
             'log_cleared' => __('Log cleared', 'modify-login'),
+            'ip_blocked' => __('Added to block list', 'modify-login'),
+            'auto_block_skipped' => __('Automatic block skipped', 'modify-login'),
+            'signin_notice' => __('New sign-in emailed', 'modify-login'),
+            'twofa_import' => __('Two-factor secrets imported', 'modify-login'),
         ));
+    }
+
+    /**
+     * Readable label of an event. Events written by an add-on that is no
+     * longer active (Authlify Pro) get a readable fallback instead of their
+     * raw key (UX2-04).
+     *
+     * @param string     $event  Event key.
+     * @param array|null $events Known events (default: events()).
+     * @return string
+     * @since 3.0.2
+     */
+    public static function label($event, $events = null)
+    {
+        $event = (string) $event;
+        $events = is_array($events) ? $events : self::events();
+        if (isset($events[$event])) {
+            return (string) $events[$event];
+        }
+
+        // Authlify Pro keys that read badly word by word.
+        $pro = array(
+            'role_admin' => __('Promoted to administrator', 'modify-login'),
+            'super_admin_granted' => __('Made a super admin', 'modify-login'),
+            'super_admin_revoked' => __('Super admin removed', 'modify-login'),
+            'new_device' => __('New device login', 'modify-login'),
+            'account_secured' => __('Account secured', 'modify-login'),
+            'reset_forced' => __('Password change required', 'modify-login'),
+            'password_policy' => __('Weak password refused', 'modify-login'),
+            'sudo_prompt' => __('Asked to confirm identity', 'modify-login'),
+            'sudo_passed' => __('Identity confirmed', 'modify-login'),
+            'sudo_failed' => __('Identity confirmation failed', 'modify-login'),
+            'twofa_grace' => __('Signed in during the 2FA grace period', 'modify-login'),
+            'webhook_failed' => __('Alert delivery failed', 'modify-login'),
+        );
+        if (isset($pro[$event])) {
+            return $pro[$event];
+        }
+
+        $words = array('twofa' => 'two-factor', '2fa' => '2FA', 'temp' => 'temporary', 'app' => 'application', 'ip' => 'IP', 'totp' => 'TOTP', 'url' => 'URL');
+        $parts = array_filter(explode('_', strtolower(preg_replace('/[^A-Za-z0-9_]/', '', $event))), 'strlen');
+        foreach ($parts as $i => $part) {
+            $parts[$i] = isset($words[$part]) ? $words[$part] : $part;
+        }
+
+        return $parts ? ucfirst(implode(' ', $parts)) : $event;
     }
 
     /**
@@ -555,7 +605,7 @@ final class Log
                     'item_id' => 'authlify-log-' . $row->id,
                     'data' => array(
                         array('name' => __('Date', 'modify-login'), 'value' => get_date_from_gmt($row->created_at)),
-                        array('name' => __('Event', 'modify-login'), 'value' => isset($events[$row->event]) ? $events[$row->event] : $row->event),
+                        array('name' => __('Event', 'modify-login'), 'value' => self::label($row->event, $events)),
                         array('name' => __('IP address', 'modify-login'), 'value' => $row->ip),
                         array('name' => __('Country', 'modify-login'), 'value' => $row->country),
                         array('name' => __('Browser', 'modify-login'), 'value' => $row->user_agent),

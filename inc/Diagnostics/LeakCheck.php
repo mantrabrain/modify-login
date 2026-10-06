@@ -82,6 +82,10 @@ final class LeakCheck
         // Probe requests must not be logged as attacks on hidden URLs.
         if (isset($_SERVER['HTTP_X_AUTHLIFY_LEAK_CHECK'])) {
             add_action('authlify_blocked_request', array(__CLASS__, 'silence_probe'), PHP_INT_MIN);
+            // The comment-form probe: its comment goes straight to spam (no
+            // moderation email) and is deleted by the run right afterwards.
+            add_filter('pre_comment_approved', array(__CLASS__, 'probe_comment_status'), PHP_INT_MAX);
+            add_filter('wp_is_comment_flood', array(__CLASS__, 'probe_comment_flood'), PHP_INT_MAX);
         }
 
         add_action('authlify_settings_updated', array(__CLASS__, 'on_settings_updated'), 10, 2);
@@ -160,6 +164,28 @@ final class LeakCheck
         if (self::is_probe()) {
             remove_all_actions('authlify_blocked_request');
         }
+    }
+
+    /**
+     * A verified probe's comment is stored as spam, so nobody is notified.
+     *
+     * @param int|string|\WP_Error $approved Approval status.
+     * @return int|string|\WP_Error
+     */
+    public static function probe_comment_status($approved)
+    {
+        return self::is_probe() && !is_wp_error($approved) ? 'spam' : $approved;
+    }
+
+    /**
+     * A verified probe is never held back by the comment flood guard.
+     *
+     * @param bool $is_flood Whether this is a flood.
+     * @return bool
+     */
+    public static function probe_comment_flood($is_flood)
+    {
+        return self::is_probe() ? false : $is_flood;
     }
 
     /*
@@ -374,6 +400,7 @@ final class LeakCheck
         // The budget covers every probe, not only the URL list above.
         $extra = array(
             'xmlrpc' => array(__('XML-RPC', 'modify-login'), 'probe_xmlrpc'),
+            'comment_redirect' => array(__('POST wp-comments-post.php with redirect_to=wp-login.php', 'modify-login'), 'probe_comment_redirect'),
             'rest_users' => array(__('REST API user list', 'modify-login'), 'probe_rest_users'),
             'author_scan' => array(__('Author archive scan', 'modify-login'), 'probe_author_scan'),
             'app_passwords' => array(__('Application passwords', 'modify-login'), 'probe_app_passwords'),
@@ -412,10 +439,11 @@ final class LeakCheck
         $site = untrailingslashit((string) get_option('siteurl'));
         $home = untrailingslashit(home_url());
         $login = $site . '/wp-login.php';
-        $multi = is_multisite() ? __('Skipped: on multisite this script handles sign-ups and is not a login page.', 'modify-login') : '';
+        $multi = is_multisite();
 
         $fix_router = __('This route is closed by Authlify\'s router. A leak here usually means another plugin redirects visitors to the login page. Deactivate plugins one at a time and rerun the check to find it, then report it to Authlify support.', 'modify-login');
         $fix_backdoor = __('This is an Authlify 2.x back door. Make sure no old copy of Modify Login (or a must-use plugin copied from it) is still loaded.', 'modify-login');
+        $fix_login_page = __('This public page has a login form (or a "Log in" link) that sends people to your custom login URL, so anyone who opens the page can read the address. That is how front-end login forms work: the form has to post somewhere. If you want the page, accept that the address is not secret there (brute-force limits, CAPTCHA and two-factor login still protect it). Otherwise remove the login form or block from the page, or change the plugin setting that created the page.', 'modify-login');
         $fix_public = __('Some part of this page prints the login URL. If it is the Meta widget, remove it (Appearance → Widgets) or accept that the link is public. For comment "log in to reply" links, turn off "Users must be registered and logged in to comment" or accept it.', 'modify-login');
 
         $defs = array(
@@ -424,6 +452,7 @@ final class LeakCheck
             'wp_login_encoded' => array(__('GET /%77p-login.php (URL-encoded)', 'modify-login'), $site . '/%77p-login.php'),
             'wp_login_trailing' => array(__('GET wp-login.php/x (trailing path)', 'modify-login'), $login . '/x'),
             'wp_login_dir' => array(__('GET /blah/wp-login.php (any folder)', 'modify-login'), $home . '/blah/wp-login.php'),
+            'wp_login_pathinfo' => array(__('GET /index.php/wp-login.php (canonical redirect)', 'modify-login'), $site . '/index.php/wp-login.php'),
             'action_register' => array(__('GET wp-login.php?action=register', 'modify-login'), $login . '?action=register'),
             'action_lostpassword' => array(__('GET wp-login.php?action=lostpassword', 'modify-login'), $login . '?action=lostpassword'),
             'action_postpass' => array(__('GET wp-login.php?action=postpass (CVE-2024-2473)', 'modify-login'), $login . '?action=postpass'),
@@ -452,8 +481,12 @@ final class LeakCheck
             'interim_login' => array(__('GET wp-login.php?interim-login=1', 'modify-login'), $login . '?interim-login=1'),
             'action_logout' => array(__('GET wp-login.php?action=logout', 'modify-login'), $login . '?action=logout'),
             'wp_register' => array(__('GET wp-register.php', 'modify-login'), $site . '/wp-register.php'),
-            'wp_signup' => array(__('GET wp-signup.php', 'modify-login'), $site . '/wp-signup.php', 'GET', array(), null, 'hidden', $multi),
-            'wp_activate' => array(__('GET wp-activate.php', 'modify-login'), $site . '/wp-activate.php', 'GET', array(), null, 'hidden', $multi),
+            // Core's canonical redirect sends any path ending in wp-register.php to the registration URL (CMPT-02).
+            'wp_register_dir' => array(__('GET /blah/wp-register.php (any folder)', 'modify-login'), $home . '/blah/wp-register.php'),
+            'wp_register_content' => array(__('GET /wp-content/wp-register.php', 'modify-login'), $site . '/wp-content/wp-register.php'),
+            // On multisite these scripts handle sign-ups, so they are public pages: they must not print the login URL (SEC2-10).
+            'wp_signup' => array(__('GET wp-signup.php', 'modify-login'), $site . '/wp-signup.php', 'GET', array(), null, $multi ? 'public' : 'hidden'),
+            'wp_activate' => array(__('GET wp-activate.php', 'modify-login'), $site . '/wp-activate.php', 'GET', array(), null, $multi ? 'public' : 'hidden'),
             'wp_admin' => array(__('GET /wp-admin/ (logged out)', 'modify-login'), $site . '/wp-admin/'),
             'options_referer' => array(
                 __('GET wp-admin/options.php with a wp-login.php Referer (CVE-2021-24917)', 'modify-login'),
@@ -484,6 +517,29 @@ final class LeakCheck
             ? array(__('A sample post', 'modify-login'), get_permalink($post[0]), 'GET', array(), null, 'public')
             : array(__('A sample post', 'modify-login'), '', 'GET', array(), null, 'public', __('Skipped: there are no published posts.', 'modify-login'));
 
+        foreach (self::login_pages() as $key => $page) {
+            $defs[$key] = array($page[0], $page[1], 'GET', array(), null, 'login_page');
+        }
+
+        // WooCommerce cart and checkout (block versions print wcSettings.wpLoginUrl for every visitor).
+        foreach (array('cart' => __('WooCommerce cart page', 'modify-login'), 'checkout' => __('WooCommerce checkout page', 'modify-login')) as $page => $label) {
+            $id = function_exists('wc_get_page_id') ? (int) wc_get_page_id($page) : 0;
+            if ($id > 0 && 'publish' === get_post_status($id)) {
+                $defs['woo_' . $page] = array($label, (string) get_permalink($id), 'GET', array(), null, 'public');
+            }
+        }
+
+        // Pages with Authlify's own shortcodes or blocks. A login, register or
+        // lost-password form (or popup) has to post to the login URL, so it is a
+        // warning; anything else (the account-security shortcode, the account
+        // menu) must never print the address to visitors.
+        foreach (self::authlify_pages() as $id => $form) {
+            $url = (string) get_permalink($id);
+            /* translators: %s: page title */
+            $label = sprintf(__('Page with a login form or Authlify block: %s', 'modify-login'), get_the_title($id));
+            $defs['login_page_form_' . $id] = array($label, $url, 'GET', array(), null, $form ? 'login_page' : 'public');
+        }
+
         $defs['page_404'] = array(__('A 404 page', 'modify-login'), $home . '/authlify-leak-check-' . wp_generate_password(8, false, false) . '/', 'GET', array(), null, 'public');
         $defs['robots'] = array(__('robots.txt', 'modify-login'), $home . '/robots.txt', 'GET', array(), null, 'public');
         $defs['sitemap'] = array(__('XML sitemap', 'modify-login'), $home . '/wp-sitemap.xml', 'GET', array(), null, 'public');
@@ -501,7 +557,7 @@ final class LeakCheck
                 'body' => isset($d[4]) ? $d[4] : null,
                 'kind' => $kind,
                 'skip' => isset($d[6]) ? $d[6] : '',
-                'fix' => 'public' === $kind ? $fix_public : ('backdoor' === $kind ? $fix_backdoor : $fix_router),
+                'fix' => 'public' === $kind ? $fix_public : ('backdoor' === $kind ? $fix_backdoor : ('login_page' === $kind ? $fix_login_page : $fix_router)),
             );
         }
 
@@ -512,6 +568,95 @@ final class LeakCheck
          * @since 3.0.0
          */
         return apply_filters('authlify_leak_check_probes', $out);
+    }
+
+    /**
+     * Public pages that usually carry a login or registration form (CMPT-03):
+     * the common addresses, and the pages that membership, shop and community
+     * plugins created for logging in or signing up.
+     *
+     * @return array key => array( label, url ).
+     * @since 3.0.2
+     */
+    public static function login_pages()
+    {
+        $home = untrailingslashit(home_url());
+        $urls = array();
+
+        foreach (array('login', 'my-account', 'account', 'members', 'register') as $path) {
+            /* translators: %s: address, e.g. /login/ */
+            $urls['login_page_' . str_replace('-', '_', $path)] = array(sprintf(__('Login page %s', 'modify-login'), '/' . $path . '/'), $home . '/' . $path . '/');
+        }
+
+        $ids = array(
+            'pmpro_login' => array(__('Paid Memberships Pro login page', 'modify-login'), (int) get_option('pmpro_login_page_id')),
+            'woo_myaccount' => array(__('WooCommerce My Account page', 'modify-login'), (int) get_option('woocommerce_myaccount_page_id')),
+        );
+
+        $edd = get_option('edd_settings');
+        if (is_array($edd) && !empty($edd['login_page'])) {
+            $ids['edd_login'] = array(__('Easy Digital Downloads login page', 'modify-login'), (int) $edd['login_page']);
+        }
+
+        $um = get_option('um_options');
+        if (is_array($um)) {
+            if (!empty($um['core_login'])) {
+                $ids['um_login'] = array(__('Ultimate Member login page', 'modify-login'), (int) $um['core_login']);
+            }
+            if (!empty($um['core_register'])) {
+                $ids['um_register'] = array(__('Ultimate Member registration page', 'modify-login'), (int) $um['core_register']);
+            }
+        }
+
+        $bp = get_option('bp-pages');
+        if (is_array($bp) && !empty($bp['register'])) {
+            $ids['bp_register'] = array(__('BuddyPress registration page', 'modify-login'), (int) $bp['register']);
+        }
+
+        $seen = wp_list_pluck($urls, 1);
+        foreach ($ids as $key => $page) {
+            if ($page[1] <= 0 || 'publish' !== get_post_status($page[1])) {
+                continue;
+            }
+            $url = (string) get_permalink($page[1]);
+            if ('' === $url || in_array($url, $seen, true)) {
+                continue;
+            }
+            $seen[] = $url;
+            $urls['login_page_' . $key] = array($page[0], $url);
+        }
+
+        /**
+         * Filters the public login and registration pages the Leak Check visits.
+         *
+         * @param array $urls key => array( label, url ).
+         * @since 3.0.2
+         */
+        return (array) apply_filters('authlify_leak_check_login_pages', $urls);
+    }
+
+    /**
+     * Published pages and posts that use an Authlify shortcode or block, or
+     * another plugin's login form shortcode or block (EDD, PMPro), at most eight.
+     *
+     * @return array post ID => whether it holds a login-type form.
+     * @since 3.0.2
+     */
+    public static function authlify_pages()
+    {
+        global $wpdb;
+
+        $rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            "SELECT ID, post_content FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_password = '' AND post_type IN ('page', 'post')"
+            . " AND (post_content LIKE '%[authlify\\_%' OR post_content LIKE '%<!-- wp:authlify%' OR post_content LIKE '%[edd\\_login%' OR post_content LIKE '%<!-- wp:edd/login%' OR post_content LIKE '%[pmpro\\_login%') ORDER BY ID ASC LIMIT 8"
+        );
+
+        $out = array();
+        foreach ((array) $rows as $row) {
+            $out[(int) $row->ID] = (bool) preg_match('#wp:authlify-pro/(login-form|login-popup|register-form|lost-password-form|account-menu)|\[authlify_login_popup|\[edd_login|wp:edd/login|\[pmpro_login#', (string) $row->post_content);
+        }
+
+        return $out;
     }
 
     /**
@@ -547,6 +692,18 @@ final class LeakCheck
             $where = __('in the page', 'modify-login');
         }
 
+        // A front-end login page is meant to show a login form; only the
+        // address itself matters there (a form that posts to the page itself,
+        // like WooCommerce My Account, reveals nothing).
+        if ('login_page' === $def['kind'] && 'form' === $leak) {
+            $leak = self::find_slug($response['location'], $slugs);
+            $where = __('in the redirect', 'modify-login');
+            if ('' === $leak) {
+                $leak = self::find_slug($response['body'], $slugs);
+                $where = __('in the page', 'modify-login');
+            }
+        }
+
         if ('' === $leak && $response['code'] >= 500) {
             return self::result('error', $def['label'], sprintf(
                 /* translators: %d: HTTP status */
@@ -563,10 +720,31 @@ final class LeakCheck
             ), '');
         }
 
+        // A private site (force login) sends every visitor to the login page by
+        // design, so the address is not secret there (FQA-04): say so, do not
+        // raise an alarm.
+        if ('form' !== $leak && __('in the redirect', 'modify-login') === $where && Settings::get('force_login', false) && false !== strpos((string) $response['location'], 'redirect_to=')) {
+            return self::result('info', $def['label'], sprintf(
+                /* translators: %s: what the server answered, e.g. "302 redirect to /door/" */
+                __('Private site: visitors who are not logged in are sent to the login page by design (%s). On a private site the login URL is not a secret.', 'modify-login'),
+                $seen
+            ), '');
+        }
+
         $what = 'form' === $leak ? __('The login form is served', 'modify-login') : __('The login URL appears', 'modify-login');
         $detail = sprintf('%1$s %2$s (%3$s).', $what, $where, $seen);
 
         $fix = $def['fix'];
+
+        // A front-end login or registration page that posts to the custom URL
+        // is a choice the site made, not a hole: report it as a warning (CMPT-03).
+        if ('login_page' === $def['kind']) {
+            $source = self::has_form($response['body']) && false === strpos($response['body'], 'edd_login_form')
+                ? __('The page\'s login form sends people to your login URL.', 'modify-login')
+                : self::public_source($response['body']);
+
+            return self::result('warn', $def['label'], $detail . ' ' . $source, $fix);
+        }
 
         // A 200 page that only prints the URL is a public-page leak, not a back door.
         if ('form' !== $leak && ('public' === $def['kind'] || ('backdoor' === $def['kind'] && 200 === $response['code']))) {
@@ -630,7 +808,7 @@ final class LeakCheck
                 Router::is_hiding()
                     ? __('The welcome email still links to wp-login.php, which new site owners cannot open while it is hidden.', 'modify-login')
                     : __('The welcome email links to wp-login.php, which works because hiding is off.', 'modify-login'),
-                Router::is_hiding() ? __('Another plugin replaces the welcome email text after Authlify. Check network plugins that customise emails.', 'modify-login') : ''
+                Router::is_hiding() ? __('Another plugin replaces the welcome email text after Authlify. Check network plugins that customize emails.', 'modify-login') : ''
             );
         }
 
@@ -872,6 +1050,52 @@ final class LeakCheck
     }
 
     /**
+     * The comment form redirects to any redirect_to it is given: a visitor
+     * asking for wp-login.php must not be sent to the custom URL.
+     *
+     * @return array
+     */
+    private static function probe_comment_redirect()
+    {
+        $label = __('POST wp-comments-post.php with redirect_to=wp-login.php', 'modify-login');
+
+        if (get_option('comment_registration')) {
+            return self::result('skip', $label, __('Skipped: only logged-in users can comment on this site.', 'modify-login'), '');
+        }
+
+        $post = get_posts(array('numberposts' => 1, 'post_type' => 'any', 'post_status' => 'publish', 'has_password' => false, 'comment_status' => 'open', 'suppress_filters' => false));
+        if (!$post) {
+            return self::result('skip', $label, __('Skipped: no published post accepts comments.', 'modify-login'), '');
+        }
+
+        $site = untrailingslashit((string) get_option('siteurl'));
+        $email = 'leak-check@authlify.invalid';
+        $response = self::request($site . '/wp-comments-post.php', 'POST', array(), array(
+            'comment_post_ID' => $post[0]->ID,
+            'author' => 'Authlify Leak Check',
+            'email' => $email,
+            'comment' => 'Authlify Leak Check ' . wp_generate_password(12, false, false),
+            'redirect_to' => $site . '/wp-login.php',
+        ));
+
+        // The probe's comment (stored as spam) is removed at once.
+        foreach (get_comments(array('author_email' => $email, 'status' => array('all', 'spam', 'trash'), 'fields' => 'ids', 'number' => 20)) as $id) {
+            wp_delete_comment((int) $id, true);
+        }
+
+        $slugs = array_values(array_unique(array_filter(array(Router::slug(), Router::pending_slug()))));
+        if (!is_wp_error($response) && 3 !== (int) floor($response['code'] / 100) && '' === self::find_leak($response['body'], $slugs)) {
+            return self::result('skip', $label, sprintf(
+                /* translators: %s: what the server answered, e.g. "409" */
+                __('Skipped: the comment was not accepted (the server answered %s), so there was no redirect to test.', 'modify-login'),
+                self::describe($response)
+            ), '');
+        }
+
+        return self::judge(array('label' => $label, 'kind' => 'hidden', 'fix' => __('Something rewrites redirects to wp-login.php into the login URL for visitors. Update Authlify; if it still leaks, deactivate plugins one at a time to find the one that does this.', 'modify-login')), $response, $slugs, Router::is_hiding());
+    }
+
+    /**
      * What leaked: 'form', 'slug' or ''.
      *
      * @param string   $text  Response body or header.
@@ -891,6 +1115,24 @@ final class LeakCheck
 
         foreach ($slugs as $slug) {
             if ('' !== $slug && preg_match(self::slug_pattern($slug), $text)) {
+                return 'slug';
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * 'slug' when the text contains a slug used as a URL, else ''.
+     *
+     * @param string   $text  Text.
+     * @param string[] $slugs Slugs.
+     * @return string
+     */
+    private static function find_slug($text, array $slugs)
+    {
+        foreach ($slugs as $slug) {
+            if ('' !== $slug && preg_match(self::slug_pattern($slug), (string) $text)) {
                 return 'slug';
             }
         }
@@ -933,6 +1175,15 @@ final class LeakCheck
         }
         if (preg_match('#must-log-in|comment-reply-login|logged-in-as#', $html)) {
             return __('It looks like a comment "log in to reply" link (comments require registration).', 'modify-login');
+        }
+        if (false !== strpos($html, 'edd_login_form')) {
+            return __('It looks like the Easy Digital Downloads login form\'s "Lost Password?" link. Use the EDD "Login" block on that page and choose it under Downloads → Settings → General → Pages → Login page: EDD then handles lost passwords on its own page.', 'modify-login');
+        }
+        if (false !== strpos($html, 'wpLoginUrl')) {
+            return __('It looks like WooCommerce\'s block settings (wcSettings.wpLoginUrl) on a cart or checkout page. Update Authlify: it points that address at My Account while the login URL is hidden.', 'modify-login');
+        }
+        if (false !== strpos($html, 'wp-admin-bar-bp-login')) {
+            return __('It looks like the BuddyPress toolbar "Log In" link. Turn off BuddyPress → Settings → "Show the Toolbar for logged-out users", or update Authlify (it removes that link while the login URL is hidden).', 'modify-login');
         }
         if (false !== strpos($html, 'wp-block-loginout')) {
             return __('It looks like a Login/out block.', 'modify-login');
@@ -1005,8 +1256,29 @@ final class LeakCheck
         if (in_array('error', $statuses, true)) {
             return 'incomplete';
         }
+        if (self::login_page_warnings($probes) > 0) {
+            return 'warning';
+        }
 
         return 'passed';
+    }
+
+    /**
+     * Front-end login pages that show the login address (CMPT-03).
+     *
+     * @param array $probes Probes.
+     * @return int
+     */
+    private static function login_page_warnings(array $probes)
+    {
+        $n = 0;
+        foreach ($probes as $key => $probe) {
+            if (0 === strpos((string) $key, 'login_page_') && isset($probe['status']) && 'warn' === $probe['status']) {
+                $n++;
+            }
+        }
+
+        return $n;
     }
 
     /**
@@ -1062,7 +1334,17 @@ final class LeakCheck
                 /* translators: %d: number of leaks */
                 return sprintf(_n('%d place reveals your login URL or login form.', '%d places reveal your login URL or login form.', $c['failed'], 'modify-login'), $c['failed']);
             case 'warning':
-                return __('No leaks, but wp-login.php is not hidden.', 'modify-login');
+                if (empty($result['probes']) || isset($result['probes']['hiding_off'])) {
+                    return __('No leaks, but wp-login.php is not hidden.', 'modify-login');
+                }
+
+                $pages = max(1, self::login_page_warnings($result['probes']));
+
+                return sprintf(
+                    /* translators: %d: number of pages */
+                    _n('No hidden URL leaks, but %d public login page shows your login address.', 'No hidden URL leaks, but %d public login pages show your login address.', $pages, 'modify-login'),
+                    $pages
+                );
             case 'incomplete':
                 return __('No leaks found, but some probes could not run.', 'modify-login');
         }
@@ -1133,10 +1415,17 @@ final class LeakCheck
 
         $result = self::last();
 
+        $stale = $result && (int) $result['time'] < time() - SiteHealth::LEAK_CHECK_STALE;
         $checks['leak_check'] = array(
-            $result && 'passed' === $result['state'],
+            $result && 'passed' === $result['state'] && !$stale,
             __('Leak Check passed', 'modify-login'),
-            self::summary($result),
+            $stale
+                ? self::summary($result) . ' ' . sprintf(
+                    /* translators: %s: time ago */
+                    __('That result is %s old; run the check again.', 'modify-login'),
+                    human_time_diff((int) $result['time'])
+                )
+                : self::summary($result),
             Menu::url('dashboard') . '#authlify-leak-check',
         );
 

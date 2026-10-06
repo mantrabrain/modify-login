@@ -2,6 +2,10 @@
 
 namespace lbuchs\WebAuthn;
 use lbuchs\WebAuthn\Binary\ByteBuffer;
+
+// Authlify: loaded only from inside WordPress.
+defined('ABSPATH') || exit;
+
 require_once 'WebAuthnException.php';
 require_once 'Binary/ByteBuffer.php';
 require_once 'Attestation/AttestationObject.php';

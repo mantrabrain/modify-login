@@ -333,7 +333,7 @@
 			return;
 		}
 
-		var start = el('button', { type: 'button', className: 'button button-primary', text: i18n.totpSetup });
+		var start = el('button', { type: 'button', className: 'button', text: i18n.totpSetup });
 		start.addEventListener('click', function () {
 			busy(start, true);
 			api('totp/setup', 'POST').then(function (json) {
@@ -605,7 +605,7 @@
 
 		var nameId = id('passkey-name');
 		var name = el('input', { type: 'text', id: nameId, className: 'regular-text', maxlength: '100', 'aria-describedby': nameId + '-hint', autocomplete: 'off', placeholder: i18n.passkeyNameHint });
-		var add = el('button', { type: 'button', className: has ? 'button' : 'button button-primary', text: i18n.passkeyCreate });
+		var add = el('button', { type: 'button', className: 'button', text: i18n.passkeyCreate });
 
 		function create() {
 			busy(add, true);

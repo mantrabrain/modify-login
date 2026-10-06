@@ -81,9 +81,10 @@ final class RecaptchaV3 extends RecaptchaV2
      */
     public static function threshold()
     {
-        $value = (float) str_replace(',', '.', (string) Settings::get('captcha_v3_threshold', '0.5'));
+        $value = trim(str_replace(',', '.', (string) Settings::get('captcha_v3_threshold', '0.5')));
 
-        return max(0.0, min(1.0, $value));
+        // A stored value that is not a number means the default, never 0.0 (FQA-11).
+        return is_numeric($value) ? max(0.0, min(1.0, (float) $value)) : 0.5;
     }
 
     /**

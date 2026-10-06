@@ -212,6 +212,15 @@ final class Admin
             }
         }
         echo '</fieldset>';
+        // The block checkout follows the WooCommerce checkout switch, named above.
+        $covered = array_diff_key(Integrations::labels(), array('woo_blocks' => true));
+        if ($covered) {
+            echo '<p class="description">' . esc_html(sprintf(
+                /* translators: %s: plugin names, e.g. "Easy Digital Downloads, Ultimate Member" */
+                __('Also covers the login, registration and lost-password forms of %s. They follow the switches above.', 'modify-login'),
+                implode(', ', $covered)
+            )) . '</p>';
+        }
         UI::field_end();
 
         UI::choice_row('captcha_mode', __('When to show it', 'modify-login'), array(
@@ -271,8 +280,14 @@ final class Admin
             $values['captcha_after'] = min(100, max(1, (int) $values['captcha_after']));
         }
         if (isset($values['captcha_v3_threshold'])) {
-            $threshold = max(0.0, min(1.0, (float) str_replace(',', '.', (string) $values['captcha_v3_threshold'])));
-            $values['captcha_v3_threshold'] = number_format($threshold, 1, '.', '');
+            $raw = trim(str_replace(',', '.', (string) $values['captcha_v3_threshold']));
+            if (!is_numeric($raw)) {
+                // Not a number (an imported file, an empty field): keep the current
+                // value instead of saving 0.0, which lets every score through (FQA-11).
+                unset($values['captcha_v3_threshold']);
+            } else {
+                $values['captcha_v3_threshold'] = number_format(max(0.0, min(1.0, (float) $raw)), 1, '.', '');
+            }
         }
         foreach (array('captcha_site_key', 'captcha_secret_key') as $key) {
             if (isset($values[$key])) {

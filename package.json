@@ -1,6 +1,6 @@
 {
   "name": "modify-login",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "private": true,
   "description": "Authlify (formerly Modify Login). Build tooling for the login page designer.",
   "license": "GPL-2.0-or-later",

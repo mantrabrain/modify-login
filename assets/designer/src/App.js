@@ -457,7 +457,7 @@ export default function App() {
 							variant="tertiary"
 							isPressed={ zoom === '100' }
 							aria-pressed={ zoom === '100' }
-							label={ zoom === '100' ? __( 'Fit the preview to the screen', 'modify-login' ) : __( 'Show the preview at actual size', 'modify-login' ) }
+							label={ zoom === '100' ? __( '100%: fit the preview to the screen', 'modify-login' ) : __( '100%: show the preview at actual size', 'modify-login' ) }
 							showTooltip
 							onClick={ () => setZoom( zoom === '100' ? 'fit' : '100' ) }
 						>

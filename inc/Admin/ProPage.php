@@ -98,9 +98,11 @@ final class ProPage
             )),
             array('shield', __('Security', 'modify-login'), array(
                 array(__('Brute-force lockouts with escalation, allow and deny lists', 'modify-login'), true, true),
+                array(__('Block an IP from the log, and after repeated lockouts', 'modify-login'), true, true),
                 array(__('Real visitor IP behind Cloudflare and proxies', 'modify-login'), true, true),
                 array(__('Hardening: XML-RPC, application passwords, user enumeration, force login', 'modify-login'), true, true),
                 array(__('CAPTCHA: Turnstile, hCaptcha, reCAPTCHA, ALTCHA and honeypot', 'modify-login'), true, true),
+                array(__('CAPTCHA on WooCommerce (incl. block checkout), EDD, Ultimate Member, MemberPress and BuddyPress forms', 'modify-login'), true, true),
                 array(__('Breached-password check when a password is set', 'modify-login'), true, true),
                 array(__('Breached-password check at login, password policy and expiry', 'modify-login'), false, true),
                 array(__('Session length, idle logout and concurrent-login limits', 'modify-login'), false, true),
@@ -109,6 +111,7 @@ final class ProPage
             array('smartphone', __('Two-factor login', 'modify-login'), array(
                 array(__('Authenticator apps, backup codes and passkeys', 'modify-login'), true, true),
                 array(__('Sign in with a passkey, no password', 'modify-login'), true, true),
+                array(__('Import authenticator apps from Two Factor and WP 2FA', 'modify-login'), true, true),
                 array(__('Codes by email', 'modify-login'), false, true),
                 array(__('Require two-factor by role, with a grace period and setup wizard', 'modify-login'), false, true),
                 array(__('Trusted devices', 'modify-login'), false, true),
@@ -124,6 +127,7 @@ final class ProPage
             array('activity', __('Activity and alerts', 'modify-login'), array(
                 array(__('Activity log with filters, CSV export and privacy tools', 'modify-login'), true, true),
                 array(__('Visitor country', 'modify-login'), __('From Cloudflare', 'modify-login'), __('Cloudflare or local database', 'modify-login')),
+                array(__('Email users about sign-ins from a new device or IP', 'modify-login'), true, true),
                 array(__('New-device and new-country alerts with “This wasn’t me”', 'modify-login'), false, true),
                 array(__('Slack, Discord, Telegram, Teams and signed webhooks', 'modify-login'), false, true),
                 array(__('Audit events: new admins, role and plugin changes', 'modify-login'), false, true),
@@ -146,7 +150,7 @@ final class ProPage
             )),
             array('help', __('Support and updates', 'modify-login'), array(
                 array(__('Support', 'modify-login'), __('Community forum', 'modify-login'), __('Priority email', 'modify-login')),
-                array(__('Updates', 'modify-login'), __('WordPress.org', 'modify-login'), __('One click, with a licence', 'modify-login')),
+                array(__('Updates', 'modify-login'), __('WordPress.org', 'modify-login'), __('One click, with a license', 'modify-login')),
             )),
         );
     }
@@ -220,7 +224,7 @@ final class ProPage
 
             <div class="authlify-strip">
                 <?php echo Dashboard::status_icon(true); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-                <p class="authlify-strip__text"><strong><?php esc_html_e('Our promise:', 'modify-login'); ?></strong> <?php esc_html_e('no free feature will ever move into Pro, and Pro keeps working if a licence lapses; the licence only brings updates and support. 14-day money-back guarantee.', 'modify-login'); ?></p>
+                <p class="authlify-strip__text"><strong><?php esc_html_e('Our promise:', 'modify-login'); ?></strong> <?php esc_html_e('no free feature will ever move into Pro, and Pro keeps working if a license lapses; the license only brings updates and support. 14-day money-back guarantee.', 'modify-login'); ?></p>
             </div>
 
             <?php UI::panel_start(__('Compare features', 'modify-login')); ?>

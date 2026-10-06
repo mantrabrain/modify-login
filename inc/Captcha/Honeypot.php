@@ -163,7 +163,9 @@ final class Honeypot
         $limits = self::limits();
         $hour = (int) floor(time() / HOUR_IN_SECONDS);
         $total_key = 'authlify_hp_' . substr(md5($parts[1] . '|' . $hour), 0, 20);
-        $ip_key = 'authlify_hp_' . substr(md5($parts[1] . '|' . \Authlify\Net\Ip::client() . '|' . $hour), 0, 20);
+        // Per address as lockouts count it (an IPv6 /64 is one address), so one
+        // network cannot use up a cached page's stamp by rotating addresses.
+        $ip_key = 'authlify_hp_' . substr(md5($parts[1] . '|' . \Authlify\Security\Limiter::ip_key(\Authlify\Net\Ip::client()) . '|' . $hour), 0, 20);
         $total = (int) get_transient($total_key);
         $mine = (int) get_transient($ip_key);
         if ($mine >= $limits['ip'] || $total >= $limits['total']) {

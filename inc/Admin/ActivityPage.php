@@ -132,6 +132,8 @@ final class ActivityPage
             cache_users($user_ids);
         }
         $pages = (int) ceil($total / $filters['per_page']);
+        // Stored addresses end in .0 when they are anonymized: blocking one would block nobody.
+        $blockable = !\Authlify\Settings::get('log_anonymize_ip', false);
         $filtered = '' !== $filters['event'] || '' !== $filters['search'] || '' !== $filters['from'] || '' !== $filters['to'];
 
         // Only show the Country column when at least one row has a country.
@@ -196,17 +198,18 @@ final class ActivityPage
                 ?>
                 <tr>
                     <td class="authlify-log__when" title="<?php echo esc_attr(get_date_from_gmt($row->created_at, get_option('date_format') . ' ' . get_option('time_format'))); ?>"><?php echo esc_html(self::when($time)); ?></td>
-                    <td><?php echo UI::pill(isset($events[$row->event]) ? $events[$row->event] : $row->event, self::tone($row->event)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
+                    <td><?php echo UI::pill(Log::label($row->event, $events), self::tone($row->event)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></td>
                     <td class="authlify-log__user">
                         <?php if ($row->user_id && ($user = get_userdata((int) $row->user_id))) : ?>
-                            <a href="<?php echo esc_url(get_edit_user_link($user->ID)); ?>"><?php echo esc_html($user->user_login); ?></a>
+                            <a class="authlify-log__clip" href="<?php echo esc_url(get_edit_user_link($user->ID)); ?>" title="<?php echo esc_attr($user->user_login); ?>" dir="auto"><?php echo esc_html($user->user_login); ?></a>
                         <?php elseif ('' !== (string) $row->username) : ?>
-                            <?php echo esc_html($row->username); ?>
+                            <span class="authlify-log__clip" title="<?php echo esc_attr($row->username); ?>" dir="auto"><?php echo esc_html($row->username); ?></span>
                         <?php else : ?>
                             <span class="authlify-table__sub" aria-hidden="true">—</span>
                         <?php endif; ?>
                     </td>
-                    <td><a class="authlify-log__ip" href="<?php echo esc_url(add_query_arg(array('page' => 'modify-login-logs', 's' => $row->ip), admin_url('admin.php'))); ?>" title="<?php esc_attr_e('Show everything from this address', 'modify-login'); ?>"><code><?php echo esc_html($row->ip); ?></code></a></td>
+                    <td class="authlify-log__ipcell"><a class="authlify-log__ip" href="<?php echo esc_url(add_query_arg(array('page' => 'modify-login-logs', 's' => $row->ip), admin_url('admin.php'))); ?>" title="<?php /* translators: %s: IP address */ echo esc_attr(sprintf(__('Show everything from %s', 'modify-login'), $row->ip)); ?>"><code dir="ltr"><?php echo esc_html($row->ip); ?></code></a>
+                        <?php echo self::block_action((string) $row->ip, $blockable); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in block_action(). ?></td>
                     <?php if ($has_country) : ?>
                         <td><?php echo esc_html($row->country ? $row->country : (isset($context['country_name']) ? $context['country_name'] : '')); ?></td>
                     <?php endif; ?>
@@ -270,6 +273,44 @@ final class ActivityPage
     }
 
     /**
+     * The "Block" row action for an address in the log (or a "Blocked" pill).
+     *
+     * @param string $ip        Address.
+     * @param bool   $blockable Whether stored addresses are real ones (not anonymized).
+     * @return string HTML.
+     * @since 3.1.0
+     */
+    private static function block_action($ip, $blockable)
+    {
+        static $cache = array();
+        if (!$blockable || !\Authlify\Net\Ip::valid($ip)) {
+            return '';
+        }
+        if (isset($cache[$ip])) {
+            return $cache[$ip];
+        }
+
+        if (\Authlify\Security\Limiter::is_denylisted($ip)) {
+            $html = ' ' . UI::pill(__('Blocked', 'modify-login'), 'error');
+        } elseif (ProtectionPage::can_block($ip)) {
+            $html = sprintf(
+                ' <a class="authlify-log__block" href="%1$s" onclick="return confirm(\'%2$s\');" aria-label="%3$s">%4$s</a>',
+                esc_url(ProtectionPage::block_url($ip, 'activity')),
+                esc_js(sprintf(/* translators: %s: IP address */ __('Block %s permanently? It is added to the "Always block" list on the Security screen.', 'modify-login'), $ip)),
+                /* translators: %s: IP address */
+                esc_attr(sprintf(__('Block %s', 'modify-login'), $ip)),
+                esc_html__('Block', 'modify-login')
+            );
+        } else {
+            $html = '';
+        }
+
+        $cache[$ip] = $html;
+
+        return $html;
+    }
+
+    /**
      * Log settings.
      */
     private static function render_settings()
@@ -287,6 +328,24 @@ final class ActivityPage
 
         UI::panel_start(__('Alerts', 'modify-login'));
         UI::toggle_row('alert_admin_lockout', __('Email me when an administrator account triggers a lockout', 'modify-login'), __('At most one email per hour.', 'modify-login'), __('Lockout email', 'modify-login'));
+        UI::toggle_row('signin_notice', __('Email users when they sign in from a new device or IP address', 'modify-login'), __('Helps people notice a stolen password. At most one email per account every 15 minutes.', 'modify-login'), __('New sign-in email', 'modify-login'));
+        UI::own('signin_notice_roles');
+        UI::field_start(__('Who gets it', 'modify-login'), __('Roles whose members are emailed.', 'modify-login'), '', 'authlify[signin_notice]=1');
+        $chosen = (array) \Authlify\Settings::get('signin_notice_roles', array());
+        echo '<fieldset class="authlify-checklist"><legend class="screen-reader-text">' . esc_html__('Roles', 'modify-login') . '</legend>';
+        foreach (wp_roles()->get_names() as $role => $name) {
+            printf(
+                '<label><input type="checkbox" name="authlify[signin_notice_roles][]" value="%1$s" %2$s> <span>%3$s</span></label>',
+                esc_attr($role),
+                checked(in_array($role, $chosen, true), true, false),
+                esc_html(translate_user_role($name))
+            );
+        }
+        echo '</fieldset>';
+        if (\Authlify\Security\SigninNotice::pro_handles()) {
+            echo '<p class="description">' . esc_html__('Authlify Pro\'s new-device alerts are on, so Pro sends these emails for the roles it covers.', 'modify-login') . '</p>';
+        }
+        UI::field_end();
         Upsell::render('alerts');
         UI::panel_end();
         UI::form_end();
@@ -315,7 +374,7 @@ final class ActivityPage
         if (in_array($event, array('login_success', 'unlock', 'passkey_added', 'twofa_enabled'), true)) {
             return 'ok';
         }
-        if (in_array($event, array('lockout', 'denied', 'captcha_failed', 'twofa_failed'), true)) {
+        if (in_array($event, array('lockout', 'denied', 'captcha_failed', 'twofa_failed', 'ip_blocked'), true)) {
             return 'error';
         }
         if (in_array($event, array('login_failed', 'hidden_probe'), true)) {
@@ -349,6 +408,22 @@ final class ActivityPage
         }
         if ('lockout' === $event && !empty($context['minutes'])) {
             $parts[] = sprintf(_n('%d minute', '%d minutes', (int) $context['minutes'], 'modify-login'), (int) $context['minutes']);
+        }
+        if ('ip_blocked' === $event) {
+            if (!empty($context['auto'])) {
+                /* translators: %d: number of lockouts */
+                $parts[] = sprintf(_n('Automatically, after %d lockout', 'Automatically, after %d lockouts', (int) (isset($context['lockouts']) ? $context['lockouts'] : 0), 'modify-login'), (int) (isset($context['lockouts']) ? $context['lockouts'] : 0));
+            } elseif (!empty($context['by']) && !class_exists('AuthlifyPro\\Alerts\\Audit')) {
+                // Authlify Pro's audit log adds "by …" to every entry itself.
+                /* translators: %s: username */
+                $parts[] = sprintf(__('by %s', 'modify-login'), $context['by']);
+            }
+            if (!empty($context['subject']) && false !== strpos((string) $context['subject'], '/')) {
+                $parts[] = (string) $context['subject'];
+            }
+        }
+        if ('auto_block_skipped' === $event && !empty($context['why'])) {
+            $parts[] = 'admin_address' === $context['why'] ? __('An administrator has logged in from this address', 'modify-login') : __('The block list is full', 'modify-login');
         }
         if ('slug_changed' === $event) {
             $parts[] = sprintf('%s → %s', $context['from'] ?: 'wp-login.php', $context['to'] ?: 'wp-login.php');
@@ -406,7 +481,7 @@ final class ActivityPage
             $filters['before_id'] = $before;
             $result = Log::query($filters);
             foreach ($result['rows'] as $row) {
-                fputcsv($out, array_map(array(__CLASS__, 'csv_safe'), array($row->created_at, isset($events[$row->event]) ? $events[$row->event] : $row->event, $row->user_id, $row->username, $row->ip, $row->country, $row->user_agent, (string) $row->context)), ',', '"', '\\');
+                fputcsv($out, array_map(array(__CLASS__, 'csv_safe'), array($row->created_at, Log::label($row->event, $events), $row->user_id, $row->username, $row->ip, $row->country, $row->user_agent, (string) $row->context)), ',', '"', '\\');
                 $before = (int) $row->id;
             }
             if (function_exists('flush')) {

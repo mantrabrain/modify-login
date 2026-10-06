@@ -166,7 +166,16 @@ final class Compiler
         // Third-party buttons (social, passkeys) stay visible and neutral.
         $css[] = $p . ' #login form .button:not(.button-primary):not(.wp-hide-pw){max-width:100%;white-space:normal}';
 
-        $css[] = self::rule($p . ' .language-switcher label', array('color' => $r['page_text']));
+        $css[] = self::rule($p . ' .language-switcher label,' . $p . ' .language-switcher label .dashicons', array('color' => $r['page_text']));
+        // Core's "Change" button keeps WordPress blue on every background (UX2-01):
+        // an outline button in the page text colour reads on any design.
+        $switch = $p . ' #language-switcher .button';
+        $css[] = self::rule($switch, array('color' => $r['page_text'], 'border-color' => $r['page_text'], 'background' => 'transparent', 'box-shadow' => 'none'));
+        if ('' !== $r['page_text']) {
+            $css[] = $switch . ':hover{background:rgba(127,127,127,.18)}';
+            $css[] = self::rule($switch . ':hover,' . $switch . ':active', array('color' => $r['page_text'], 'border-color' => $r['page_text']));
+            $css[] = self::rule($switch . ':focus', array('color' => $r['page_text'], 'border-color' => $r['page_text'], 'box-shadow' => '0 0 0 2px ' . $r['page_text'], 'outline' => '2px solid transparent'));
+        }
 
         $css = implode("\n", array_filter($css));
 
@@ -721,6 +730,10 @@ final class Compiler
             // Links and link-style buttons (the 2FA "use a backup code" switches).
             $css[] = self::rule($p . ' a:focus,' . $p . ' .button-link:focus', array('box-shadow' => '0 0 0 2px ' . $r['focus'], 'border-radius' => '2px', 'outline' => '2px solid transparent'));
         }
+
+        // The 2FA step's "use a backup code instead" switches sit inside the form:
+        // the form's text colour keeps them readable on any card (UX2-14).
+        $css[] = self::rule($p . ' .authlify-2fa__alt .button-link,' . $p . ' .authlify-2fa__alt-title', array('color' => $r['card_text']));
 
         // Links inside messages use the message text colour, for the focus ring too
         // (the template's focus colour can vanish on a light message box).

@@ -54,7 +54,25 @@ final class Passwords
             add_filter('authlify_validate_settings', array(__CLASS__, 'validate'), 10, 3);
         }
 
-        if (!Settings::get('hibp_enabled', false)) {
+        // Read the switch once Authlify Pro has applied a network site's own
+        // settings (PQA-AG-01).
+        if (!did_action('plugins_loaded') && !doing_action('plugins_loaded')) {
+            add_action('plugins_loaded', array(__CLASS__, 'wire'), 7);
+
+            return;
+        }
+
+        self::wire();
+    }
+
+    /**
+     * Add the breached-password hooks when the check is on.
+     *
+     * @since 3.0.2
+     */
+    public static function wire()
+    {
+        if (!Settings::get('hibp_enabled', false) || has_action('validate_password_reset', array(__CLASS__, 'check_reset'))) {
             return;
         }
 
@@ -249,11 +267,13 @@ final class Passwords
     /**
      * How often a password appears in breaches (0 when not found or on error).
      *
-     * @param string $password Password.
+     * @param string    $password Password.
+     * @param bool|null $failed   Set to true when the service could not be reached.
      * @return int
      */
-    public static function breach_count($password)
+    public static function breach_count($password, &$failed = null)
     {
+        $failed = false;
         if ('' === $password) {
             return 0;
         }
@@ -269,6 +289,9 @@ final class Passwords
 
         $range = self::range($prefix);
         if (null === $range) {
+            // The service could not be reached: unknown, not "clean".
+            $failed = true;
+
             return 0;
         }
 

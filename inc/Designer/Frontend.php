@@ -68,6 +68,14 @@ final class Frontend
     {
         self::$preview = self::is_preview();
         if (self::$preview) {
+            // wp-login.php signs a visitor in again from the auth cookie
+            // (wp_signon() with no credentials). Only a network installed in
+            // sub-directories sends that cookie to the login page, and there
+            // each preview load started a new session: the designer's REST
+            // nonce went stale and every save was first refused with a 403
+            // (CMPT-07). A preview only shows the form, so it never signs
+            // anyone in.
+            add_filter('authenticate', array(__CLASS__, 'preview_no_signon'), 31, 3);
             $draft = Design::draft(get_current_user_id());
             self::$design = $draft ? $draft : Design::saved();
             self::$design['enabled'] = true;
@@ -122,6 +130,29 @@ final class Frontend
             add_action('login_footer', array(__CLASS__, 'preview_script'), 99);
             add_action('login_init', array(__CLASS__, 'preview_screen'), 50);
         }
+    }
+
+    /**
+     * Preview only: refuse the cookie sign-in that wp-login.php attempts
+     * with no username and password. The two "empty" codes are the ones core
+     * clears on a GET, so the form shows no error.
+     *
+     * @param \WP_User|\WP_Error|null $user     Result so far.
+     * @param string                  $username Username.
+     * @param string                  $password Password.
+     * @return \WP_User|\WP_Error|null
+     * @since 3.0.2
+     */
+    public static function preview_no_signon($user, $username = '', $password = '')
+    {
+        if (!$user instanceof \WP_User || '' !== (string) $username || '' !== (string) $password || !empty($_POST)) { // phpcs:ignore WordPress.Security.NonceVerification
+            return $user;
+        }
+
+        $error = new \WP_Error('empty_username', '');
+        $error->add('empty_password', '');
+
+        return $error;
     }
 
     /**

@@ -5,7 +5,7 @@ Tags: hide login, limit login attempts, two factor, passkeys, login customizer
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.0.1
+Stable tag: 3.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,13 +43,14 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 * **Attackers can't lock out the real admin.** A targeted account is never locked for everyone: it can ask for a CAPTCHA, and if the attack goes on it is paused only for addresses it has never logged in from. Its owner keeps logging in as usual and can always use an email unlock link.
 * Lockouts also cover **XML-RPC, the REST API and application passwords**, not just the login form.
 * **Correct visitor IPs behind Cloudflare or your own proxy.** Faked forwarding headers are ignored, so lockouts can't be dodged or pinned on someone else. Authlify detects your setup and suggests the right option.
-* Allow and block lists (IP addresses and CIDR ranges).
+* Allow and block lists (IP addresses and CIDR ranges). **Block an address in one click** from the activity log or the lockout list, and optionally block repeat offenders automatically after a number of lockouts (off by default; addresses an administrator has logged in from are never blocked).
 * **Hardening:** switch off XML-RPC or its multi-password requests, hide usernames from the REST API and ?author= scans, limit application passwords, show generic login errors, and make the site private (force login) with public exceptions.
 
 = CAPTCHA on login, registration, comments and WooCommerce =
 
 * **Cloudflare Turnstile, hCaptcha, Google reCAPTCHA v2 and v3**, and **ALTCHA**, a self-hosted, privacy-friendly CAPTCHA with no third party at all. Plus an invisible honeypot.
-* On login, registration, lost password, comments and WooCommerce login, registration and lost-password forms.
+* On login, registration, lost password, comments, WooCommerce login, registration and lost-password forms, and WooCommerce checkout (classic and block checkout).
+* Also on the login, registration and lost-password forms of **Easy Digital Downloads, Ultimate Member, MemberPress and BuddyPress/BuddyBoss** when those plugins are active. They follow the same form switches, and are checked before the password, so bots cost your server almost nothing.
 * Show it always, or only after failed logins.
 * Key checks before you switch it on, and a test mode that logs instead of blocking.
 
@@ -58,6 +59,7 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 * **Authenticator apps** (Google Authenticator, Microsoft Authenticator, 1Password, Authy and others) with one-time **backup codes**.
 * **Passkeys:** sign in with Face ID, Touch ID, Windows Hello or a security key, plus a "Sign in with a passkey" button on the login page (PHP 8.0 or later with OpenSSL).
 * Each user sets up two-factor login on their own profile. Admins can reset it, and users can recover by email.
+* **Switching from Two Factor or WP 2FA?** Import your users' authenticator apps, with a preview first, so nobody has to set their app up again.
 * The two-factor step uses your login page design.
 * **Breached-password check:** optionally refuse passwords found in known data breaches, using the privacy-preserving Have I Been Pwned range API.
 
@@ -76,6 +78,7 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 * Filter, search and export to CSV.
 * Stored only on your site, with a retention period, optional IP anonymization, and the WordPress privacy export and erase tools.
 * Optional email to the admin when an administrator account is locked out.
+* Optional **new sign-in email**: tell users (in the roles you choose) when their account signs in from a new device or IP address.
 
 = Redirects, recovery and tools =
 
@@ -171,7 +174,15 @@ They can. Once a user adds a passkey on their profile, they can sign in with the
 
 = Does it work with WooCommerce, membership and LMS plugins? =
 
-Yes. WooCommerce My Account login keeps working and gets the same lockouts and CAPTCHA. Links to the login page from other plugins are rewritten to your custom address automatically.
+Yes. Lockouts, the block list and two-factor login apply to every login that goes through WordPress, whichever form it comes from. The CAPTCHA covers WooCommerce (My Account and checkout, classic and block), Easy Digital Downloads, Ultimate Member, MemberPress and BuddyPress/BuddyBoss forms; Ultimate Member and Easy Digital Downloads also show Authlify's lockout message instead of "wrong password". Links to the login page from other plugins are rewritten to your custom address automatically.
+
+= Can I keep my users' authenticator apps when I switch from another 2FA plugin? =
+
+Yes, from Two Factor and WP 2FA. Go to Authlify → Settings → Switch plugins, click Preview to see how many users would be imported, then Import, and deactivate the other plugin. Users keep the same entry in their app. Wordfence Login Security secrets cannot be copied (Wordfence does not document their format), so those users set up their app again.
+
+= Can users get an email when someone signs in to their account? =
+
+Yes. Under Activity → Settings, turn on "New sign-in email" and choose the roles. Users get one email when their account signs in from a device or IP address it has not used before (at most one every 15 minutes), with a link to change their password. It is off by default.
 
 = Does it work behind Cloudflare or a load balancer? =
 
@@ -222,6 +233,16 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 
 == Changelog ==
 
+= 3.1.0 - 2026/10/06 =
+* New: CAPTCHA and lockout messages on the WooCommerce block checkout and on Easy Digital Downloads, Ultimate Member, MemberPress and BuddyPress/BuddyBoss forms. They follow your existing form switches.
+* New: block an IP address in one click from the activity log or the lockout list, and optionally block repeat offenders automatically (off by default).
+* New: import your users' authenticator apps from Two Factor and WP 2FA (Settings → Switch plugins), with a preview.
+* New: optional email to users when they sign in from a new device or IP address (off by default).
+* New: a notice when another plugin also limits logins or renames the login page, and a Site Health check that scheduled tasks (WP-Cron) run.
+* Security: hardening of the hidden login URL, the CAPTCHA, unlock links, lost password and private-site mode. Leak Check covers more places and reports public login-form pages as a warning.
+* Improved: the CAPTCHA is checked before the password, the attempt that locks an address says so, and locked-out WooCommerce customers can ask for an unlock link from My Account.
+* Fixed: Solid Security no longer pauses Authlify two-factor login unless its own two-factor module is on; per-site network settings on multisite; right-to-left admin screens; layout on phones.
+
 = 3.0.1 - 2026/09/30 =
 * Improved: the built-in help and readme describe the real defaults (lockouts, the activity log and the weekly Leak Check are on for new sites, the honeypot is off), the account pause, IPv6 network lockouts (/48) and the PHP 8 requirement for passkeys.
 * Improved: a link to the online documentation on the Docs screen, and videos of Authlify and Authlify Pro in the readme.
@@ -267,6 +288,9 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 * Fixed: Plain permalink issue resolved
 
 == Upgrade Notice ==
+
+= 3.1.0 =
+Security hardening and new integrations: CAPTCHA on WooCommerce block checkout, EDD, Ultimate Member, MemberPress and BuddyPress, one-click IP blocking and two-factor import. Recommended for everyone. Authlify Pro users: update Pro to 1.0.1.
 
 = 3.0.0 =
 Modify Login is now Authlify: a rebuilt hidden login, brute-force lockouts, modern CAPTCHAs, two-factor login, passkeys and a new designer. Your login URL and settings carry over, and new protections stay off until you turn them on. Requires WordPress 6.4+.

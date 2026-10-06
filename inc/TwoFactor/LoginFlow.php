@@ -1391,7 +1391,7 @@ final class LoginFlow
             $gate = Limiter::gate_error();
             $errors->add('authlify_passkey_failed', $gate ? $gate->get_error_message() : __('<strong>Error:</strong> Please try again later.', 'modify-login'));
         } elseif ('refused' === $passkey) {
-            $errors->add('authlify_passkey_failed', __('<strong>Error:</strong> Your passkey was recognised, but this account cannot sign in from here or at this time. Please contact the site admin.', 'modify-login'));
+            $errors->add('authlify_passkey_failed', __('<strong>Error:</strong> Your passkey was recognized, but this account cannot sign in from here or at this time. Please contact the site admin.', 'modify-login'));
         }
 
         return $errors;

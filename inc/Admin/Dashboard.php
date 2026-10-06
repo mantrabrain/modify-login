@@ -128,7 +128,7 @@ final class Dashboard
             <div class="authlify-dash__grid">
                 <div class="authlify-dash__main">
                     <?php
-                    $aside = '<span class="authlify-badge authlify-badge--' . ($done >= count($checks) ? 'ok' : 'accent') . '">' . esc_html(sprintf(/* translators: 1: done, 2: total */ __('%1$d of %2$d done', 'modify-login'), $done, count($checks))) . '</span>';
+                    $aside = '<span dir="auto" class="authlify-badge authlify-badge--' . ($done >= count($checks) ? 'ok' : 'accent') . '">' . esc_html(sprintf(/* translators: 1: done, 2: total */ __('%1$d of %2$d done', 'modify-login'), $done, count($checks))) . '</span>';
                     UI::panel_start(
                         $done >= count($checks) ? __('Your login is well protected', 'modify-login') : __('Protect your login', 'modify-login'),
                         __('The protections that matter most, in the order to set them up.', 'modify-login'),
@@ -308,10 +308,10 @@ final class Dashboard
             echo '<ul class="authlify-feed">';
             foreach ($result['rows'] as $row) {
                 printf(
-                    '<li><span class="authlify-feed__event">%1$s</span><span class="authlify-feed__who">%2$s</span><code class="authlify-feed__ip">%3$s</code><time class="authlify-feed__when" datetime="%4$s">%5$s</time></li>',
-                    UI::pill(isset($events[$row->event]) ? $events[$row->event] : $row->event, ActivityPage::tone($row->event)), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+                    '<li><span class="authlify-feed__event">%1$s</span><span class="authlify-feed__who" title="%2$s" dir="auto">%2$s</span><code class="authlify-feed__ip" title="%3$s" dir="ltr">%3$s</code><time class="authlify-feed__when" datetime="%4$s" dir="auto">%5$s</time></li>',
+                    UI::pill(Log::label($row->event, $events), ActivityPage::tone($row->event)), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
                     esc_html('' !== $row->username ? $row->username : '—'),
-                    esc_html($row->ip),
+                    esc_attr($row->ip),
                     esc_attr(mysql2date('c', $row->created_at . ' UTC')),
                     /* translators: %s: time, e.g. "5 minutes" */
                     esc_html(sprintf(__('%s ago', 'modify-login'), human_time_diff(strtotime($row->created_at . ' UTC'))))

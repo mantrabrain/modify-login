@@ -21,10 +21,41 @@ defined('ABSPATH') || exit;
 final class Hardening
 {
     /**
+     * Whether the switches' hooks were added.
+     *
+     * @var bool
+     */
+    private static $wired = false;
+
+    /**
      * Wire up.
      */
     public static function init()
     {
+        // On a network, Authlify Pro applies a site's own settings (per-site
+        // overrides) on plugins_loaded, after Authlify has booted: read the
+        // switches once it has (PQA-AG-01). Every hook below runs later.
+        if (!did_action('plugins_loaded') && !doing_action('plugins_loaded')) {
+            add_action('plugins_loaded', array(__CLASS__, 'wire'), 7);
+
+            return;
+        }
+
+        self::wire();
+    }
+
+    /**
+     * Add the hooks for the switches that are on.
+     *
+     * @since 3.0.2
+     */
+    public static function wire()
+    {
+        if (self::$wired) {
+            return;
+        }
+        self::$wired = true;
+
         // XML-RPC.
         $xmlrpc = Settings::get('xmlrpc', 'on');
         if ('off' === $xmlrpc) {
@@ -66,6 +97,8 @@ final class Hardening
         if (Settings::get('force_login', false)) {
             add_action('template_redirect', array(__CLASS__, 'force_login'), 0);
             add_filter('rest_authentication_errors', array(__CLASS__, 'force_login_rest'), 99);
+            // wp-comments-post.php never reaches template_redirect.
+            add_action('pre_comment_on_post', array(__CLASS__, 'force_login_comment'), 0);
         }
     }
 
@@ -89,12 +122,36 @@ final class Hardening
         }
 
         $body = file_get_contents('php://input'); // phpcs:ignore WordPress.WP.AlternativeFunctions
-        if (is_string($body) && 'system.multicall' === self::xmlrpc_method($body)) {
+        $method = is_string($body) ? self::xmlrpc_method($body) : '';
+
+        // system.multicall is registered by the XML-RPC server itself, after
+        // every filter: take it out of the method list in the response.
+        if ('system.listmethods' === $method) {
+            ob_start(array(__CLASS__, 'strip_multicall_listing'));
+
+            return;
+        }
+
+        if ('system.multicall' === $method) {
             status_header(403);
             header('Content-Type: text/xml; charset=utf-8');
             echo '<?xml version="1.0"?><methodResponse><fault><value><struct><member><name>faultCode</name><value><int>403</int></value></member><member><name>faultString</name><value><string>system.multicall is disabled on this site.</string></value></member></struct></value></fault></methodResponse>';
             exit;
         }
+    }
+
+    /**
+     * Remove system.multicall from a system.listMethods response.
+     *
+     * @param string $xml Response.
+     * @return string
+     */
+    public static function strip_multicall_listing($xml)
+    {
+        // Same length (spaces between elements): the server already sent Content-Length.
+        return (string) preg_replace_callback('#<value>\s*<string>system\.multicall</string>\s*</value>#i', function ($m) {
+            return str_repeat(' ', strlen($m[0]));
+        }, (string) $xml);
     }
 
     /**
@@ -256,7 +313,16 @@ final class Hardening
         if ($errors instanceof \WP_Error) {
             $codes = $errors->get_error_codes();
             if (array_intersect($codes, array('invalid_username', 'invalid_email', 'incorrect_password', 'invalidcombo'))) {
-                return __('<strong>Error:</strong> The username or password is incorrect.', 'modify-login');
+                $message = __('<strong>Error:</strong> The username or password is incorrect.', 'modify-login');
+                // Notes about this address (attempts left, a lockout that has just
+                // started) say nothing about the account, so keep them (FQA-05).
+                foreach (array('authlify_attempts_left', 'authlify_locked') as $code) {
+                    if (in_array($code, $codes, true)) {
+                        $message .= '<br>' . $errors->get_error_message($code);
+                    }
+                }
+
+                return $message;
             }
         }
 
@@ -273,7 +339,15 @@ final class Hardening
      */
     public static function generic_lost_password($errors, $user_data = false)
     {
-        if ($user_data instanceof \WP_User || !did_action('login_init') || ($errors instanceof \WP_Error && $errors->has_errors())) {
+        if ($user_data instanceof \WP_User || !did_action('login_init')) {
+            return;
+        }
+
+        // Core reports an unknown email address as invalid_email before this
+        // hook runs (and an unknown username as invalidcombo after it). Those
+        // mean "no such account" and get the same answer as a real one; any
+        // other error (an empty field, a failed CAPTCHA) is still shown.
+        if ($errors instanceof \WP_Error && array_diff($errors->get_error_codes(), array('invalid_email', 'invalidcombo'))) {
             return;
         }
 
@@ -300,9 +374,66 @@ final class Hardening
         $host = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST'])) : '';
         $uri = isset($_SERVER['REQUEST_URI']) ? esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])) : '/';
 
+        // On a 404 the router prints "#" for the login URL (so hidden-login
+        // 404 pages never link to it); a private site must still send the
+        // visitor to the real login page, or the redirect loops on "#".
+        $hide = has_filter('login_url', array(Router::class, 'filter_login_url_on_404'));
+        if (false !== $hide) {
+            remove_filter('login_url', array(Router::class, 'filter_login_url_on_404'), $hide);
+        }
+        $login = wp_login_url($scheme . $host . $uri);
+        if (false !== $hide) {
+            add_filter('login_url', array(Router::class, 'filter_login_url_on_404'), $hide, 3);
+        }
+
         nocache_headers();
-        wp_safe_redirect(wp_login_url($scheme . $host . $uri), 302);
+        wp_safe_redirect($login, 302);
         exit;
+    }
+
+    /**
+     * A private site takes no comments from visitors who are not logged in
+     * (wp-comments-post.php would otherwise store them and reveal the post's
+     * address), except on pages the site keeps public.
+     *
+     * @param int $post_id Post the comment is for.
+     */
+    public static function force_login_comment($post_id)
+    {
+        if (is_user_logged_in()) {
+            return;
+        }
+
+        $link = (string) get_permalink((int) $post_id);
+        $path = '' !== $link ? (string) wp_parse_url($link, PHP_URL_PATH) : '';
+        $home = untrailingslashit((string) wp_parse_url(home_url('/'), PHP_URL_PATH));
+        if ('' !== $home && 0 === strpos($path, $home)) {
+            $path = substr($path, strlen($home));
+        }
+        $path = '/' . trim($path, '/');
+        $query = '' !== $link ? (string) wp_parse_url($link, PHP_URL_QUERY) : '';
+
+        $public = false;
+        foreach ('' === $query ? Settings::lines('force_login_exclude') : array() as $rule) {
+            $rule = '/' . trim((string) wp_parse_url($rule, PHP_URL_PATH), '/');
+            if ('/' === $rule ? '/' === $path : 0 === strpos($path . '/', rtrim($rule, '/') . '/')) {
+                $public = true;
+                break;
+            }
+        }
+
+        /**
+         * Filters whether a logged-out visitor may comment on a post of a private site.
+         *
+         * @param bool $public  Whether the post is on a public page.
+         * @param int  $post_id Post ID.
+         * @since 3.0.2
+         */
+        if (apply_filters('authlify_force_login_comment_allowed', $public, (int) $post_id)) {
+            return;
+        }
+
+        wp_die(esc_html__('Please log in to comment.', 'modify-login'), esc_html__('Comment Submission Failure', 'modify-login'), array('response' => 403));
     }
 
     /**

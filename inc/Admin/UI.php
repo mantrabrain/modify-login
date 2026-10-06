@@ -164,13 +164,14 @@ final class UI
     /**
      * The one primary action in the header for the current page, if any.
      *
-     * @return array label, url, target (bool), icon. Empty for none.
+     * @return array label, url, target (bool), icon, outline (bool). Empty for none.
      */
     public static function primary_action()
     {
         $action = array();
         if ('modify-login' === Menu::current_slug()) {
-            $action = array('label' => __('Open login page', 'modify-login'), 'url' => wp_login_url(), 'target' => true, 'icon' => 'external');
+            // An outline button: the page's own call to action stays the only filled one (UX2-19).
+            $action = array('label' => __('Open login page', 'modify-login'), 'url' => wp_login_url(), 'target' => true, 'icon' => 'external', 'outline' => true);
         }
 
         /**
@@ -234,7 +235,7 @@ final class UI
                     </a>
                 <?php endif; ?>
                 <?php if (!empty($action['label']) && !empty($action['url'])) : ?>
-                    <a class="button button-primary authlify-top__action" href="<?php echo esc_url($action['url']); ?>"<?php echo !empty($action['target']) ? ' target="_blank" rel="noopener"' : ''; ?>>
+                    <a class="button button-primary authlify-top__action<?php echo !empty($action['outline']) ? ' is-outline' : ''; ?>" href="<?php echo esc_url($action['url']); ?>"<?php echo !empty($action['target']) ? ' target="_blank" rel="noopener"' : ''; ?>>
                         <?php echo !empty($action['icon']) ? self::icon($action['icon'], 16) : ''; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG. ?>
                         <span><?php echo esc_html($action['label']); ?></span>
                         <?php if (!empty($action['target'])) : ?>
@@ -453,7 +454,7 @@ final class UI
             'authlify-pro-passwordless' => array('mail', __('Passwordless', 'modify-login'), __('magic link email code temporary access', 'modify-login')),
             'authlify-alerts' => array('bell', __('Alerts', 'modify-login'), __('alerts email slack discord telegram webhook digest', 'modify-login')),
             'authlify-agency' => array('building', __('Agency', 'modify-login'), __('white label client handoff network design sync', 'modify-login')),
-            'authlify-license' => array('badge', __('Account', 'modify-login'), __('licence license key updates support', 'modify-login')),
+            'authlify-license' => array('badge', __('Account', 'modify-login'), __('license licence key updates support', 'modify-login')),
         );
 
         return isset($defaults[$key]) ? $defaults[$key] : array('dot', '', '');
@@ -1128,7 +1129,7 @@ final class UI
         $tag = '' !== $url ? 'a' : 'div';
         echo '<' . $tag . ' class="authlify-stat' . ('' !== $tone ? ' authlify-stat--' . esc_attr($tone) : '') . '"' . ('a' === $tag ? ' href="' . esc_url($url) . '"' : '') . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed tag.
         echo '<span class="authlify-stat__icon" aria-hidden="true">' . self::icon($icon, 20) . '</span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
-        echo '<span class="authlify-stat__value">' . esc_html(is_numeric($value) ? number_format_i18n((float) $value) : (string) $value) . '</span>';
+        echo '<span class="authlify-stat__value" dir="auto">' . esc_html(is_numeric($value) ? number_format_i18n((float) $value) : (string) $value) . '</span>';
         echo '<span class="authlify-stat__label">' . esc_html($label) . ('' !== $meta ? '<span class="authlify-stat__meta"> · ' . esc_html($meta) . '</span>' : '') . '</span>';
         echo '</' . $tag . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed tag.
     }
@@ -1166,10 +1167,11 @@ final class UI
             $messages = apply_filters('authlify_admin_notice_messages', array(
                 'slug_confirmed' => __('Your new login URL is confirmed and active. We emailed it to you as well.', 'modify-login'),
                 'unlocked' => __('Lockouts cleared.', 'modify-login'),
+                'ip_blocked' => __('Added to the block list. That address can no longer log in.', 'modify-login'),
                 'log_cleared' => __('Activity log cleared.', 'modify-login'),
                 'imported' => __('Settings imported.', 'modify-login'),
                 'emailed' => __('We emailed the login URL to you and the site admin address.', 'modify-login'),
-                'pending_cancelled' => __('Change cancelled. Your login URL stays as it was.', 'modify-login'),
+                'pending_cancelled' => __('Change canceled. Your login URL stays as it was.', 'modify-login'),
             ));
             $key = sanitize_key(wp_unslash($_GET['authlify_notice']));
             if (isset($messages[$key])) {

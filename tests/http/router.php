@@ -202,3 +202,40 @@ t('login URL helpers point at the slug; wp-login.php links are rewritten', funct
     eq(BASE . '/' . SLUG . '/?action=lostpassword', wp_eval('echo wp_lostpassword_url();'));
     contains('/' . SLUG . '/?action=logout', wp_eval('wp_set_current_user(' . $GLOBALS['admin']['id'] . '); echo wp_logout_url();'));
 });
+
+t('SEC2-01: visitors are never redirected to the slug (comment redirect_to, /index.php/wp-login.php)', function () {
+    $post = (int) wp_eval('echo wp_insert_post(array("post_title" => "Comment leak", "post_status" => "publish", "comment_status" => "open", "post_content" => "x"));');
+    try {
+        $res = post(BASE . '/wp-comments-post.php', array('comment_post_ID' => $post, 'author' => 'probe', 'email' => 'probe@example.test', 'comment' => 'leak ' . uniqid(), 'redirect_to' => BASE . '/wp-login.php'), array('ip' => '198.51.100.71'));
+        eq(302, $res->code, 'the comment was accepted');
+        not_contains(SLUG, $res->location, 'comment redirect');
+        contains('/wp-login.php', $res->location, 'the redirect stays on the hidden wp-login.php');
+        $res = post(BASE . '/wp-comments-post.php', array('comment_post_ID' => $post, 'author' => 'probe', 'email' => 'probe2@example.test', 'comment' => 'leak ' . uniqid(), 'redirect_to' => BASE . '/wp-login.php?action=lostpassword'), array('ip' => '198.51.100.72'));
+        not_contains(SLUG, $res->location, 'comment redirect with an action');
+    } finally {
+        wp_eval('wp_delete_post(' . $post . ', true);');
+    }
+    foreach (array('/index.php/wp-login.php', '/index.php//wp-login.php', '/index.php/wp-login.php/', '/index.php/wp-login.php?action=lostpassword') as $path) {
+        $res = get(BASE . $path);
+        not_contains(SLUG, $res->location . $res->body, $path);
+        not_contains('id="loginform"', $res->body, $path);
+    }
+});
+
+t('SEC2-01: login-page flows still redirect within the slug (lost password, logout, logged-in redirects)', function () {
+    $u = http_user('subscriber');
+    $res = post(login_url(SLUG) . '?action=lostpassword', array('user_login' => $u['login'], 'wp-submit' => 'Get New Password'), array('ip' => '198.51.100.73'));
+    eq(302, $res->code, 'lost password answered with a redirect');
+    contains('/' . SLUG . '/?checkemail=confirm', $res->location, 'lost password goes to the check-email screen on the slug');
+    $s = session_for($u['id'], array('log-out'));
+    $res = get(login_url(SLUG) . '?action=logout&_wpnonce=' . $s['nonces']['log-out'], array('cookies' => $s['cookies']));
+    eq(302, $res->code);
+    contains('/' . SLUG . '/?loggedout=true', $res->location, 'logout lands on the slug');
+    // A logged-in user is still sent to the slug (they can see it anyway).
+    eq(login_url(SLUG), wp_eval('wp_set_current_user(' . $u['id'] . '); echo \Authlify\Login\Router::filter_redirect(get_option("siteurl") . "/wp-login.php");'));
+});
+
+after_all(function () {
+    // tests/leak-suite.sh posts one comment per run.
+    wp_eval('foreach (get_comments(array("author_email" => "leak-suite@authlify.invalid", "status" => "all", "fields" => "ids")) as $id) { wp_delete_comment($id, true); }');
+});

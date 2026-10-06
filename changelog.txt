@@ -1,3 +1,51 @@
+= 3.1.0 - 2026-10-06 =
+New
+* CAPTCHA on the WooCommerce block checkout (guest orders, or only orders that create an account), Easy Digital Downloads (login, registration, lost password), Ultimate Member (login, registration, password reset), MemberPress (login) and BuddyPress/BuddyBoss (registration). Each follows the existing form switches; nothing new turns on by itself.
+* Ultimate Member and Easy Digital Downloads show Authlify's lockout message instead of "Password is incorrect" or "Invalid username or password".
+* Block an IP address or its network in one click from the activity log or "Locked out right now".
+* Optional automatic block after a number of lockouts (off by default). Private addresses and addresses an administrator signed in from are never blocked.
+* Import authenticator apps from Two Factor and WP 2FA under Settings → Switch plugins, with a preview. Users keep the same entry in their app.
+* Optional "new sign-in" email to users when they sign in from a new device or IP address, per role, at most one every 15 minutes (off by default). Skipped when Authlify Pro's login alerts already cover the user.
+* A dismissible notice and a Site Health test when another plugin also limits failed logins or renames the login page (Limit Login Attempts Reloaded, Loginizer, All In One Security, Solid Security, Wordfence).
+* A Site Health test and a dashboard item when WP-Cron is not running, and a Leak Check result older than 14 days is flagged as out of date.
+* Locked-out WooCommerce customers can ask for an unlock link from My Account, without seeing the hidden login URL.
+* New developer hooks: authlify_export_filename, authlify_public_login_url, authlify_hide_toolbar_login_links, authlify_leak_check_login_pages, authlify_conflicting_plugins, authlify_cron_ok, authlify_force_login_comment_allowed, authlify_woo_blocks_check, authlify_auto_block_cap, authlify_signin_notice_email, authlify_signin_notice_mail, authlify_captcha_integrations, authlify_captcha_login_form, authlify_captcha_lostpassword_form and the authlify_ip_blocked action.
+
+Security
+* Hardening of the hidden login URL: more redirects, pages and links that could show the login address to visitors are closed, including on multisite, WooCommerce block cart and checkout, and the BuddyPress toolbar.
+* CAPTCHA hardening on WooCommerce forms, and a CAPTCHA answer without a clear result now counts as a failed check.
+* Unlock links allow a normal number of attempts and work for one login.
+* Lost password answers the same way whether or not an email address has an account.
+* Private-site mode also refuses comments from visitors who are not logged in.
+* Rate limits on unlock emails per account and on two-factor recovery log entries.
+
+Leak Check
+* New probes, including the WooCommerce cart and checkout, pages with Authlify blocks or shortcodes, and the multisite sign-up page.
+* Public login-form pages (WooCommerce My Account, Paid Memberships Pro, EDD, Ultimate Member, BuddyPress and similar) are now reported as a warning with the fix steps, and Site Health shows "recommended". Nothing that worked before stops working.
+* On a private site, the redirect to the login page is reported as expected instead of as a leak.
+
+Improved
+* The CAPTCHA is checked before the password, so refused bots no longer cost a password hash.
+* The attempt that triggers a lockout now says so. With generic error messages on, the "attempts left" and lockout notes are kept.
+* WPS Hide Login and Limit Login Attempts Reloaded are offered for import even on their default settings.
+* "Redirect to" for the hidden login must be an address on this site.
+* On plain permalinks, /?your-login-address works in any letter case.
+* LoginPress 6.x button colors are imported.
+* Activity log and dashboard: long usernames and IPv6 addresses no longer overflow, and event names stay readable after an add-on is removed.
+* The lockout list shows 10 rows with "Show more", and works on phones.
+* Right-to-left languages in the admin screens and the designer.
+* Clearer example placeholders, one primary button on the profile screen, a readable language switcher on designed login pages, a larger "Use a backup code" link and better accessible names.
+* US English spelling throughout.
+
+Fixed
+* Solid Security: Authlify two-factor login pauses only while Solid's own two-factor module is on.
+* Multisite: per-site settings set by the network (Authlify Pro) now apply to the login URL, XML-RPC, user enumeration, generic errors, private-site mode and the breached-password check.
+* Designer: the live preview no longer starts a new session, which could make the first save fail.
+* Users list: the passkey column uses one query per page.
+* Settings import: an invalid reCAPTCHA v3 threshold no longer becomes 0.0, and values the checks refuse are no longer saved.
+* Private site: missing pages redirect to the login page instead of "#".
+* XML-RPC "block multicall" mode also hides system.multicall from system.listMethods.
+
 = 3.0.1 - 2026-09-30 =
 * Built-in help and readme match the plugin's real defaults and limits; online documentation link; videos in the readme
 
@@ -48,6 +96,9 @@
 * Initial Version released
 
 == Upgrade Notice ==
+
+= 3.1.0 =
+Security hardening and new integrations: CAPTCHA on WooCommerce block checkout, EDD, Ultimate Member, MemberPress and BuddyPress, one-click IP blocking and two-factor import. Recommended for everyone. Authlify Pro users: update Pro to 1.0.1.
 
 = 2.0.0 =
 Major update with completely redesigned interface, visual login page builder, and many new features! Please backup your site before upgrading.

@@ -4,18 +4,38 @@
  * on disposable WordPress sites with COPIES of the plugins, once with "Delete
  * all data" off and once with it on, and checks exactly what remains.
  *
- * The sites live in /tmp/claude-501/authlify-uninstall-{off,on} (own databases)
- * and are rebuilt on every run; the main test site is not touched.
+ * The sites live next to the test site, in {AUTHLIFY_TEST_DIR}-uninstall-{off,on},
+ * with their own databases named after that folder, so parallel suites on other
+ * sites never share them (CMPT-14). They are rebuilt on every run and removed
+ * afterwards; the main test site is not touched.
  *
  * @package Authlify\Tests
  */
 
 // phpcs:ignoreFile
 
+/**
+ * Folder and database of one disposable site, derived from AUTHLIFY_TEST_DIR.
+ */
+function u_paths($name)
+{
+    $base = rtrim((string) getenv('AUTHLIFY_TEST_DIR'), '/');
+    if ('' === $base) {
+        $base = '/tmp/claude-501/authlify-testsuite';
+    }
+
+    return array(
+        'dir' => $base . '-uninstall-' . $name,
+        'db' => 'authlify_un_' . substr(md5($base), 0, 10) . '_' . $name,
+    );
+}
+
 function u_site($name)
 {
-    $dir = '/tmp/claude-501/authlify-uninstall-' . $name;
-    $env = 'AUTHLIFY_TEST_DIR=' . escapeshellarg($dir) . ' AUTHLIFY_TEST_DB=authlify_uninstall_' . $name . ' AUTHLIFY_TEST_COPY_PLUGINS=1 AUTHLIFY_TEST_NO_SERVER=1';
+    $paths = u_paths($name);
+    $dir = $paths['dir'];
+    $GLOBALS['u_sites'][$name] = $dir;
+    $env = 'AUTHLIFY_TEST_DIR=' . escapeshellarg($dir) . ' AUTHLIFY_TEST_DB=' . escapeshellarg($paths['db']) . ' AUTHLIFY_TEST_COPY_PLUGINS=1 AUTHLIFY_TEST_NO_SERVER=1';
     $out = shell_exec($env . ' ' . escapeshellarg(dirname(__DIR__) . '/bin/make-site.sh') . ' 2>&1');
     if (false === strpos((string) $out, 'Site ready')) {
         fail('could not build the disposable site: ' . substr((string) $out, -300));
@@ -29,6 +49,21 @@ function u_eval($wp, $php)
 {
     return trim((string) shell_exec(escapeshellarg($wp) . ' eval ' . escapeshellarg($php) . ' 2>&1'));
 }
+
+$GLOBALS['u_sites'] = array();
+
+// Remove the disposable sites and their databases when the file is done.
+after_all(function () {
+    foreach ($GLOBALS['u_sites'] as $dir) {
+        if (is_executable($dir . '/wp.sh')) {
+            // Through PHP: `wp db drop` needs the mysql client, which may be missing.
+            shell_exec(escapeshellarg($dir . '/wp.sh') . ' eval ' . escapeshellarg('global $wpdb; $wpdb->query("DROP DATABASE IF EXISTS `" . DB_NAME . "`");') . ' 2>&1');
+        }
+        if (0 === strpos($dir, '/') && false !== strpos(basename($dir), '-uninstall-')) {
+            shell_exec('rm -rf ' . escapeshellarg($dir));
+        }
+    }
+});
 
 /**
  * Fill the site with data from both plugins, plus unrelated data that must survive.

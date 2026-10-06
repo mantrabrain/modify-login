@@ -340,6 +340,51 @@ final class Passkeys
     }
 
     /**
+     * Load the passkey counts of several users with one query (CMPT-09), so
+     * a list of users (the Users screen) does not run one query per row.
+     *
+     * @param int[] $user_ids User IDs.
+     * @since 3.0.2
+     */
+    public static function prime(array $user_ids)
+    {
+        $rp = self::rp_id();
+        $missing = array();
+        foreach (array_unique(array_filter(array_map('intval', $user_ids))) as $id) {
+            if (isset(self::$user_counts[$id])) {
+                continue;
+            }
+            $cached = wp_cache_get('u' . $id . ':' . md5($rp), self::CACHE);
+            if (false !== $cached) {
+                self::$user_counts[$id] = (int) $cached;
+                continue;
+            }
+            $missing[] = $id;
+        }
+
+        if (!$missing) {
+            return;
+        }
+
+        $found = array();
+        if (self::table_exists()) {
+            global $wpdb;
+            $table = self::table();
+            $in = implode(',', $missing); // Integers only.
+            $rows = $wpdb->get_results($wpdb->prepare("SELECT user_id, COUNT(*) AS n FROM {$table} WHERE rp_id = %s AND user_id IN ({$in}) GROUP BY user_id", $rp)); // phpcs:ignore
+            foreach ((array) $rows as $row) {
+                $found[(int) $row->user_id] = (int) $row->n;
+            }
+        }
+
+        foreach ($missing as $id) {
+            $count = isset($found[$id]) ? $found[$id] : 0;
+            self::$user_counts[$id] = $count;
+            wp_cache_set('u' . $id . ':' . md5($rp), $count, self::CACHE, HOUR_IN_SECONDS);
+        }
+    }
+
+    /**
      * Passkey counts for every user on this host (one grouped query).
      *
      * This reads the whole table: use it for reports, never on every request.

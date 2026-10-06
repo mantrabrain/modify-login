@@ -59,6 +59,8 @@ final class Settings
             'trusted_proxies' => array('text', ''),
             'ip_allowlist' => array('text', ''),
             'ip_denylist' => array('text', ''),
+            // Lockouts of one address within 24 hours that add it to the block list (0 = off).
+            'auto_block_lockouts' => array('int', 0),
 
             // CAPTCHA (inc/Captcha).
             'captcha_provider' => array('choice', 'none', array('none', 'turnstile', 'hcaptcha', 'recaptcha_v2', 'recaptcha_v3', 'altcha')),
@@ -100,6 +102,9 @@ final class Settings
             'log_anonymize_ip' => array('bool', false),
             'geo_source' => array('choice', 'headers', array('off', 'headers', 'dbip')),
             'alert_admin_lockout' => array('bool', false),
+            // Email users when they sign in from a new device or address (off by default).
+            'signin_notice' => array('bool', false),
+            'signin_notice_roles' => array('list', array('administrator')),
 
             // Leak Check (inc/Diagnostics).
             'leak_check_schedule' => array('bool', true),

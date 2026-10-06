@@ -74,13 +74,17 @@ function perm_endpoints()
         array('post', 'GET', 'authlify_export_settings', array(), 'admin'),
         array('post', 'POST', 'authlify_import_settings', array(), 'admin', 'no file (error notice when allowed)'),
         array('post', 'POST', 'authlify_run_importer', array('importer' => 'none'), 'admin'),
+        array('post', 'GET', 'authlify_block_ip', array('subject' => '203.0.113.249', 'from' => 'protection'), 'admin', 'adds to the block list'),
+        array('post', 'POST', 'authlify_2fa_import', array('source' => 'two-factor'), 'admin', 'preview (dry run)'),
         array('post', 'POST', 'authlify_leak_check', array(), 'admin'),
         array('post', 'POST', 'authlify_2fa_reset', array('user_id' => '{victim}'), 'admin', 'reset another user', '', array('authlify_2fa_reset_{victim}')),
         array('post', 'GET', 'authlify_2fa_coexist_dismiss', array(), 'admin'),
         array('post', 'GET', 'authlify_dismiss_notice', array(), 'self', 'per-user notice flag'),
+        array('post', 'GET', 'authlify_dismiss_conflict', array('plugin' => 'llar'), 'admin', 'per-plugin conflict notice (CMPT-05)', '', array('authlify_dismiss_conflict_llar')),
 
         // ------------------------------------------------ Pro admin-post.
         array('post', 'POST', 'authlify_pro_license', array('task' => 'activate', 'license_key' => 'test-key'), 'admin', 'store blocked by the harness', 'pro'),
+        array('post', 'GET', 'authlify_pro_renew', array(), 'admin', 'redirects to the store checkout', 'pro'),
         array('post', 'POST', 'authlify_pro_test_email', array(), 'admin', '', 'pro'),
         array('post', 'POST', 'authlify_pro_geodb_update', array(), 'admin', 'download blocked by the harness', 'pro'),
         array('post', 'GET', 'authlify_pro_device_revoke', array('user_id' => '{victim}', 'device' => 'x'), 'admin', 'another user', 'pro', array('authlify_pro_device_revoke_{victim}')),
@@ -104,6 +108,7 @@ function perm_endpoints()
         array('post', 'GET', 'authlify_pro_social_unlink', array('user_id' => '{self}', 'provider' => 'google'), 'self', 'own account', 'pro', array('authlify_pro_social_unlink_{self}_google')),
         array('post', 'POST', 'authlify_pro_site_overrides', array(), 'multisite', 'multisite only', 'pro'),
         array('post', 'POST', 'authlify_pro_clear_site', array(), 'multisite', 'multisite only', 'pro'),
+        array('post', 'POST', 'authlify_pro_signed_in', array('do' => 'user', 'user' => '{victim}'), 'admin', 'sign out another user', 'pro'),
 
         // ------------------------------------------------ AJAX.
         array('ajax', 'POST', 'authlify_pro_social_test', array('provider' => 'google'), 'admin', 'nonce field "nonce"', 'pro', array('authlify_pro_social_test', 'nonce')),

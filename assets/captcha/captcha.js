@@ -297,7 +297,23 @@
 
     window.AuthlifyCaptcha = { render: renderAll, reset: resetAll, loadApi: loadApi };
 
+    /* Boxes printed by a hook after the submit button move in front of it. */
+    function place() {
+        var list = document.querySelectorAll('.authlify-captcha[data-before]');
+        for (var i = 0; i < list.length; i++) {
+            var box = list[i], form = box.closest ? box.closest('form') : null;
+            var target = form ? form.querySelector(box.getAttribute('data-before')) : null;
+            if (target && target.parentNode && target !== box) {
+                target.parentNode.insertBefore(box, target);
+            }
+            box.removeAttribute('data-before');
+        }
+    }
+
     function ready() {
+        try {
+            place();
+        } catch (e) { /* keep the box where it was printed */ }
         renderAll();
         if (window.jQuery) {
             window.jQuery(document.body).on('checkout_error', resetAll);

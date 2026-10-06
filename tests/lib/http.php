@@ -269,7 +269,8 @@ function totp_now($secret, $offset = 0)
 
 // Snapshot per file: settings, design, lockouts, HTTP mocks.
 $snapshot = wp_eval('global $wpdb; echo base64_encode(serialize(array("settings" => get_option("authlify_settings"), "design" => get_option("authlify_design"), "limits" => $wpdb->get_results("SELECT * FROM " . $wpdb->base_prefix . "authlify_limits", ARRAY_A), "structure" => get_option("permalink_structure"))));');
-$GLOBALS['http_secret'] = wp_eval('echo get_option("authlify_test_secret");');
+// A file that (re)activates Pro leaves its one-time "welcome" redirect for the next file's first wp-admin visit.
+$GLOBALS['http_secret'] = wp_eval('delete_transient("authlify_pro_activated"); echo get_option("authlify_test_secret");');
 
 try {
     require $file;

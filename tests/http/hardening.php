@@ -41,6 +41,27 @@ t('A-04: private site: an excluded path never serves another post through query 
     }
 });
 
+t('SEC2-09: private site: logged-out comments are refused, except on public pages', function () {
+    $id = (int) wp_eval('echo wp_insert_post(array("post_title" => "Private comments", "post_status" => "publish", "comment_status" => "open"));');
+    $page = (int) wp_eval('echo wp_insert_post(array("post_title" => "Open comments", "post_name" => "open-c09", "post_status" => "publish", "post_type" => "page", "comment_status" => "open"));');
+    settings(array('force_login' => true, 'force_login_exclude' => '/open-c09'));
+    try {
+        $before = (int) wp_eval('echo get_comments(array("post_id" => ' . $id . ', "count" => true, "status" => "all"));');
+        $res = post(BASE . '/wp-comments-post.php', array('comment_post_ID' => $id, 'author' => 'probe', 'email' => 'probe@example.test', 'comment' => 'x ' . uniqid()), array('ip' => '203.0.113.175'));
+        eq(403, $res->code, 'refused');
+        not_contains('private-comments', $res->location . $res->body, 'the post address is not revealed');
+        eq($before, (int) wp_eval('echo get_comments(array("post_id" => ' . $id . ', "count" => true, "status" => "all"));'), 'no comment stored');
+        $res = post(BASE . '/wp-comments-post.php', array('comment_post_ID' => $page, 'author' => 'probe', 'email' => 'probe2@example.test', 'comment' => 'y ' . uniqid()), array('ip' => '203.0.113.176'));
+        eq(302, $res->code, 'a public (excluded) page still takes comments');
+        $s = session_for($GLOBALS['alice']['id']);
+        $res = post(BASE . '/wp-comments-post.php', array('comment_post_ID' => $id, 'comment' => 'z ' . uniqid()), array('ip' => '203.0.113.177', 'cookies' => $s['cookies']));
+        eq(302, $res->code, 'logged-in users still comment');
+    } finally {
+        settings(array('force_login' => false, 'force_login_exclude' => ''));
+        wp_eval('wp_delete_post(' . $id . ', true); wp_delete_post(' . $page . ', true);');
+    }
+});
+
 t('A-14: "block multicall" also refuses an entity-encoded system.multicall', function () {
     settings(array('xmlrpc' => 'no_multicall'));
     try {
@@ -68,6 +89,11 @@ t('A-17: with generic errors on, lost password answers the same for unknown and 
         contains('checkemail=confirm', $unknown->location);
         not_contains('wp-login.php', $unknown->location, 'stays on the custom login URL');
         not_contains('wp-login.php', $real->location, 'a real account too (core redirects to a relative wp-login.php)');
+        // SEC2-07: an unknown email address answers like a real one too.
+        $unknown_mail = post(login_url(HSLUG) . '?action=lostpassword', array('user_login' => 'nosuch_' . mt_rand(1000, 9999) . '@example.com'), array('ip' => '203.0.113.161'));
+        $real_mail = post(login_url(HSLUG) . '?action=lostpassword', array('user_login' => $GLOBALS['alice']['email']), array('ip' => '203.0.113.161'));
+        eq(302, $unknown_mail->code, 'unknown email redirects');
+        eq($real_mail->location, $unknown_mail->location, 'unknown email: same place as a real one');
         $empty = post(login_url(HSLUG) . '?action=lostpassword', array('user_login' => ''), array('ip' => '203.0.113.161'));
         eq(200, $empty->code, 'an empty field still shows its error');
     } finally {
@@ -116,6 +142,63 @@ t('A-12: unlock emails: none while nothing is locked; 3 per account and address;
     $res = get($first[1], array('ip' => $ip));
     contains('authlify_unlocked=1', $res->location, 'the first link still works after newer ones were sent');
     wp_eval('\Authlify\Security\Limiter::unlock("' . $ip . '"); global $wpdb; $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE \'%authlify\\\\_unlock%\'"); wp_cache_flush();');
+});
+
+t('FQA-02 / SEC2-12: unlock emails are capped per account across addresses; the owner\'s link survives', function () {
+    $a = $GLOBALS['alice'];
+    $ips = array('203.0.113.181', '203.0.113.182', '203.0.113.183', '203.0.113.184', '203.0.113.185', '203.0.113.186');
+    $before = mail_count();
+    $first = '';
+    foreach ($ips as $i => $ip) {
+        for ($j = 0; $j < 3; $j++) {
+            login_post(login_url(HSLUG), 'someone-else', 'wrong' . $j, array(), array('ip' => $ip));
+        }
+        $form = get(login_url(HSLUG) . '?action=authlify_unlock', array('ip' => $ip));
+        preg_match('/name="_wpnonce" value="([^"]+)"/', $form->body, $n);
+        post(login_url(HSLUG) . '?action=authlify_unlock', array('user_login' => $a['login'], '_wpnonce' => $n[1]), array('ip' => $ip));
+        if (0 === $i) {
+            $sent = mails($before);
+            ok(1 === count($sent), 'the first request sends a link');
+            preg_match('#(http\S+action=authlify_unlock\S+)#', $sent[0]['message'], $m);
+            $first = $m[1];
+        }
+    }
+    eq(3, count(mails($before)), 'at most 3 unlock emails an hour per account, from any number of addresses');
+    $res = get($first, array('ip' => $ips[0]));
+    contains('authlify_unlocked=1', $res->location, 'the first (owner\'s) link still works');
+    $clean = '';
+    foreach ($ips as $ip) {
+        $clean .= '\Authlify\Security\Limiter::unlock("' . $ip . '");';
+    }
+    wp_eval($clean . ' global $wpdb; $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE \'%authlify\\\\_unlock%\'"); wp_cache_flush();');
+});
+
+t('FQA-01: private site: a logged-out visit to a missing page goes to the real login URL (no "#" loop)', function () {
+    settings(array('force_login' => true, 'force_login_exclude' => ''));
+    try {
+        $res = get(BASE . '/no-such-page-' . mt_rand(1000, 9999) . '/');
+        eq(302, $res->code);
+        neq('#', $res->location, 'not the 404 placeholder');
+        contains('/' . HSLUG . '/', $res->location, 'the login URL');
+    } finally {
+        settings(array('force_login' => false));
+    }
+});
+
+t('FQA-03: with multicall blocked, system.listMethods no longer lists it (and other methods still do)', function () {
+    settings(array('xmlrpc' => 'no_multicall'));
+    try {
+        $res = post(BASE . '/xmlrpc.php', '<?xml version="1.0"?><methodCall><methodName>system.listMethods</methodName><params></params></methodCall>', array('headers' => array('Content-Type: text/xml')));
+        eq(200, $res->code);
+        not_contains('system.multicall', $res->body);
+        contains('wp.getUsersBlogs', $res->body);
+        if (isset($res->headers['content-length'])) {
+            eq(strlen($res->body), (int) $res->headers['content-length'][0], 'Content-Length still matches the body');
+        }
+        ok(false !== simplexml_load_string(trim($res->body)), 'still valid XML');
+    } finally {
+        settings(array('xmlrpc' => 'on'));
+    }
 });
 
 t('PERF-06: the activity CSV export streams every row with keyset paging (no 100k cap)', function () {

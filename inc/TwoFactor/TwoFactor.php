@@ -162,12 +162,14 @@ final class TwoFactor
     public static function other_provider()
     {
         $name = '';
-        if (class_exists('Two_Factor_Core')) {
+        if (self::two_factor_plugin_active()) {
             $name = 'Two Factor';
-        } elseif (class_exists('WP2FA\WP2FA')) {
+        } elseif (defined('WP_2FA_VERSION') || class_exists('WP2FA\WP2FA', false)) {
             $name = 'WP 2FA';
-        } elseif (defined('WORDFENCE_LS_VERSION') || class_exists('WordfenceLS\Controller_WordfenceLS')) {
+        } elseif (defined('WORDFENCE_LS_VERSION') || class_exists('WordfenceLS\Controller_WordfenceLS', false)) {
             $name = 'Wordfence Login Security';
+        } elseif (self::solid_two_factor_active()) {
+            $name = 'Solid Security';
         }
 
         /**
@@ -178,6 +180,47 @@ final class TwoFactor
          * @since 3.0.0
          */
         return (string) apply_filters('authlify_twofactor_other_provider', $name);
+    }
+
+    /**
+     * Whether the real Two Factor plugin is loaded (CMPT-01).
+     *
+     * Never autoloads: Solid Security registers its own small
+     * Two_Factor_Core stand-in with Composer's class map, so a plain
+     * class_exists() would load it and mistake Solid for Two Factor. The
+     * stand-in has no add_hooks(); the real class always does.
+     *
+     * @return bool
+     * @since 3.0.2
+     */
+    private static function two_factor_plugin_active()
+    {
+        if (defined('TWO_FACTOR_VERSION') || defined('TWO_FACTOR_DIR')) {
+            return true;
+        }
+
+        return class_exists('Two_Factor_Core', false) && method_exists('Two_Factor_Core', 'add_hooks');
+    }
+
+    /**
+     * Whether Solid Security (formerly iThemes Security) has its two-factor
+     * module switched on. With it off, Solid does not touch logins and
+     * Authlify's two-factor login keeps running.
+     *
+     * @return bool
+     * @since 3.0.2
+     */
+    private static function solid_two_factor_active()
+    {
+        if (!class_exists('ITSEC_Modules', false) || !is_callable(array('ITSEC_Modules', 'is_active'))) {
+            return false;
+        }
+
+        try {
+            return (bool) \ITSEC_Modules::is_active('two-factor');
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     /**

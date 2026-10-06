@@ -30,6 +30,11 @@ final class Recovery
     const UNLOCK_ACTION = 'authlify_unlock';
 
     /**
+     * Unlock emails one account can receive an hour, whoever asks.
+     */
+    const UNLOCK_PER_ACCOUNT = 3;
+
+    /**
      * Wire up.
      */
     public static function init()
@@ -39,6 +44,8 @@ final class Recovery
         add_action('login_form_' . self::UNLOCK_ACTION, array(__CLASS__, 'unlock_screen'));
         add_filter('authlify_lockout_message', array(__CLASS__, 'lockout_message_link'), 10, 2);
         add_filter('login_message', array(__CLASS__, 'unlocked_message'));
+        // WooCommerce My Account: ask for an unlock link without the login URL (FQA-09).
+        add_action('woocommerce_before_customer_login_form', array(__CLASS__, 'woo_unlock_form'), 5);
     }
 
     /**
@@ -211,12 +218,76 @@ final class Recovery
         // show this message to anonymous visitors, so only the login page itself
         // may print it; elsewhere it would reveal the hidden address.
         if ('' !== Router::slug() && !Router::is_login_request()) {
+            // A WooCommerce My Account login gets a link to the same page,
+            // where the request form is shown (FQA-09).
+            $woo = self::woo_unlock_url();
+            if ('' !== $woo && isset($_POST['login'], $_POST['username'])) { // phpcs:ignore WordPress.Security.NonceVerification
+                return $message . '<br><a href="' . esc_url($woo) . '">' . esc_html__('Is this your account? Email me an unlock link.', 'modify-login') . '</a>';
+            }
+
             return $message;
         }
 
         $url = add_query_arg('action', self::UNLOCK_ACTION, wp_login_url());
 
         return $message . '<br><a href="' . esc_url($url) . '">' . esc_html__('Is this your account? Email me an unlock link.', 'modify-login') . '</a>';
+    }
+
+    /**
+     * The My Account address that shows the unlock request form, or '' without WooCommerce.
+     *
+     * @return string
+     * @since 3.0.2
+     */
+    public static function woo_unlock_url()
+    {
+        if (!function_exists('wc_get_page_permalink')) {
+            return '';
+        }
+        $page = (string) wc_get_page_permalink('myaccount');
+
+        return '' !== $page ? add_query_arg('authlify_unlock', '1', $page) : '';
+    }
+
+    /**
+     * WooCommerce My Account (logged out, ?authlify_unlock=1): the same unlock
+     * request as the login page, so customers never need the login URL. The
+     * emailed link goes to the account's own address only.
+     *
+     * @since 3.0.2
+     */
+    public static function woo_unlock_form()
+    {
+        // phpcs:disable WordPress.Security.NonceVerification
+        if (is_user_logged_in() || empty($_GET['authlify_unlock']) || !apply_filters('authlify_unlock_by_email', true)) {
+            return;
+        }
+
+        $sent = false;
+        if (isset($_POST['authlify_unlock_login'], $_POST['authlify_unlock_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['authlify_unlock_nonce'])), self::UNLOCK_ACTION)) {
+            self::send_unlock_email(sanitize_text_field(wp_unslash($_POST['authlify_unlock_login'])), Ip::client());
+            $sent = true;
+        }
+        // phpcs:enable
+
+        $text = $sent
+            ? __('If that account exists, an unlock link is on its way to its email address. The link works from this device for 30 minutes.', 'modify-login')
+            : __('Locked out after too many attempts? Enter your username or email address and we will email you a link that lets you log in to your account from this device.', 'modify-login');
+        ?>
+        <div class="authlify-woo-unlock" style="margin-bottom:2em">
+            <div class="woocommerce-info" role="status"><?php echo esc_html($text); ?></div>
+            <?php if (!$sent) : ?>
+                <form method="post" class="woocommerce-form authlify-woo-unlock__form" action="<?php echo esc_url(self::woo_unlock_url()); ?>">
+                    <p class="woocommerce-form-row form-row">
+                        <label for="authlify_unlock_login"><?php esc_html_e('Username or Email Address', 'modify-login'); ?></label>
+                        <input type="text" class="woocommerce-Input input-text" name="authlify_unlock_login" id="authlify_unlock_login" autocomplete="username" required>
+                    </p>
+                    <input type="hidden" name="authlify_unlock_nonce" value="<?php echo esc_attr(wp_create_nonce(self::UNLOCK_ACTION)); ?>">
+                    <p><button type="submit" class="woocommerce-button button<?php echo function_exists('wc_wp_theme_get_element_class_name') ? ' ' . esc_attr(wc_wp_theme_get_element_class_name('button')) : ''; ?>"><?php esc_html_e('Email unlock link', 'modify-login'); ?></button></p>
+                </form>
+            <?php endif; ?>
+        </div>
+        <?php
     }
 
     /**
@@ -345,13 +416,18 @@ final class Recovery
 
         $user = get_user_by(is_email($login) ? 'email' : 'login', $login);
 
-        // Quotas: 3 an hour per account and address, and 10 an hour per address
-        // overall (so one address cannot flood every account's inbox).
-        $ip_key = 'authlify_unlock_rate_' . md5($ip);
-        $pair_key = 'authlify_unlock_rate_' . md5($ip . '|' . ($user ? $user->ID : strtolower($login)));
+        // Quotas, per address counted the way lockouts are (an IPv6 /64 is one
+        // address): 3 an hour per account and address, 10 an hour per address
+        // overall (so one address cannot flood every account's inbox), and 3
+        // an hour per account from anywhere (so rotating addresses cannot either).
+        $ip_id = Limiter::ip_key($ip);
+        $ip_key = 'authlify_unlock_rate_' . md5($ip_id);
+        $pair_key = 'authlify_unlock_rate_' . md5($ip_id . '|' . ($user ? $user->ID : strtolower($login)));
+        $user_key = $user ? 'authlify_unlock_rate_u' . $user->ID : '';
         $ip_sent = (int) get_transient($ip_key);
         $pair_sent = (int) get_transient($pair_key);
-        if ($ip_sent >= 10 || $pair_sent >= 3) {
+        $user_sent = '' !== $user_key ? (int) get_transient($user_key) : 0;
+        if ($ip_sent >= 10 || $pair_sent >= 3 || $user_sent >= self::UNLOCK_PER_ACCOUNT) {
             return;
         }
         set_transient($ip_key, $ip_sent + 1, HOUR_IN_SECONDS);
@@ -360,10 +436,16 @@ final class Recovery
         if (!$user) {
             return;
         }
+        set_transient($user_key, $user_sent + 1, HOUR_IN_SECONDS);
 
-        // Keep earlier links valid: a new request never cancels the owner's link.
+        // Earlier links stay valid: expired keys are dropped, and the
+        // per-account cap (3 an hour, links last 30 minutes) keeps the number
+        // of live keys under the 5 kept, so a new request never pushes out a
+        // link the owner was emailed.
         $key = wp_generate_password(32, false);
-        $keys = self::unlock_keys($user->ID);
+        $keys = array_values(array_filter(self::unlock_keys($user->ID), function ($item) {
+            return isset($item['expires']) && $item['expires'] > time();
+        }));
         $keys[] = array('hash' => wp_hash($key . '|' . $user->ID), 'expires' => time() + 30 * MINUTE_IN_SECONDS);
         self::save_unlock_keys($user->ID, array_slice($keys, -5));
 

@@ -163,7 +163,7 @@ final class Migration
     public static function importers($importers)
     {
         $importers['loginpress-design'] = array(
-            __('LoginPress: login page design (logo, background, form, button and link colours, custom CSS)', 'modify-login'),
+            __('LoginPress: login page design (logo, background, form, button and link colors, custom CSS)', 'modify-login'),
             function () {
                 return is_array(get_option('loginpress_customization'));
             },
@@ -173,7 +173,7 @@ final class Migration
         );
 
         $importers['colorlib-design'] = array(
-            __('Colorlib Login Customizer: login page design (logo, background, columns, form, fields, button and link colours, custom CSS)', 'modify-login'),
+            __('Colorlib Login Customizer: login page design (logo, background, columns, form, fields, button and link colors, custom CSS)', 'modify-login'),
             function () {
                 return is_array(get_option('clc-options'));
             },
@@ -285,8 +285,20 @@ final class Migration
         if ('' === $d['button']['background']) {
             $d['button']['background'] = Color::sanitize($v('login_button_color'));
         }
-        $d['button']['hover_background'] = Color::sanitize($v('login_button_hover'));
-        $d['button']['text'] = Color::sanitize($v('login_button_text_color'));
+        // LoginPress 6.x names (FQA-10), then the older ones.
+        $first = function (array $keys) use ($v) {
+            foreach ($keys as $key) {
+                $color = Color::sanitize($v($key));
+                if ('' !== $color) {
+                    return $color;
+                }
+            }
+
+            return '';
+        };
+        $d['button']['hover_background'] = $first(array('button_hover_color', 'login_button_hover'));
+        $d['button']['text'] = $first(array('button_text_color', 'login_button_text_color'));
+        $d['button']['hover_text'] = $first(array('button_hover_text_color'));
         $d['button']['radius'] = $n('login_button_radius');
 
         $d['links']['color'] = Color::sanitize($v('login_footer_color'));

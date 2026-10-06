@@ -21,14 +21,14 @@ use Authlify\Security\Limiter;
 function captcha_reset()
 {
     $p = new ReflectionProperty(Captcha::class, 'checked');
-    $p->setAccessible(true);
+    if (PHP_VERSION_ID < 80100) { $p->setAccessible(true); } // No-op since PHP 8.1, deprecated in 8.5.
     $p->setValue(null, array());
 }
 
 function honeypot_stamp($time, $nonce = null)
 {
     $m = new ReflectionMethod(Honeypot::class, 'sign');
-    $m->setAccessible(true);
+    if (PHP_VERSION_ID < 80100) { $m->setAccessible(true); } // No-op since PHP 8.1, deprecated in 8.5.
     $nonce = null === $nonce ? bin2hex(random_bytes(8)) : $nonce;
 
     return $time . '.' . $nonce . '.' . $m->invoke(null, $time, $nonce);
@@ -58,7 +58,7 @@ function altcha_solve(array $c, $number = null)
 function altcha_key()
 {
     $m = new ReflectionMethod(Altcha::class, 'key');
-    $m->setAccessible(true);
+    if (PHP_VERSION_ID < 80100) { $m->setAccessible(true); } // No-op since PHP 8.1, deprecated in 8.5.
 
     return $m->invoke(null);
 }
@@ -334,6 +334,34 @@ t('outage: fail open lets people in, fail closed refuses; both are logged', func
     is_error_code('authlify_captcha', Captcha::check('login'), '5xx counts as an outage');
 });
 
+t('SEC2-08: a 4xx or non-JSON answer and an oversized token fail closed, even with "fail open"', function () {
+    set_settings(array('captcha_provider' => 'turnstile', 'captcha_site_key' => 's', 'captcha_secret_key' => 'k', 'captcha_fail' => 'open', 'captcha_forms' => array('login'), 'captcha_mode' => 'always'));
+    $calls = 0;
+    mock_http(function () use (&$calls) {
+        $calls++;
+        return http_response(413, '<html>Request Entity Too Large</html>');
+    });
+    $_POST = array('cf-turnstile-response' => 'junk');
+    is_error_code('authlify_captcha', Captcha::check('login'), '413 HTML is a failed check, not an outage');
+
+    captcha_reset();
+    remove_all_filters('pre_http_request', 1);
+    mock_http(function () use (&$calls) {
+        $calls++;
+        return http_response(200, 'not json');
+    });
+    is_error_code('authlify_captcha', Captcha::check('login'), '200 without a verdict is a failed check');
+
+    captcha_reset();
+    $calls = 0;
+    $_POST = array('cf-turnstile-response' => str_repeat('A', 9000));
+    is_error_code('authlify_captcha', Captcha::check('login'), 'oversized token refused');
+    eq(0, $calls, 'an oversized token is never sent to the provider');
+
+    $provider = Captcha::active_provider();
+    eq('unreachable', $provider->check_secret('k'), 'the key check still reports a bad answer as "could not check"');
+});
+
 t('test mode: failures are logged but never block', function () {
     set_settings(array('captcha_provider' => 'altcha', 'captcha_test_mode' => true));
     $_POST = array();
@@ -404,6 +432,48 @@ t('check_login: API requests, password-less posts and non-login contexts are not
     eq($user, Captcha::check_login($user, $user->user_login, 'pw'), 'a forged Woo nonce does not select a form');
     $locked = new WP_Error('authlify_locked', 'x');
     eq($locked, Captcha::check_login($locked, 'x', 'pw'), 'lockout errors pass through untouched');
+});
+
+t('SEC2-03: a WooCommerce login or lost-password post is checked whichever nonce field it uses', function () {
+    set_settings(array('captcha_provider' => 'altcha', 'captcha_forms' => array('woo_login', 'woo_lostpassword'), 'captcha_mode' => 'always', 'honeypot' => false));
+    $_SERVER['REQUEST_METHOD'] = 'POST';
+    wp_set_current_user(0);
+    $user = make_user('subscriber');
+    $login = wp_create_nonce('woocommerce-login');
+    $lost = wp_create_nonce('lost_password');
+
+    foreach (array('woocommerce-login-nonce', '_wpnonce') as $field) {
+        captcha_reset();
+        $_POST = array('login' => 'Log in', 'username' => $user->user_login, 'password' => 'pw', $field => $login);
+        $_REQUEST = $_POST;
+        ok(is_wp_error(Captcha::check_login($user, $user->user_login, 'pw')), 'Woo login with ' . $field);
+    }
+    // The nonce in the query string, the fields in the body (WooCommerce reads $_REQUEST).
+    captcha_reset();
+    $_POST = array('login' => 'Log in', 'username' => $user->user_login, 'password' => 'pw');
+    $_REQUEST = array_merge($_POST, array('_wpnonce' => $login));
+    ok(is_wp_error(Captcha::check_login($user, $user->user_login, 'pw')), 'Woo login, nonce in the query string');
+
+    foreach (array('woocommerce-lost-password-nonce', '_wpnonce') as $field) {
+        captcha_reset();
+        $_POST = array('wc_reset_password' => 'true', 'user_login' => $user->user_login, $field => $lost);
+        $_REQUEST = $_POST;
+        $errors = new WP_Error();
+        Captcha::check_lostpassword($errors, $user);
+        ok($errors->has_errors(), 'Woo lost password with ' . $field);
+    }
+
+    // A wrong nonce is not WooCommerce's form (WooCommerce ignores it too).
+    captcha_reset();
+    $_POST = array('login' => 'Log in', 'username' => $user->user_login, '_wpnonce' => 'forged');
+    $_REQUEST = $_POST;
+    eq($user, Captcha::check_login($user, $user->user_login, 'pw'), 'forged nonce');
+});
+
+t('SEC2-03: a WooCommerce login form posted to xmlrpc.php is not an API request', function () {
+    $out = subprocess('define("XMLRPC_REQUEST", true); $old = get_option("authlify_settings"); \Authlify\Settings::update(array("captcha_provider" => "altcha", "captcha_forms" => array("woo_login"), "captcha_mode" => "always", "honeypot" => false)); \Authlify\Settings::flush(); wp_set_current_user(0); $_SERVER["REQUEST_METHOD"] = "POST"; $u = get_userdata(1); $_POST = $_REQUEST = array("login" => "Log in", "username" => $u->user_login, "woocommerce-login-nonce" => wp_create_nonce("woocommerce-login")); $r = \Authlify\Captcha\Captcha::check_login($u, $u->user_login, "pw"); $_POST = $_REQUEST = array(); $plain = \Authlify\Captcha\Captcha::check_login($u, $u->user_login, "pw"); update_option("authlify_settings", $old); echo (is_wp_error($r) ? "woo-checked" : "woo-skipped"), " ", (is_wp_error($plain) ? "api-checked" : "api-skipped");');
+    contains('woo-checked', $out, 'Woo form on xmlrpc.php');
+    contains('api-skipped', $out, 'a real XML-RPC login is still not gated');
 });
 
 t('AUTHLIFY_DISABLE_CAPTCHA switches every form off', function () {

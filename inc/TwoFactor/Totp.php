@@ -303,6 +303,37 @@ final class Totp
     }
 
     /**
+     * Store an authenticator-app secret another plugin set up, so the user
+     * keeps the same app entry (Tools → Switch plugins). Never replaces a
+     * secret the user already has here.
+     *
+     * @param int    $user_id User ID.
+     * @param string $secret  Base32 secret.
+     * @return true|\WP_Error
+     * @since 3.1.0
+     */
+    public static function import_secret($user_id, $secret)
+    {
+        $user_id = (int) $user_id;
+        $secret = strtoupper(preg_replace('/[\s=-]+/', '', (string) $secret));
+        $key = self::base32_decode($secret);
+
+        // RFC 4226 asks for at least 128 bits; the plugins we import from use 80-160.
+        if (false === $key || strlen($key) < 10) {
+            return new \WP_Error('authlify_totp_import_invalid', __('The secret is not a valid authenticator-app key.', 'modify-login'));
+        }
+        if (self::is_configured($user_id)) {
+            return new \WP_Error('authlify_totp_import_exists', __('This user already has an authenticator app in Authlify.', 'modify-login'));
+        }
+
+        update_user_meta($user_id, self::META_SECRET, Crypto::encrypt($secret, self::context($user_id)));
+        delete_user_meta($user_id, self::META_PENDING);
+        delete_user_meta($user_id, self::META_LAST_STEP);
+
+        return true;
+    }
+
+    /**
      * Remove the authenticator app.
      *
      * @param int $user_id User ID.

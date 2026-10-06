@@ -96,7 +96,7 @@ final class LoginUrlPage
                 ?>
                     <span class="authlify-input-group">
                         <code><?php echo esc_html(self::url_prefix()); ?></code>
-                        <input type="text" id="authlify-login_slug" name="authlify[login_slug]" value="<?php echo esc_attr(self::field_value($slug, $pending)); ?>" class="regular-text" pattern="[A-Za-z0-9_\-]{3,64}" title="<?php esc_attr_e('3 to 64 letters, numbers, hyphens or underscores', 'modify-login'); ?>" placeholder="<?php echo esc_attr(self::suggestion()); ?>" autocomplete="off" spellcheck="false"<?php echo UI::describedby('authlify-login_slug-note'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in describedby(). ?> <?php disabled($forced); ?>>
+                        <input type="text" id="authlify-login_slug" name="authlify[login_slug]" value="<?php echo esc_attr(self::field_value($slug, $pending)); ?>" class="regular-text" pattern="[A-Za-z0-9_\-]{3,64}" title="<?php esc_attr_e('3 to 64 letters, numbers, hyphens or underscores', 'modify-login'); ?>" placeholder="<?php /* translators: %s: example login address */ echo esc_attr(sprintf(__('e.g. %s', 'modify-login'), self::suggestion())); ?>" autocomplete="off" spellcheck="false"<?php echo UI::describedby('authlify-login_slug-note'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in describedby(). ?> <?php disabled($forced); ?>>
                     </span>
                     <p class="description" id="authlify-login_slug-note"><?php printf(esc_html__('Need an idea? %s', 'modify-login'), '<code>' . esc_html(self::suggestion()) . '</code>'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
                 <?php UI::field_end(); ?>
@@ -114,7 +114,7 @@ final class LoginUrlPage
                     'redirect' => array(__('Redirect', 'modify-login'), __('Send visitors to another page, such as the homepage.', 'modify-login'), 'icon' => 'route'),
                 ), __('A normal "page not found" gives bots nothing to work with.', 'modify-login') . ' ' . UI::learn_more('howto-hide-login', __('Which to choose', 'modify-login')), 'cards');
 
-                UI::input_row('blocked_redirect_url', __('Redirect to', 'modify-login'), __('Used with "A redirect". Leave empty for the homepage.', 'modify-login'), array('type' => 'url', 'placeholder' => home_url('/'), 'show_if' => 'authlify[blocked_response]=redirect'));
+                UI::input_row('blocked_redirect_url', __('Redirect to', 'modify-login'), __('Used with "Redirect". An address on this site; leave empty for the homepage.', 'modify-login'), array('type' => 'url', 'placeholder' => home_url('/'), 'show_if' => 'authlify[blocked_response]=redirect'));
 
                 UI::toggle_row('leak_check_schedule', __('Re-check weekly and after every change that the address stays hidden', 'modify-login'), __('Leak Check requests your own site about 40 times, like a visitor would. Nothing leaves your server. You can always run it by hand.', 'modify-login') . ' ' . UI::learn_more('leak-check'), __('Automatic Leak Check', 'modify-login'));
                 ?>
@@ -206,7 +206,20 @@ final class LoginUrlPage
      */
     public static function validate($values, $page)
     {
-        if (is_wp_error($values) || 'login-url' !== $page || !array_key_exists('login_slug', $values)) {
+        if (is_wp_error($values) || 'login-url' !== $page) {
+            return $values;
+        }
+
+        // A redirect to another site is ignored when it is used (visitors would
+        // land on the homepage), so refuse it here instead (FQA-06).
+        if (isset($values['blocked_response'], $values['blocked_redirect_url']) && 'redirect' === $values['blocked_response']) {
+            $to = esc_url_raw(trim(wp_unslash((string) $values['blocked_redirect_url'])));
+            if ('' !== $to && '' === wp_validate_redirect($to, '')) {
+                return new \WP_Error('authlify_redirect_host', __('"Redirect to" must be an address on this site. Leave it empty to use the homepage.', 'modify-login'));
+            }
+        }
+
+        if (!array_key_exists('login_slug', $values)) {
             return $values;
         }
 

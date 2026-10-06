@@ -48,7 +48,26 @@ final class Router
      */
     public static function init()
     {
-        if ('' === self::slug() && '' === self::pending_slug()) {
+        // Authlify boots while plugins load. On a network, Authlify Pro applies
+        // a site's own settings (per-site overrides) on plugins_loaded, so look
+        // at the settings again once it has: a site may have a login URL even
+        // when the network has none (PQA-AG-01).
+        if (!did_action('plugins_loaded') && !doing_action('plugins_loaded')) {
+            add_action('plugins_loaded', array(__CLASS__, 'wire'), 7);
+        }
+
+        self::wire();
+    }
+
+    /**
+     * Add the routing hooks when a login URL (active or pending) is set.
+     * Safe to call more than once.
+     *
+     * @since 3.0.2
+     */
+    public static function wire()
+    {
+        if (has_action('wp_loaded', array(__CLASS__, 'serve')) || ('' === self::slug() && '' === self::pending_slug())) {
             return;
         }
 
@@ -59,6 +78,14 @@ final class Router
         add_filter('site_url', array(__CLASS__, 'filter_url'), 10, 4);
         add_filter('network_site_url', array(__CLASS__, 'filter_url'), 10, 3);
         add_filter('wp_redirect', array(__CLASS__, 'filter_redirect'), 10, 2);
+        add_filter('redirect_canonical', array(__CLASS__, 'filter_canonical'), 10, 2);
+        add_action('wp_before_admin_bar_render', array(__CLASS__, 'hide_toolbar_login_links'));
+        // WooCommerce prints its block settings (wcSettings.wpLoginUrl, from
+        // wp_login_url()) at wp_print_footer_scripts priority 1, on the cart
+        // and checkout pages for every visitor. Its own filter cannot change
+        // that value, so wp_login_url() points elsewhere for that one moment.
+        add_action('wp_print_footer_scripts', array(__CLASS__, 'start_public_login_url'), 0);
+        add_action('wp_print_footer_scripts', array(__CLASS__, 'end_public_login_url'), 2);
         add_filter('login_url', array(__CLASS__, 'filter_login_url_on_404'), 10, 3);
         add_filter('site_option_welcome_email', array(__CLASS__, 'filter_welcome_email'));
         add_filter('user_request_action_email_content', array(__CLASS__, 'privacy_email_content'), 999, 2);
@@ -255,7 +282,7 @@ final class Router
             return;
         }
 
-        self::init();
+        self::wire();
         self::route();
     }
 
@@ -405,8 +432,9 @@ final class Router
             return true;
         }
 
-        // /?slug, which also works with pretty permalinks as a fallback.
-        return '' === $path && isset($_GET) && array_key_exists($slug, $_GET); // phpcs:ignore WordPress.Security.NonceVerification
+        // /?slug, which also works with pretty permalinks as a fallback. Any
+        // case, like the pretty /SLUG/ path (FQA-07).
+        return '' === $path && isset($_GET) && in_array($slug, array_map('strtolower', array_map('strval', array_keys((array) $_GET))), true); // phpcs:ignore WordPress.Security.NonceVerification
     }
 
     /**
@@ -426,6 +454,21 @@ final class Router
 
         foreach ($scripts as $script) {
             if ($path === $script || 0 === strpos($path, $script . '/')) {
+                return true;
+            }
+        }
+
+        // The same script names in any folder (CMPT-02): /x/wp-register.php,
+        // /wp-content/wp-register.php or, with WordPress in its own folder,
+        // /wp/wp-register.php. Core's canonical redirect sends any path ending
+        // in wp-register.php to the registration URL, which is the custom
+        // login URL, before any redirect filter runs.
+        $segments = explode('/', $path);
+        foreach (array('wp-login.php', 'wp-register.php', 'wp-signup.php') as $script) {
+            if ('wp-signup.php' === $script && is_multisite()) {
+                continue;
+            }
+            if (in_array($script, $segments, true)) {
                 return true;
             }
         }
@@ -523,7 +566,152 @@ final class Router
             return $location;
         }
 
+        // A logged-out visitor who is not on the login page must never be
+        // redirected to the custom URL: core redirects to wherever a visitor
+        // asks (the comment form's redirect_to) or to the canonical form of
+        // the requested path (/index.php/wp-login.php), and either would hand
+        // out the slug. The redirect keeps pointing at wp-login.php, which
+        // answers with the blocked response. Lost password, registration,
+        // logout, interim login and the 2FA screens all run on the login page.
+        if (self::is_hiding() && !self::is_login_request() && !is_user_logged_in()) {
+            return $location;
+        }
+
         return self::replace_login_php($location);
+    }
+
+    /**
+     * Never let a canonical redirect hand a logged-out visitor the custom
+     * login URL (CMPT-02, defence in depth: the wp-register.php case is
+     * answered by the router before core's canonical code runs).
+     *
+     * @param string|false $redirect_url  Canonical URL.
+     * @param string       $requested_url Requested URL.
+     * @return string|false
+     */
+    public static function filter_canonical($redirect_url, $requested_url = '')
+    {
+        if (!is_string($redirect_url) || '' === $redirect_url || !self::is_hiding() || self::is_login_request() || is_user_logged_in()) {
+            return $redirect_url;
+        }
+
+        return self::points_to_login($redirect_url) ? false : $redirect_url;
+    }
+
+    /**
+     * Whether a URL points at the custom (or pending) login URL.
+     *
+     * @param string $url URL.
+     * @return bool
+     */
+    public static function points_to_login($url)
+    {
+        $path = strtolower(trim((string) wp_parse_url($url, PHP_URL_PATH), '/'));
+        $query = (string) wp_parse_url($url, PHP_URL_QUERY);
+
+        foreach (array_filter(array(self::slug(), self::pending_slug())) as $slug) {
+            $login = strtolower(trim((string) wp_parse_url(self::login_url(null, $slug), PHP_URL_PATH), '/'));
+            if ('' !== $login && $path === $login) {
+                return true;
+            }
+            // Plain permalinks: /?slug.
+            if ('' !== $query && preg_match('#(?:^|&)' . preg_quote($slug, '#') . '(?:=|&|$)#i', $query)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Where a public page may send visitors to log in while the login URL is
+     * hidden: WooCommerce My Account when it exists, else the home page.
+     *
+     * @return string
+     * @since 3.0.2
+     */
+    public static function public_login_url()
+    {
+        $url = '';
+        if (function_exists('wc_get_page_id') && wc_get_page_id('myaccount') > 0) {
+            $url = (string) wc_get_page_permalink('myaccount');
+        }
+
+        /**
+         * Filters the address public pages use instead of the hidden login URL
+         * (WooCommerce block settings). Never return the login URL itself.
+         *
+         * @param string $url URL ('' for the home page).
+         * @since 3.0.2
+         */
+        $url = (string) apply_filters('authlify_public_login_url', $url);
+
+        return '' !== $url ? $url : home_url('/');
+    }
+
+    /**
+     * Footer scripts on the front end for logged-out visitors: wp_login_url()
+     * gives the public login address while WooCommerce prints its settings.
+     */
+    public static function start_public_login_url()
+    {
+        if (is_admin() || is_user_logged_in() || !self::is_hiding() || self::is_login_request() || !class_exists('WooCommerce', false)) {
+            return;
+        }
+
+        add_filter('login_url', array(__CLASS__, 'swap_login_url'), PHP_INT_MAX);
+    }
+
+    /**
+     * Back to the real login URL once WooCommerce has printed its settings.
+     */
+    public static function end_public_login_url()
+    {
+        remove_filter('login_url', array(__CLASS__, 'swap_login_url'), PHP_INT_MAX);
+    }
+
+    /**
+     * login_url filter used between the two hooks above.
+     *
+     * @param string $login_url Login URL.
+     * @return string
+     */
+    public static function swap_login_url($login_url)
+    {
+        return self::points_to_login((string) $login_url) ? self::public_login_url() : $login_url;
+    }
+
+    /**
+     * Toolbar links to the login page for logged-out visitors (CMPT-04).
+     *
+     * Core shows the toolbar to logged-in people only, but BuddyPress (and
+     * some themes) show it to visitors too, with a "Log In" item built from
+     * wp_login_url(): that would print the custom URL on every public page.
+     * While the login URL is hidden, those items are removed.
+     */
+    public static function hide_toolbar_login_links()
+    {
+        global $wp_admin_bar;
+
+        if (is_user_logged_in() || !self::is_hiding() || self::is_login_request() || !$wp_admin_bar instanceof \WP_Admin_Bar) {
+            return;
+        }
+
+        /**
+         * Filters whether toolbar items that link to the login page are removed for logged-out visitors.
+         *
+         * @param bool $hide Hide (default true while the login URL is hidden).
+         * @since 3.0.2
+         */
+        if (!apply_filters('authlify_hide_toolbar_login_links', true)) {
+            return;
+        }
+
+        foreach ((array) $wp_admin_bar->get_nodes() as $id => $node) {
+            if (!empty($node->href) && self::points_to_login((string) $node->href)) {
+                $wp_admin_bar->remove_node($id);
+            }
+        }
     }
 
     /**
@@ -598,6 +786,13 @@ final class Router
             return '#';
         }
 
+        // On a network that lets visitors register sites, wp-signup.php tells
+        // logged-out visitors to "log in first" with a link to the login URL
+        // (SEC2-10). The sign-up page is public, so it must not hand it out.
+        if (self::is_hiding() && !is_user_logged_in() && is_multisite() && isset($GLOBALS['pagenow']) && 'wp-signup.php' === $GLOBALS['pagenow']) {
+            return '#';
+        }
+
         return $login_url;
     }
 
@@ -609,6 +804,10 @@ final class Router
      */
     public static function filter_welcome_email($value)
     {
+        if ('' === self::slug()) {
+            return $value;
+        }
+
         return str_replace(array('wp-login.php', site_url('wp-login.php')), array(trailingslashit(self::slug()), self::login_url()), (string) $value);
     }
 

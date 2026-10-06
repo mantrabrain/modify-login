@@ -30,6 +30,134 @@ final class SiteHealth
     {
         add_filter('site_status_tests', array(__CLASS__, 'tests'));
         add_filter('debug_information', array(__CLASS__, 'debug_information'));
+        add_action('authlify_daily', array(__CLASS__, 'note_cron_run'), 0);
+        add_filter('authlify_dashboard_checks', array(__CLASS__, 'dashboard_cron_check'), 20);
+    }
+
+    /**
+     * Option with the time the daily housekeeping last ran.
+     */
+    const CRON_LAST = 'authlify_cron_last';
+
+    /**
+     * A Leak Check result older than this is reported as out of date (CMPT-06).
+     */
+    const LEAK_CHECK_STALE = 14 * DAY_IN_SECONDS;
+
+    /**
+     * Remember that WP-Cron ran Authlify's daily housekeeping.
+     */
+    public static function note_cron_run()
+    {
+        update_option(self::CRON_LAST, time(), false);
+    }
+
+    /**
+     * Whether WP-Cron runs Authlify's jobs (CMPT-06).
+     *
+     * Every Authlify job (log retention, limiter cleanup, the weekly Leak
+     * Check, Pro's alert e-mails and webhooks) runs on WP-Cron. When the
+     * site sets DISABLE_WP_CRON without a real cron job, or loopback requests
+     * fail, they silently stop.
+     *
+     * @return array ok (bool), overdue (int seconds of the most overdue job), hooks (string[]), disabled (bool), last (int).
+     * @since 3.0.2
+     */
+    public static function cron_status()
+    {
+        $now = time();
+        $overdue = 0;
+        $hooks = array();
+        $crons = function_exists('_get_cron_array') ? _get_cron_array() : array();
+
+        foreach ((array) $crons as $timestamp => $events) {
+            if (!is_array($events) || (int) $timestamp > $now - HOUR_IN_SECONDS) {
+                continue;
+            }
+            foreach (array_keys($events) as $hook) {
+                if (0 === strpos((string) $hook, 'authlify')) {
+                    $overdue = max($overdue, $now - (int) $timestamp);
+                    $hooks[] = (string) $hook;
+                }
+            }
+        }
+
+        $disabled = defined('DISABLE_WP_CRON') && DISABLE_WP_CRON;
+        $last = (int) get_option(self::CRON_LAST, 0);
+        // With WP-Cron switched off, a daily job that has not run for two days
+        // means no system cron replaces it (only once it has run at least once).
+        $stale = $disabled && $last > 0 && $last < $now - 2 * DAY_IN_SECONDS;
+
+        /**
+         * Filters whether Authlify reports WP-Cron as not running.
+         *
+         * @param bool  $ok     Whether jobs run.
+         * @param array $hooks  Overdue Authlify hooks.
+         * @since 3.0.2
+         */
+        $ok = (bool) apply_filters('authlify_cron_ok', !$hooks && !$stale, $hooks);
+
+        return array(
+            'ok' => $ok,
+            'overdue' => $overdue,
+            'hooks' => array_values(array_unique($hooks)),
+            'disabled' => $disabled,
+            'last' => $last,
+        );
+    }
+
+    /**
+     * Dashboard checklist item, only when jobs are not running.
+     *
+     * @param array $checks Checks.
+     * @return array
+     */
+    public static function dashboard_cron_check($checks)
+    {
+        $status = self::cron_status();
+        if (!$status['ok']) {
+            $checks['cron'] = array(
+                false,
+                __('Scheduled tasks are not running', 'modify-login'),
+                self::cron_problem($status),
+                admin_url('site-health.php'),
+            );
+        }
+
+        return $checks;
+    }
+
+    /**
+     * One-paragraph explanation of a cron problem.
+     *
+     * @param array $status cron_status().
+     * @return string
+     */
+    private static function cron_problem(array $status)
+    {
+        if ($status['overdue'] > 0) {
+            $text = sprintf(
+                /* translators: %s: time, e.g. "3 hours" */
+                __('Authlify\'s scheduled tasks are %s overdue.', 'modify-login'),
+                human_time_diff(time() - $status['overdue'])
+            );
+        } else {
+            $text = sprintf(
+                /* translators: %s: time ago */
+                __('Authlify\'s daily tasks last ran %s ago.', 'modify-login'),
+                human_time_diff($status['last'])
+            );
+        }
+
+        $text .= ' ' . __('Old activity is not cleaned up, the weekly Leak Check does not run, and Authlify Pro\'s alert e-mails and webhooks wait in a queue.', 'modify-login');
+
+        if ($status['disabled']) {
+            $text .= ' ' . __('DISABLE_WP_CRON is set in wp-config.php, so a real cron job must call wp-cron.php (for example every 5 minutes: wget -q -O - https://your-site/wp-cron.php?doing_wp_cron), or run "wp cron event run --due-now". Ask your host if you are unsure.', 'modify-login');
+        } else {
+            $text .= ' ' . __('WP-Cron runs when people visit the site and needs loopback requests; check the loopback test on this page, or set up a real cron job that calls wp-cron.php.', 'modify-login');
+        }
+
+        return $text;
     }
 
     /**
@@ -47,6 +175,7 @@ final class SiteHealth
             'authlify_cache' => array(__('Authlify login page caching', 'modify-login'), 'test_cache'),
             'authlify_recovery' => array(__('Authlify recovery settings', 'modify-login'), 'test_recovery'),
             'authlify_passkeys' => array(__('Authlify passkey support', 'modify-login'), 'test_passkeys'),
+            'authlify_cron' => array(__('Authlify scheduled tasks', 'modify-login'), 'test_cron'),
         );
 
         foreach ($direct as $key => $test) {
@@ -140,6 +269,15 @@ final class SiteHealth
             human_time_diff((int) $result['time'])
         );
         $summary = LeakCheck::summary($result) . ' ' . $when;
+
+        // An old pass says nothing about today's plugins and theme (CMPT-06).
+        if ('passed' === $result['state'] && (int) $result['time'] < time() - self::LEAK_CHECK_STALE) {
+            $why = self::cron_status()['ok']
+                ? __('It runs by itself every week; an old result usually means it was switched off or could not run.', 'modify-login')
+                : __('It runs by itself every week, but scheduled tasks are not running on this site (see "Authlify scheduled tasks").', 'modify-login');
+
+            return self::result($test, 'recommended', __('The Authlify Leak Check result is out of date', 'modify-login'), self::p($summary) . self::p($why . ' ' . __('Run it again to confirm nothing reveals your login URL today.', 'modify-login')), $action);
+        }
 
         switch ($result['state']) {
             case 'passed':
@@ -390,6 +528,23 @@ final class SiteHealth
         $lines[] = __('If you ever lose the login URL, add <code>define( \'AUTHLIFY_DISABLE_HIDE\', true );</code> to wp-config.php, or run <code>wp authlify url reset</code>.', 'modify-login');
 
         return self::result($test, 'good', __('Authlify recovery options are available', 'modify-login'), implode('', array_map(array(__CLASS__, 'p'), $lines)));
+    }
+
+    /**
+     * Scheduled tasks run (CMPT-06).
+     *
+     * @return array
+     */
+    public static function test_cron()
+    {
+        $test = 'authlify_cron';
+        $status = self::cron_status();
+
+        if ($status['ok']) {
+            return self::result($test, 'good', __('Authlify\'s scheduled tasks are running', 'modify-login'), self::p(__('Log cleanup, the weekly Leak Check and (with Authlify Pro) alert e-mails run on time through WP-Cron.', 'modify-login')));
+        }
+
+        return self::result($test, 'recommended', __('Authlify\'s scheduled tasks are not running', 'modify-login'), self::p(self::cron_problem($status)));
     }
 
     /**

@@ -112,6 +112,9 @@
 }
 
 .login .authlify-2fa__alt .button-link {
+	/* WCAG 2.2 target size: at least 24px tall (UX2-14). */
+	min-height: 24px;
+	padding: 4px 0;
 	color: inherit;
 	text-align: left;
 	text-decoration: underline;

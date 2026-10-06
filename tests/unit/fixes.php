@@ -173,7 +173,7 @@ t('A-27: import runs the screens\' validators (a file that blocks your own addre
     // Registered on admin screens (the import runs in admin-post.php).
     add_test_filter('authlify_validate_settings', array(\Authlify\Admin\ProtectionPage::class, 'validate'), 10, 3);
     $m = new ReflectionMethod(ToolsPage::class, 'validate_import');
-    $m->setAccessible(true);
+    if (PHP_VERSION_ID < 80100) { $m->setAccessible(true); } // No-op since PHP 8.1, deprecated in 8.5.
     $out = $m->invoke(null, array('ip_denylist' => '203.0.113.0/24', 'limit_attempts' => 5));
     is_error_code('self_block', $out);
     $out = $m->invoke(null, array('limit_attempts' => 5000, 'hibp_enabled' => true));
@@ -209,7 +209,7 @@ t('LC-13: 1.x logout still lands on the homepage', function () {
     update_option('mb_login_endpoint', 'old-door');
     try {
         $m = new ReflectionMethod(Upgrader::class, 'map_1x');
-        $m->setAccessible(true);
+        if (PHP_VERSION_ID < 80100) { $m->setAccessible(true); } // No-op since PHP 8.1, deprecated in 8.5.
         $v = $m->invoke(null);
         eq(home_url('/'), $v['logout_redirect_url']);
         no($v['twofa_enabled']);

@@ -278,3 +278,16 @@ t('recovery link: at most 3 per account per hour', function () {
     contains('already sent several', $messages[3]);
     wp_eval('delete_transient("authlify_2fa_rec_u_' . $u['id'] . '");');
 });
+
+t('SEC2-16: made-up 2FA recovery links add at most one log row per address a minute', function () {
+    $count = function () {
+        return (int) wp_eval('global $wpdb; echo (int) $wpdb->get_var("SELECT COUNT(*) FROM " . \Authlify\Log\Log::table() . " WHERE event = \'twofa_recovery_refused\'");');
+    };
+    $before = $count();
+    for ($i = 0; $i < 6; $i++) {
+        $res = get(login_url(TSLUG) . '?action=authlify_2fa_recover&uid=1&rkey=made-up-' . $i, array('ip' => '198.51.100.161'));
+        contains('invalid, used or expired', strip_tags($res->body));
+    }
+    eq($before + 1, $count(), 'six requests, one row');
+    wp_eval('delete_transient("authlify_2fa_rec_log_" . md5("198.51.100.161"));');
+});

@@ -1003,3 +1003,9 @@ $pad: 20px;
 		width: 100%;
 	}
 }
+
+/* Right-to-left languages: undo points back, which is to the right (UX2-03). */
+.rtl .al-bar__actions .dashicons-undo,
+.rtl .al-bar__actions .dashicons-redo {
+	transform: scaleX(-1);
+}

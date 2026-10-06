@@ -62,7 +62,7 @@ final class MatchSite
         self::$palette = self::palette($settings);
         if (self::$palette) {
             /* translators: %d: number of colours. */
-            $found[] = sprintf(_n('colour palette (%d colour)', 'colour palette (%d colours)', count(self::$palette), 'modify-login'), count(self::$palette));
+            $found[] = sprintf(_n('color palette (%d color)', 'color palette (%d colors)', count(self::$palette), 'modify-login'), count(self::$palette));
         }
 
         // Background and text.
@@ -92,7 +92,7 @@ final class MatchSite
             $text = self::first_slug(array('contrast', 'foreground', 'text', 'black', 'dark'));
         }
         if ('' === $text) {
-            $missing[] = __('text colour', 'modify-login');
+            $missing[] = __('text color', 'modify-login');
         } else {
             /* translators: %s: colour. */
             $found[] = sprintf(__('text %s', 'modify-login'), $text);
@@ -109,15 +109,15 @@ final class MatchSite
         $source = isset($roles['source']) ? $roles['source'] : '';
         $candidates = array(
             /* translators: 1: colour, 2: theme name. */
-            array(isset($roles['primary']) ? $roles['primary'] : '', __('accent %1$s (%2$s global colours)', 'modify-login')),
+            array(isset($roles['primary']) ? $roles['primary'] : '', __('accent %1$s (%2$s global colors)', 'modify-login')),
             /* translators: %s: colour. */
-            array(self::theme_color($styles, array('elements', 'button', 'color', 'background')), __('accent %s (theme button colour)', 'modify-login')),
+            array(self::theme_color($styles, array('elements', 'button', 'color', 'background')), __('accent %s (theme button color)', 'modify-login')),
             /* translators: %s: colour. */
-            array(self::theme_color($styles, array('blocks', 'core/button', 'color', 'background')), __('accent %s (theme button colour)', 'modify-login')),
+            array(self::theme_color($styles, array('blocks', 'core/button', 'color', 'background')), __('accent %s (theme button color)', 'modify-login')),
             /* translators: %s: colour. */
             array(self::first_slug(array('primary', 'accent', 'accent-1', 'brand', 'secondary', 'accent-2')), __('accent %s (theme palette)', 'modify-login')),
             /* translators: %s: colour. */
-            array(self::theme_color($styles, array('elements', 'link', 'color', 'text')), __('accent %s (theme link colour)', 'modify-login')),
+            array(self::theme_color($styles, array('elements', 'link', 'color', 'text')), __('accent %s (theme link color)', 'modify-login')),
             /* translators: %s: colour. */
             array(self::classic_primary(), __('accent %s (theme stylesheet)', 'modify-login')),
         );
@@ -132,7 +132,7 @@ final class MatchSite
         }
         if ('' === $primary) {
             $primary = $dark ? '#8ab4ff' : '#3858e9';
-            $missing[] = __('accent colour', 'modify-login');
+            $missing[] = __('accent color', 'modify-login');
         }
 
         $on_primary = self::theme_color($styles, array('elements', 'button', 'color', 'text'));

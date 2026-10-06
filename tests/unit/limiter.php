@@ -221,6 +221,32 @@ t('unlock pass: only the granted account may log in from the locked IP', functio
     delete_transient('authlify_unlock_pass_' . md5('203.0.113.21'));
 });
 
+t('SEC2-04: an unlock pass is a bounded allowance: failures use it up, a success ends it, the account pause comes back', function () {
+    set_settings(array('limit_enabled' => true, 'limit_attempts' => 3, 'limit_user_lock' => true, 'user_attempts' => 2));
+    $alice = make_user('subscriber');
+    as_ip('203.0.113.25');
+    limiter_fail(3, 'someone');
+    Limiter::grant_pass('203.0.113.25', $alice->ID);
+    eq(null, Limiter::gate_error($alice->user_login), 'the pass lets the owner try');
+    limiter_fail(2, $alice->user_login);
+    eq(null, Limiter::gate_error($alice->user_login), 'one attempt left');
+    limiter_fail(1, $alice->user_login);
+    is_error_code('authlify_locked', Limiter::gate_error($alice->user_login), 'the allowance is used up: locked again');
+
+    // A success ends the pass (single use).
+    Limiter::grant_pass('203.0.113.25', $alice->ID);
+    eq(null, Limiter::gate_error($alice->user_login));
+    Limiter::record_success($alice->user_login, $alice);
+    is_error_code('authlify_locked', Limiter::gate_error($alice->user_login), 'a second login needs a new link');
+
+    // 3.0.x passes (a plain list of IDs) still work, with the same allowance.
+    set_transient('authlify_unlock_pass_' . md5('203.0.113.25'), array($alice->ID), 600);
+    eq(null, Limiter::gate_error($alice->user_login), 'old-format pass');
+    limiter_fail(3, $alice->user_login);
+    is_error_code('authlify_locked', Limiter::gate_error($alice->user_login), 'old-format pass is bounded too');
+    delete_transient('authlify_unlock_pass_' . md5('203.0.113.25'));
+});
+
 t('ignored failure codes are never counted (CAPTCHA, lockout, deny, 2FA API, empty fields)', function () {
     as_ip('203.0.113.23');
     foreach (array('authlify_captcha', 'authlify_locked', 'authlify_denied', 'authlify_2fa_api', 'empty_username', 'empty_password') as $code) {
@@ -391,7 +417,7 @@ t('a lockout is started once: a concurrent failure that also crossed the limit d
     eq(1, (int) $row->lockouts);
     // A request that passed the gate before the lock landed.
     $m = new ReflectionMethod(Limiter::class, 'lock');
-    $m->setAccessible(true);
+    if (PHP_VERSION_ID < 80100) { $m->setAccessible(true); } // No-op since PHP 8.1, deprecated in 8.5.
     $m->invoke(null, 'ip', '203.0.113.41', 'x');
     eq(1, (int) limiter_row('ip', '203.0.113.41')->lockouts, 'no second escalation step');
 });

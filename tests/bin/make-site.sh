@@ -31,7 +31,7 @@ mkdir -p "$DIR/site"
 if [ -d "$SRC/wp-includes" ]; then
     rsync -a --exclude='wp-content/plugins/*' --exclude='wp-content/uploads' --exclude='wp-content/mu-plugins' --exclude='wp-config.php' "$SRC/" "$DIR/site/"
 else
-    "$PHP" "$WPCLI" core download --path="$DIR/site" --quiet
+    "$PHP" -d memory_limit=1G "$WPCLI" core download --path="$DIR/site" --quiet
 fi
 mkdir -p "$DIR/site/wp-content/plugins" "$DIR/site/wp-content/mu-plugins"
 
@@ -49,19 +49,22 @@ PHPR
 
 "$PHP" -r "\$m = new mysqli('localhost', 'root', 'root', '', 0, '$SOCK'); \$m->query('DROP DATABASE IF EXISTS $DB'); \$m->query('CREATE DATABASE $DB');"
 
-printf '#!/bin/bash\nexec %s -d mysqli.default_socket=%s %s --path=%s/site "$@"\n' "$PHP" "$SOCK" "$WPCLI" "$DIR" > "$DIR/wp.sh"
+# Every path is quoted: Local's PHP binaries live under "Application Support" (CMPT-14).
+# Deprecations are hidden while WP-CLI itself loads (its phar triggers some on
+# PHP 8.5); WordPress turns full error reporting back on with WP_DEBUG.
+printf '#!/bin/bash\nexec %q -d mysqli.default_socket=%q -d error_reporting=%q %q --path=%q "$@"\n' "$PHP" "$SOCK" 'E_ALL & ~E_DEPRECATED' "$WPCLI" "$DIR/site" > "$DIR/wp.sh"
 chmod +x "$DIR/wp.sh"
 W="$DIR/wp.sh"
 
-$W config create --dbname="$DB" --dbuser=root --dbpass=root --dbhost="localhost:$SOCK" --skip-check --force >/dev/null
-$W config set WP_DEBUG true --raw >/dev/null
-$W config set WP_DEBUG_LOG "'$DIR/debug.log'" --raw >/dev/null
-$W config set WP_DEBUG_DISPLAY false --raw >/dev/null
-$W config set DISABLE_WP_CRON true --raw >/dev/null
+"$W" config create --dbname="$DB" --dbuser=root --dbpass=root --dbhost="localhost:$SOCK" --skip-check --force >/dev/null
+"$W" config set WP_DEBUG true --raw >/dev/null
+"$W" config set WP_DEBUG_LOG "'$DIR/debug.log'" --raw >/dev/null
+"$W" config set WP_DEBUG_DISPLAY false --raw >/dev/null
+"$W" config set DISABLE_WP_CRON true --raw >/dev/null
 # Application passwords need HTTPS or a local environment.
-$W config set WP_ENVIRONMENT_TYPE local >/dev/null
-$W core install --url="http://localhost:$PORT" --title="Authlify Test Suite" --admin_user=admin --admin_password='Qa-Pass-123!' --admin_email=admin@example.com --skip-email >/dev/null
-$W rewrite structure '/%postname%/' >/dev/null
+"$W" config set WP_ENVIRONMENT_TYPE local >/dev/null
+"$W" core install --url="http://localhost:$PORT" --title="Authlify Test Suite" --admin_user=admin --admin_password='Qa-Pass-123!' --admin_email=admin@example.com --skip-email >/dev/null
+"$W" rewrite structure '/%postname%/' >/dev/null
 
 if [ -n "${AUTHLIFY_TEST_COPY_PLUGINS:-}" ]; then
     # Real copies (uninstall tests delete things; never touch the working copy).
@@ -74,18 +77,18 @@ else
 fi
 
 if [ -n "${AUTHLIFY_TEST_NO_SERVER:-}" ]; then
-    $W plugin activate modify-login >/dev/null
-    $W eval '\Authlify\Install\Upgrader::maybe_upgrade();' >/dev/null
-    [ -d "$DIR/site/wp-content/plugins/authlify-pro" ] && $W plugin activate authlify-pro >/dev/null
+    "$W" plugin activate modify-login >/dev/null
+    "$W" eval '\Authlify\Install\Upgrader::maybe_upgrade();' >/dev/null
+    [ -d "$DIR/site/wp-content/plugins/authlify-pro" ] && "$W" plugin activate authlify-pro >/dev/null
     echo "Site ready (no server): $DIR, WP-CLI: $W"
     exit 0
 fi
 
 "$HERE/bin/serve.sh"
-$W plugin activate modify-login >/dev/null
+"$W" plugin activate modify-login >/dev/null
 # First request runs Authlify's first-run setup (tables, settings).
 curl -s -o /dev/null "http://localhost:$PORT/"
-[ -d "$PLUGINS/authlify-pro" ] && $W plugin activate authlify-pro >/dev/null
+[ -d "$PLUGINS/authlify-pro" ] && "$W" plugin activate authlify-pro >/dev/null
 curl -s -o /dev/null "http://localhost:$PORT/"
 
 echo "Test site ready: http://localhost:$PORT (admin / Qa-Pass-123!), WP-CLI: $W"

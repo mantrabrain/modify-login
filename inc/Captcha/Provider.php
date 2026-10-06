@@ -24,6 +24,11 @@ defined('ABSPATH') || exit;
 abstract class Provider
 {
     /**
+     * Longest token sent to the provider (bytes).
+     */
+    const MAX_TOKEN = 8192;
+
+    /**
      * Provider key, as stored in captcha_provider.
      *
      * @return string
@@ -120,6 +125,13 @@ abstract class Provider
             return self::result(false, 'missing-input-response');
         }
 
+        // Real tokens are a few KB at most. A huge one is only useful for
+        // provoking an error page from the provider (which would count as an
+        // outage): refuse it as a failed check.
+        if (strlen($token) > self::MAX_TOKEN) {
+            return self::result(false, 'token-too-long');
+        }
+
         $response = $this->siteverify((string) Settings::get('captcha_secret_key', ''), $token);
         if ($response['outage']) {
             return self::result(false, $response['reason'], true);
@@ -179,7 +191,7 @@ abstract class Provider
         }
 
         $response = $this->siteverify($secret, $token);
-        if ($response['outage']) {
+        if ($response['outage'] || !empty($response['invalid'])) {
             return 'unreachable';
         }
         if (!empty($response['data']['success'])) {
@@ -207,7 +219,7 @@ abstract class Provider
     public function check_secret($secret)
     {
         $response = $this->siteverify($secret, 'authlify-key-check-' . wp_generate_password(16, false));
-        if ($response['outage']) {
+        if ($response['outage'] || !empty($response['invalid'])) {
             return 'unreachable';
         }
 
@@ -258,8 +270,15 @@ abstract class Provider
         $code = (int) wp_remote_retrieve_response_code($response);
         $data = json_decode((string) wp_remote_retrieve_body($response), true);
 
-        if ($code >= 500 || !is_array($data)) {
+        // Only a provider that cannot be reached or answers 5xx is "down"
+        // (and then follows the fail-open or fail-closed setting). Any other
+        // answer that is not a verdict, such as a 4xx or an HTML page, is a
+        // failed check: it must never let a login through.
+        if ($code >= 500) {
             return array('outage' => true, 'reason' => 'http ' . $code, 'data' => array());
+        }
+        if (!is_array($data)) {
+            return array('outage' => false, 'invalid' => true, 'reason' => 'http ' . $code, 'data' => array('success' => false, 'error-codes' => array('bad-response-http-' . $code)));
         }
 
         return array('outage' => false, 'reason' => '', 'data' => $data);

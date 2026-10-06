@@ -471,7 +471,7 @@ final class Design
             '#<\s*/?\s*style#i' => __('an HTML style tag', 'modify-login'),
             '#@import[^;{}]*;?#i' => __('@import rules (load fonts and files from your own CSS file instead)', 'modify-login'),
             '#' . $decl . 'expression\s*\(' . $decl . ';?#i' => __('expression()', 'modify-login'),
-            '#' . $decl . '(-moz-binding|behavior)\s*:' . $decl . ';?#i' => __('behaviour bindings', 'modify-login'),
+            '#' . $decl . '(-moz-binding|behavior)\s*:' . $decl . ';?#i' => __('behavior bindings', 'modify-login'),
             '#' . $decl . '(javascript|vbscript)\s*:' . $decl . ';?#i' => __('javascript: URLs', 'modify-login'),
             '#<!--|-->#' => __('HTML comments', 'modify-login'),
         );

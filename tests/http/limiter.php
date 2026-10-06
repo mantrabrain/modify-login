@@ -124,7 +124,7 @@ t('denylist: refused with the right password; allowlist: never locked', function
     settings(array('ip_denylist' => '', 'ip_allowlist' => ''));
 });
 
-t('unlock link: lets only that account in from the locked address, once', function () {
+t('unlock link: lets only that account in from the locked address, for one login (SEC2-04)', function () {
     $a = $GLOBALS['alice'];
     $b = $GLOBALS['bob'];
     $ip = '203.0.113.146';
@@ -147,12 +147,27 @@ t('unlock link: lets only that account in from the locked address, once', functi
 
     $res = login_post(login_url(LSLUG), $b['login'], $b['pass'], array(), array('ip' => $ip));
     no(l_logged_in($res), 'another account stays locked out');
+    // The link gives the normal allowance (3 here), not unlimited guesses.
+    login_post(login_url(LSLUG), $a['login'], 'wrong-a', array(), array('ip' => $ip));
+    login_post(login_url(LSLUG), $a['login'], 'wrong-b', array(), array('ip' => $ip));
     $res = login_post(login_url(LSLUG), $a['login'], $a['pass'], array(), array('ip' => $ip));
     ok(l_logged_in($res), 'the unlocked account gets in');
+    $res = login_post(login_url(LSLUG), $a['login'], $a['pass'], array(), array('ip' => $ip));
+    no(l_logged_in($res), 'the pass ends with that login: the next one needs a new link');
 
     $res = get($link, array('ip' => '203.0.113.147'));
     contains('invalid or has expired', strip_tags($res->body), 'the link works once');
     ok((int) wp_eval('echo \Authlify\Security\Limiter::locked_until("' . $ip . '");') > time(), 'the lockout itself stays');
+
+    // A new link, then the allowance used up by wrong passwords: locked again,
+    // and the right password is refused (SEC2-04 PoC: 30 guesses then success).
+    wp_eval('\Authlify\Security\Limiter::grant_pass("' . $ip . '", ' . $a['id'] . ');');
+    for ($i = 0; $i < 3; $i++) {
+        login_post(login_url(LSLUG), $a['login'], 'guess' . $i, array(), array('ip' => $ip));
+    }
+    $res = login_post(login_url(LSLUG), $a['login'], $a['pass'], array(), array('ip' => $ip));
+    no(l_logged_in($res), 'after the allowance, even the right password is refused');
+    contains('Too many failed login attempts', $res->body);
     wp_eval('delete_transient("authlify_unlock_pass_" . md5("' . $ip . '")); delete_transient("authlify_unlock_rate_" . md5("' . $ip . '"));');
 });
 

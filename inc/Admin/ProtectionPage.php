@@ -26,6 +26,7 @@ final class ProtectionPage
     public static function boot()
     {
         add_action('admin_post_authlify_unlock', array(__CLASS__, 'unlock'));
+        add_action('admin_post_authlify_block_ip', array(__CLASS__, 'block_ip'));
         add_filter('authlify_validate_settings', array(__CLASS__, 'validate'), 10, 3);
     }
 
@@ -110,18 +111,24 @@ final class ProtectionPage
             'cloudflare' => array(__('Through Cloudflare', 'modify-login'), __('Uses the visitor address Cloudflare passes on.', 'modify-login'), 'icon' => 'cloud', 'badge' => 'cloudflare' === $detected['source'] ? $recommended : ''),
             'proxy' => array(__('Through my own proxy', 'modify-login'), __('A load balancer or reverse proxy. List it under Trusted proxies.', 'modify-login'), 'icon' => 'layers', 'badge' => 'proxy' === $detected['source'] ? $recommended : ''),
         ), __('Choose how requests reach this site.', 'modify-login') . ' ' . UI::learn_more('ip-detection', __('How to choose', 'modify-login')), 'cards');
-        UI::textarea_row('trusted_proxies', __('Trusted proxies', 'modify-login'), __('One IP or CIDR range per line. Only used with "my own proxy".', 'modify-login'), "10.0.0.0/8\n192.168.1.10");
+        UI::textarea_row('trusted_proxies', __('Trusted proxies', 'modify-login'), __('One IP or CIDR range per line. Only used with "my own proxy".', 'modify-login'), /* translators: example value shown in an empty field */ sprintf(__('e.g. %s', 'modify-login'), '10.0.0.0/8'));
         UI::panel_end();
 
         UI::panel_start(__('Allow and block lists', 'modify-login'), __('Check the ranges carefully: blocking your own address locks you out.', 'modify-login') . ' ' . UI::learn_more('allow-block-lists'));
-        UI::textarea_row('ip_allowlist', __('Never lock out', 'modify-login'), __('Your office or home IP. One IP or CIDR range per line.', 'modify-login'), '203.0.113.7');
+        UI::textarea_row('ip_allowlist', __('Never lock out', 'modify-login'), __('Your office or home IP. One IP or CIDR range per line.', 'modify-login'), /* translators: example value shown in an empty field */ sprintf(__('e.g. %s', 'modify-login'), '203.0.113.7'));
         UI::textarea_row('ip_denylist', __('Always block', 'modify-login'), __('These addresses can never log in. One IP or CIDR range per line.', 'modify-login'));
+        UI::input_row('auto_block_lockouts', __('Block repeat offenders', 'modify-login'), __('Adds an address to "Always block" after this many lockouts in a row (a day without one starts the count again). Addresses an administrator has logged in from are never added. 0 turns it off.', 'modify-login'), array('type' => 'number', 'min' => 0, 'max' => 100, 'suffix' => __('lockouts', 'modify-login')));
         UI::panel_end();
 
         UI::form_end();
 
         self::lockouts_panel();
     }
+
+    /**
+     * Lockouts listed before "Show all".
+     */
+    const LOCKOUTS_SHOWN = 10;
 
     /**
      * Current lockouts.
@@ -134,9 +141,36 @@ final class ProtectionPage
         if (!$rows) {
             echo '<p class="authlify-empty">' . esc_html__('Nobody is locked out.', 'modify-login') . ' ' . UI::learn_more('trouble-locked-out', __('If a real person is locked out', 'modify-login')) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         } else {
+            // Long lists stay short: the first rows, the rest behind "Show all" (UX2-05).
+            $first = array_slice($rows, 0, self::LOCKOUTS_SHOWN);
+            $more = array_slice($rows, self::LOCKOUTS_SHOWN);
+            self::lockouts_table($first);
+            if ($more) {
+                echo '<details class="authlify-details authlify-lockouts-more"><summary>';
+                /* translators: %d: number of further lockouts */
+                echo esc_html(sprintf(_n('Show %d more', 'Show %d more', count($more), 'modify-login'), count($more)));
+                echo '</summary>';
+                self::lockouts_table($more);
+                echo '</details>';
+            }
             ?>
-            <table class="widefat striped authlify-table">
-                <thead><tr><th><?php esc_html_e('Address', 'modify-login'); ?></th><th><?php esc_html_e('Until', 'modify-login'); ?></th><th><?php esc_html_e('Lockouts in a row', 'modify-login'); ?></th><th></th></tr></thead>
+            <p><a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=authlify_unlock&subject=all'), 'authlify_unlock')); ?>"><?php esc_html_e('Unlock everyone', 'modify-login'); ?></a></p>
+            <?php
+        }
+        UI::panel_end();
+    }
+
+    /**
+     * One table of lockouts (scrolls sideways inside its card on phones).
+     *
+     * @param object[] $rows Lockout rows.
+     */
+    private static function lockouts_table(array $rows)
+    {
+        ?>
+        <div class="authlify-table-scroll">
+            <table class="widefat striped authlify-table authlify-lockouts">
+                <thead><tr><th><?php esc_html_e('Address', 'modify-login'); ?></th><th><?php esc_html_e('Until', 'modify-login'); ?></th><th><?php esc_html_e('Lockouts in a row', 'modify-login'); ?></th><th><span class="screen-reader-text"><?php esc_html_e('Actions', 'modify-login'); ?></span></th></tr></thead>
                 <tbody>
                 <?php foreach ($rows as $row) : ?>
                     <tr>
@@ -144,19 +178,20 @@ final class ProtectionPage
                             <?php $paused = 0 === strpos($row->subject, 'id:') ? get_userdata((int) substr($row->subject, 3)) : false; ?>
                             <?php echo esc_html($paused ? $paused->user_login : $row->subject); ?> <?php echo UI::pill(__('account paused for new addresses', 'modify-login'), 'warning'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
                         <?php else : ?>
-                            <code><?php echo esc_html($row->subject); ?></code><?php echo 'net' === $row->scope ? ' ' . UI::pill(__('network', 'modify-login'), 'info') : ''; // phpcs:ignore ?>
+                            <code dir="ltr"><?php echo esc_html($row->subject); ?></code><?php echo 'net' === $row->scope ? ' ' . UI::pill(__('network', 'modify-login'), 'info') : ''; // phpcs:ignore ?>
                         <?php endif; ?></td>
                         <td><?php echo esc_html(wp_date(get_option('date_format') . ' ' . get_option('time_format'), (int) $row->locked_until)); ?></td>
                         <td><?php echo (int) $row->lockouts; ?></td>
-                        <td><a class="button button-small" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=authlify_unlock&subject=' . rawurlencode($row->subject)), 'authlify_unlock')); ?>"><?php esc_html_e('Unlock', 'modify-login'); ?></a></td>
+                        <td class="authlify-lockouts__actions"><a class="button button-small" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=authlify_unlock&subject=' . rawurlencode($row->subject)), 'authlify_unlock')); ?>"><?php esc_html_e('Unlock', 'modify-login'); ?></a>
+                            <?php if ('user' !== $row->scope && self::can_block($row->subject)) : ?>
+                                <a class="button button-small" href="<?php echo esc_url(self::block_url($row->subject, 'protection')); ?>" onclick="return confirm('<?php echo esc_js(sprintf(/* translators: %s: IP address or range */ __('Block %s permanently? It is added to the "Always block" list.', 'modify-login'), $row->subject)); ?>');"><?php echo 'net' === $row->scope ? esc_html__('Block network', 'modify-login') : esc_html__('Block', 'modify-login'); ?></a>
+                            <?php endif; ?></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
-            <p><a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=authlify_unlock&subject=all'), 'authlify_unlock')); ?>"><?php esc_html_e('Unlock everyone', 'modify-login'); ?></a></p>
-            <?php
-        }
-        UI::panel_end();
+        </div>
+        <?php
     }
 
     /**
@@ -186,7 +221,7 @@ final class ProtectionPage
 
         UI::panel_start(__('Private site', 'modify-login'), __('Only logged-in users can see the site. Everyone else is sent to the login page.', 'modify-login'));
         UI::toggle_row('force_login', __('Require login to view the site', 'modify-login'), __('Also blocks anonymous REST API requests.', 'modify-login') . ' ' . UI::learn_more('force-login'), __('Force login', 'modify-login'));
-        UI::textarea_row('force_login_exclude', __('Public pages', 'modify-login'), __('Paths that stay public, one per line. A path includes its sub-pages.', 'modify-login'), "/\n/contact", array(
+        UI::textarea_row('force_login_exclude', __('Public pages', 'modify-login'), __('Paths that stay public, one per line. A path includes its sub-pages.', 'modify-login'), /* translators: example value shown in an empty field */ sprintf(__('e.g. %s', 'modify-login'), '/contact'), array(
             'show_if' => 'authlify[force_login]=1',
             'note' => __('For example <code>/contact</code> or <code>/shop/</code>. Use <code>/</code> for the home page only.', 'modify-login'),
         ));
@@ -208,7 +243,7 @@ final class ProtectionPage
             return $values;
         }
 
-        $bounds = array('limit_attempts' => array(1, 100), 'limit_window' => array(1, 1440), 'lockout_minutes' => array(1, 10080), 'user_attempts' => array(1, 1000));
+        $bounds = array('limit_attempts' => array(1, 100), 'limit_window' => array(1, 1440), 'lockout_minutes' => array(1, 10080), 'user_attempts' => array(1, 1000), 'auto_block_lockouts' => array(0, 100));
         foreach ($bounds as $key => $range) {
             if (isset($values[$key])) {
                 $values[$key] = min($range[1], max($range[0], (int) $values[$key]));
@@ -243,6 +278,71 @@ final class ProtectionPage
         }
 
         return $values;
+    }
+
+    /**
+     * Link that adds an address or range to the block list.
+     *
+     * @param string $subject Address or CIDR range.
+     * @param string $from    Screen to return to: protection or activity.
+     * @return string
+     * @since 3.1.0
+     */
+    public static function block_url($subject, $from = 'protection')
+    {
+        return wp_nonce_url(add_query_arg(array('action' => 'authlify_block_ip', 'subject' => rawurlencode((string) $subject), 'from' => $from), admin_url('admin-post.php')), 'authlify_block_ip');
+    }
+
+    /**
+     * Whether "Block" makes sense for an address: a valid address or range,
+     * not on either list, and not the address you are using now.
+     *
+     * @param string $subject Address or CIDR range.
+     * @return bool
+     * @since 3.1.0
+     */
+    public static function can_block($subject)
+    {
+        $subject = trim((string) $subject);
+        $ip = false !== strpos($subject, '/') ? strstr($subject, '/', true) : $subject;
+        // Private and loopback addresses are your own network, a proxy or the server itself.
+        if (!Ip::valid($ip) || Ip::is_private($ip) || Limiter::is_allowlisted($ip) || Limiter::is_denylisted($ip)) {
+            return false;
+        }
+
+        return !Ip::in_range(Ip::client(), $subject);
+    }
+
+    /**
+     * "Block" action (activity log rows and the lockout list).
+     *
+     * @since 3.1.0
+     */
+    public static function block_ip()
+    {
+        if (!current_user_can(Plugin::cap()) || !check_admin_referer('authlify_block_ip')) {
+            wp_die(esc_html__('You are not allowed to do that.', 'modify-login'), 403);
+        }
+
+        $subject = isset($_GET['subject']) ? trim(sanitize_text_field(rawurldecode(wp_unslash($_GET['subject'])))) : '';
+        $from = isset($_GET['from']) && 'activity' === $_GET['from'] ? 'activity' : 'protection';
+        $back = 'activity' === $from ? Menu::url('activity') : Menu::url('protection');
+
+        // Never the address the admin is using right now.
+        if (Ip::in_range(Ip::client(), $subject)) {
+            $result = new \WP_Error('self_block', __('That is your own IP address. Blocking it would lock you out, so it was not added.', 'modify-login'));
+        } else {
+            $result = Limiter::deny($subject, array('by' => wp_get_current_user()->user_login));
+        }
+
+        if (is_wp_error($result)) {
+            set_transient('authlify_error_' . get_current_user_id(), $result->get_error_message(), MINUTE_IN_SECONDS);
+            wp_safe_redirect($back);
+            exit;
+        }
+
+        wp_safe_redirect(add_query_arg('authlify_notice', 'ip_blocked', $back));
+        exit;
     }
 
     /**

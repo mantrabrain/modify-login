@@ -361,6 +361,8 @@ final class AdminPage
                                         $user->user_login
                                     ))); ?>);"><?php esc_html_e('Reset', 'modify-login'); ?></button>
                                 </form>
+                            <?php elseif ($methods) : ?>
+                                <span class="authlify-sublabel"><?php esc_html_e('You cannot reset this user.', 'modify-login'); ?></span>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -461,6 +463,22 @@ final class AdminPage
     {
         if ('authlify_2fa' !== $column) {
             return $output;
+        }
+
+        // One passkey query for the whole page instead of one per row (CMPT-09).
+        static $primed = false;
+        if (!$primed) {
+            $primed = true;
+            $ids = array((int) $user_id);
+            $table = isset($GLOBALS['wp_list_table']) ? $GLOBALS['wp_list_table'] : null;
+            if ($table instanceof \WP_List_Table && is_array($table->items)) {
+                foreach ($table->items as $item) {
+                    if ($item instanceof \WP_User) {
+                        $ids[] = (int) $item->ID;
+                    }
+                }
+            }
+            Passkeys::prime($ids);
         }
 
         if (!TwoFactor::is_active_for($user_id)) {

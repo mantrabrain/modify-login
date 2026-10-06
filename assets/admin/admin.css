@@ -220,18 +220,18 @@
 
 /* A soft edge where the navigation continues off-screen (set by admin.js). */
 .authlify-top__nav.is-clipped {
-    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
-    mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 64px), transparent);
 }
 
 .authlify-top__nav.is-clipped.is-scrolled {
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
-    mask-image: linear-gradient(90deg, transparent, #000 40px, #000 calc(100% - 40px), transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 64px, #000 calc(100% - 64px), transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 64px, #000 calc(100% - 64px), transparent);
 }
 
 .authlify-top__nav.is-clipped.is-end {
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 40px);
-    mask-image: linear-gradient(90deg, transparent, #000 40px);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 64px);
+    mask-image: linear-gradient(90deg, transparent, #000 64px);
 }
 
 .authlify-top__link {
@@ -309,6 +309,19 @@
 .authlify-top .authlify-top__action.button-primary:focus {
     border-color: #6366f1;
     background: #6366f1;
+    color: #fff;
+}
+
+.authlify-top .authlify-top__action.button-primary.is-outline {
+    border-color: rgba(226, 232, 240, 0.4);
+    background: transparent;
+    color: #e2e8f0;
+}
+
+.authlify-top .authlify-top__action.button-primary.is-outline:hover,
+.authlify-top .authlify-top__action.button-primary.is-outline:focus {
+    border-color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.08);
     color: #fff;
 }
 
@@ -903,8 +916,11 @@
 
 .authlify-page input::placeholder,
 .authlify-page textarea::placeholder {
-    /* Placeholders carry example values: normal text contrast. */
-    color: var(--al-muted);
+    /* Examples, not values: lighter than text (still 4.5:1 on white) and
+       introduced with "e.g." so they never read as saved settings (UX2-08). */
+    color: #64748b;
+    font-style: italic;
+    opacity: 1;
 }
 
 .authlify-page .regular-text {
@@ -1267,7 +1283,8 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    margin: 4px 0 24px;
+    /* Same gap as between cards (UX2-18). */
+    margin: 4px 0 20px;
     padding: 12px 16px;
     border: 1px solid var(--al-line);
     border-radius: var(--al-radius);
@@ -1676,6 +1693,69 @@
 
 .authlify-table-wrap > .authlify-table {
     min-width: 640px;
+}
+
+/* Tables inside a card: scroll inside the card, never the page (UX2-05). */
+.authlify-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.authlify-lockouts code {
+    overflow-wrap: anywhere;
+}
+
+/* Phones: each lockout is one compact row, address and time on the left,
+   Unlock on the right (UX2-05). */
+@media screen and (max-width: 600px) {
+    .authlify-lockouts thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .authlify-page .authlify-lockouts tr {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 2px 12px;
+        align-items: center;
+        padding: 10px 12px;
+    }
+
+    .authlify-page .authlify-lockouts td {
+        display: block;
+        padding: 0;
+        border: 0;
+    }
+
+    .authlify-page .authlify-lockouts td:nth-child(2) {
+        grid-column: 1;
+        color: var(--al-muted);
+        font-size: 12px;
+    }
+
+    .authlify-page .authlify-lockouts td:nth-child(3) {
+        display: none;
+    }
+
+    .authlify-page .authlify-lockouts td:nth-child(4) {
+        grid-column: 2;
+        grid-row: 1 / span 2;
+    }
+}
+
+.authlify-lockouts td:last-child {
+    white-space: nowrap;
+}
+
+.authlify-lockouts-more {
+    margin-bottom: 12px;
+}
+
+.authlify-lockouts-more > .authlify-table-scroll {
+    padding: 0 12px 12px;
 }
 
 .authlify-page .authlify-table .num {
@@ -2097,7 +2177,7 @@
 
 .authlify-feed li {
     display: grid;
-    grid-template-columns: 170px minmax(0, 1fr) 130px 110px;
+    grid-template-columns: 170px minmax(0, 1fr) minmax(0, 170px) 110px;
     align-items: center;
     gap: 16px;
     margin: 0;
@@ -2119,9 +2199,13 @@
 }
 
 .authlify-page .authlify-feed__ip {
+    min-width: 0;
+    overflow: hidden;
     padding: 0;
     background: none;
     color: var(--al-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .authlify-feed__when {
@@ -2458,6 +2542,21 @@
 
 .authlify-page .authlify-log__ip code {
     color: var(--al-text-2);
+}
+
+/* Long usernames and IPv6 addresses never push the Details column out (UX2-09). */
+.authlify-page .authlify-log__clip,
+.authlify-page .authlify-log__ip code {
+    display: inline-block;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+.authlify-page .authlify-log__ip code {
+    max-width: 180px;
 }
 
 .authlify-page .authlify-log__ip:hover code {
@@ -3068,4 +3167,181 @@
     .authlify-choice:has(input:checked) {
         outline: 2px solid Highlight;
     }
+}
+
+/* --------------------------------------------------------------------------
+   Right-to-left languages (UX2-03). Core mirrors wp-admin with its own -rtl
+   stylesheets; these mirror the few Authlify rules that name a side.
+   -------------------------------------------------------------------------- */
+
+.rtl.authlify-admin #wpcontent {
+    padding-right: 0;
+}
+
+.rtl.authlify-admin #screen-meta-links {
+    margin-right: 0;
+    margin-left: var(--al-gutter);
+}
+
+.rtl .authlify-page .notice,
+.rtl .authlify-result {
+    border-left-width: 1px;
+    border-left-color: var(--al-line);
+    border-right-width: 4px;
+}
+
+.rtl .authlify-page .notice-success,
+.rtl .authlify-result.is-ok { border-right-color: var(--al-green); }
+.rtl .authlify-page .notice-error,
+.rtl .authlify-result.is-error { border-right-color: var(--al-red); }
+.rtl .authlify-page .notice-warning { border-right-color: #d97706; }
+.rtl .authlify-page .notice-info,
+.rtl .authlify-result { border-right-color: var(--al-accent); }
+
+.rtl .authlify-side__link .authlify-badge,
+.rtl .authlify-expand > summary::after {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+.rtl .authlify-page .authlify-setsearch input[type="search"] {
+    padding-left: 8px;
+    padding-right: 40px;
+}
+
+.rtl .authlify-setsearch__icon {
+    left: auto;
+    right: 13px;
+}
+
+.rtl .authlify-page select {
+    padding-left: 32px;
+    padding-right: 8px;
+    background-position: left 10px top 55%;
+}
+
+.rtl .authlify-toggle__track::after {
+    left: auto;
+    right: 2px;
+}
+
+.rtl .authlify-toggle input:checked + .authlify-toggle__track::after {
+    transform: translateX(-16px);
+}
+
+.rtl .authlify-page .authlify-choice input[type="radio"] {
+    right: auto;
+    left: 16px;
+}
+
+.rtl .authlify-choice__title {
+    padding-right: 0;
+    padding-left: 24px;
+}
+
+.rtl .authlify-savebar__hint::before {
+    margin-right: 0;
+    margin-left: 6px;
+}
+
+.rtl .authlify-page input[type="file"]::file-selector-button {
+    margin-right: 0;
+    margin-left: 10px;
+}
+
+.rtl .authlify-steps-list li {
+    padding-left: 0;
+    padding-right: 4px;
+}
+
+.rtl .authlify-page .authlify-table .num,
+.rtl .authlify-feed__when {
+    text-align: left;
+}
+
+.rtl .authlify-details > summary::before {
+    margin: 0 2px 2px 10px;
+    transform: rotate(135deg);
+}
+
+.rtl .authlify-details[open] > summary::before {
+    transform: rotate(45deg);
+}
+
+.rtl .authlify-page .authlify-input-group > code {
+    border-right: 1px solid var(--al-line-strong);
+    border-left: 0;
+    border-radius: 0 var(--al-radius-sm) var(--al-radius-sm) 0;
+}
+
+.rtl .authlify-page .authlify-input-group > input {
+    border-radius: var(--al-radius-sm) 0 0 var(--al-radius-sm);
+}
+
+.rtl .authlify-checklist label > .authlify-sublabel {
+    margin-left: 0;
+    margin-right: 2px;
+}
+
+@media screen and (max-width: 782px) {
+    .rtl .authlify-expand > summary {
+        padding-right: 16px;
+        padding-left: 36px;
+    }
+
+    .rtl .authlify-expand > summary::after {
+        right: auto;
+        left: 16px;
+    }
+}
+
+/* The header navigation fades on the side where it continues. */
+.rtl .authlify-top__nav.is-clipped {
+    -webkit-mask-image: linear-gradient(270deg, #000 calc(100% - 64px), transparent);
+    mask-image: linear-gradient(270deg, #000 calc(100% - 64px), transparent);
+}
+
+.rtl .authlify-top__nav.is-clipped.is-scrolled {
+    -webkit-mask-image: linear-gradient(270deg, transparent, #000 64px, #000 calc(100% - 64px), transparent);
+    mask-image: linear-gradient(270deg, transparent, #000 64px, #000 calc(100% - 64px), transparent);
+}
+
+.rtl .authlify-top__nav.is-clipped.is-end {
+    -webkit-mask-image: linear-gradient(270deg, transparent, #000 64px);
+    mask-image: linear-gradient(270deg, transparent, #000 64px);
+}
+
+/* "Block" next to an address in the activity log (CMP-08): quiet until
+   pointed at, always visible so it works on touch screens. */
+.authlify-page .authlify-log__ipcell {
+    white-space: nowrap;
+}
+
+.authlify-page .authlify-log__block {
+    margin-left: 8px;
+    color: var(--al-muted);
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.authlify-page .authlify-log__block:hover,
+.authlify-page .authlify-log__block:focus {
+    color: var(--al-red);
+    text-decoration: underline;
+}
+
+.authlify-page .authlify-log__ipcell .authlify-pill {
+    margin-left: 6px;
+}
+
+.authlify-lockouts__actions .button + .button {
+    margin-left: 4px;
+}
+
+/* A row whose action is a small form with more than one button (Tools). */
+.authlify-row__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+    margin: 0;
 }

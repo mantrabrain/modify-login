@@ -27,6 +27,23 @@ final class ToolsPage
         add_action('admin_post_authlify_export_settings', array(__CLASS__, 'export'));
         add_action('admin_post_authlify_import_settings', array(__CLASS__, 'import'));
         add_action('admin_post_authlify_run_importer', array(__CLASS__, 'run_importer'));
+        add_action('admin_post_authlify_2fa_import', array(\Authlify\TwoFactor\Import::class, 'handle'));
+    }
+
+    /**
+     * Whether a plugin is active (network-wide too).
+     *
+     * @param string $file Plugin file, e.g. wps-hide-login/wps-hide-login.php.
+     * @return bool
+     * @since 3.1.0
+     */
+    public static function plugin_active($file)
+    {
+        if (!function_exists('is_plugin_active')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        return is_plugin_active($file) || (is_multisite() && is_plugin_active_for_network($file));
     }
 
     /**
@@ -46,10 +63,15 @@ final class ToolsPage
             'wps-hide-login' => array(
                 __('WPS Hide Login: login URL and redirect page', 'modify-login'),
                 function () {
-                    return '' !== (string) get_option('whl_page', get_site_option('whl_page', ''));
+                    // Active but never saved: it uses its default slug, "login" (CMPT-12).
+                    return '' !== (string) get_option('whl_page', get_site_option('whl_page', '')) || ToolsPage::plugin_active('wps-hide-login/wps-hide-login.php');
                 },
                 function () {
-                    $slug = Settings::clean_slug(get_option('whl_page', get_site_option('whl_page', '')));
+                    $slug = Settings::clean_slug(get_option('whl_page', get_site_option('whl_page', 'login')));
+                    if ('login' === $slug) {
+                        // Its default, /login, is a WordPress shortcut Authlify keeps closed.
+                        return __('WPS Hide Login still uses its default address, /login, which WordPress itself answers, so Authlify cannot take it over. Choose your own address under Login URL, then deactivate WPS Hide Login.', 'modify-login');
+                    }
                     if (is_wp_error($valid = LoginUrlPage::validate_slug($slug))) {
                         return sprintf(__('Not imported: %s', 'modify-login'), $valid->get_error_message());
                     }
@@ -67,7 +89,11 @@ final class ToolsPage
             'limit-login-attempts-reloaded' => array(
                 __('Limit Login Attempts Reloaded: attempts, lockout length, allow and block lists', 'modify-login'),
                 function () {
-                    return false !== get_option('limit_login_allowed_retries', false);
+                    if (false !== get_option('limit_login_allowed_retries', false)) {
+                        return true;
+                    }
+                    // Active but never saved: it enforces its defaults, which the importer reads (FQA-08, CMPT-12).
+                    return ToolsPage::plugin_active('limit-login-attempts-reloaded/limit-login-attempts-reloaded.php');
                 },
                 function () {
                     $lines = function ($opt) {
@@ -169,6 +195,7 @@ final class ToolsPage
                 }
                 ?>
             <?php UI::panel_end(); ?>
+            <?php self::twofactor_panel(); ?>
 
             <?php elseif ('import' === $tab) : ?>
             <?php UI::panel_start(__('Export and import', 'modify-login'), __('Move your setup to another site. CAPTCHA secret keys are never exported.', 'modify-login')); ?>
@@ -209,6 +236,68 @@ final class ToolsPage
     }
 
     /**
+     * "Two-factor secrets" card: import authenticator apps from Two Factor
+     * and WP 2FA (shown only when one of them left data on this site).
+     *
+     * @since 3.1.0
+     */
+    private static function twofactor_panel()
+    {
+        if (!class_exists(\Authlify\TwoFactor\Import::class)) {
+            return;
+        }
+
+        $rows = array();
+        foreach (\Authlify\TwoFactor\Import::sources() as $key => $label) {
+            $count = \Authlify\TwoFactor\Import::count($key);
+            if ($count > 0) {
+                $rows[$key] = array($label, $count);
+            }
+        }
+        $wordfence = \Authlify\TwoFactor\Import::wordfence_found();
+        if (!$rows && !$wordfence) {
+            return;
+        }
+
+        UI::panel_start(__('Two-factor secrets', 'modify-login'), __('Copy authenticator apps from another two-factor plugin, so people keep the app entry they have and nobody sets it up again.', 'modify-login'));
+        echo '<ul class="authlify-checks">';
+        foreach ($rows as $key => $row) {
+            ?>
+            <li class="authlify-row authlify-row--wrap">
+                <div class="authlify-row__main">
+                    <strong><?php echo esc_html($row[0]); ?></strong>
+                    <span class="authlify-sublabel"><?php
+                        /* translators: %d: number of users */
+                        echo esc_html(sprintf(_n('%d user has an authenticator app saved. Preview first: nothing changes until you import.', '%d users have an authenticator app saved. Preview first: nothing changes until you import.', $row[1], 'modify-login'), $row[1]));
+                    ?></span>
+                </div>
+                <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="authlify-row__actions">
+                    <input type="hidden" name="action" value="authlify_2fa_import">
+                    <input type="hidden" name="source" value="<?php echo esc_attr($key); ?>">
+                    <?php wp_nonce_field('authlify_2fa_import'); ?>
+                    <button class="button" name="preview" value="1"><?php esc_html_e('Preview', 'modify-login'); ?></button>
+                    <button class="button" name="run" value="1" onclick="return confirm('<?php echo esc_js(sprintf(/* translators: %s: plugin name */ __('Import authenticator apps from %s? Users who already have one in Authlify are skipped.', 'modify-login'), $row[0])); ?>');"><?php esc_html_e('Import', 'modify-login'); ?></button>
+                </form>
+            </li>
+            <?php
+        }
+        if ($wordfence) {
+            ?>
+            <li class="authlify-row">
+                <div class="authlify-row__main">
+                    <strong><?php esc_html_e('Wordfence Login Security', 'modify-login'); ?></strong>
+                    <span class="authlify-sublabel"><?php esc_html_e('Its secrets are stored in a format Wordfence does not document, so they cannot be copied. Users set up their app again in their profile after you switch.', 'modify-login'); ?></span>
+                </div>
+                <?php echo UI::pill(__('Not supported', 'modify-login'), 'info'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+            </li>
+            <?php
+        }
+        echo '</ul>';
+        echo '<p class="description">' . esc_html__('Backup codes and email codes are not copied. Every import is written to the activity log.', 'modify-login') . '</p>';
+        UI::panel_end();
+    }
+
+    /**
      * Download settings as JSON.
      */
     public static function export()
@@ -237,7 +326,14 @@ final class ToolsPage
 
         nocache_headers();
         header('Content-Type: application/json; charset=utf-8');
-        header('Content-Disposition: attachment; filename=authlify-settings-' . gmdate('Y-m-d') . '.json');
+        /**
+         * Filters the settings export file name (Authlify Pro's white label uses its own name).
+         *
+         * @param string $filename File name.
+         * @since 3.0.2
+         */
+        $filename = sanitize_file_name((string) apply_filters('authlify_export_filename', 'authlify-settings-' . gmdate('Y-m-d') . '.json'));
+        header('Content-Disposition: attachment; filename=' . ('' !== $filename ? $filename : 'authlify-settings.json'));
         echo wp_json_encode($data, JSON_PRETTY_PRINT); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         exit;
     }
@@ -280,14 +376,16 @@ final class ToolsPage
     private static function validate_import(array $values)
     {
         $groups = array(
-            'protection|limits' => array('limit_enabled', 'limit_attempts', 'limit_window', 'lockout_minutes', 'lockout_escalate', 'limit_network', 'user_attempts', 'limit_user_lock', 'ip_source', 'trusted_proxies', 'ip_allowlist', 'ip_denylist'),
+            'protection|limits' => array('limit_enabled', 'limit_attempts', 'limit_window', 'lockout_minutes', 'lockout_escalate', 'limit_network', 'user_attempts', 'limit_user_lock', 'ip_source', 'trusted_proxies', 'ip_allowlist', 'ip_denylist', 'auto_block_lockouts'),
             'protection|captcha' => array('captcha_provider', 'captcha_site_key', 'captcha_secret_key', 'captcha_v3_threshold', 'captcha_forms', 'captcha_mode', 'captcha_after', 'captcha_test_mode', 'captcha_fail', 'honeypot'),
             'protection|hardening' => array('xmlrpc', 'block_user_enumeration', 'app_passwords', 'generic_errors', 'force_login', 'force_login_exclude'),
             'protection|passwords' => array('hibp_enabled', 'hibp_roles'),
         );
 
         $checked = array();
+        $grouped = array();
         foreach ($groups as $where => $keys) {
+            $grouped = array_merge($grouped, $keys);
             list($page, $tab) = explode('|', $where);
             $part = array_intersect_key($values, array_flip($keys));
             if (!$part) {
@@ -303,7 +401,8 @@ final class ToolsPage
 
         // Everything else goes through its own screen's validator too (keys are
         // grouped by screen only for the core screens above).
-        $rest = array_diff_key($values, $checked);
+        // A key a screen validator dropped (an invalid value) stays dropped (FQA-11).
+        $rest = array_diff_key($values, array_flip($grouped));
         foreach (array('two-factor', 'activity', 'redirects', 'tools') as $page) {
             /** This filter is documented in inc/Admin/Menu.php */
             $rest = apply_filters('authlify_validate_settings', $rest, $page, '');

@@ -60,9 +60,11 @@ final class Plugin
             Captcha\Captcha::class,
             TwoFactor\TwoFactor::class,
             Security\Passwords::class,
+            Security\SigninNotice::class,
             Designer\Designer::class,
             Diagnostics\LeakCheck::class,
             Diagnostics\SiteHealth::class,
+            Diagnostics\Conflicts::class,
         );
 
         if (is_admin()) {

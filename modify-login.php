@@ -3,7 +3,7 @@
  * Plugin Name:       Authlify – Custom Login URL, Login Security, 2FA & Login Page Designer
  * Plugin URI:        https://matrixaddons.com/plugins/authlify/
  * Description:       Hide your login page properly, stop brute-force attacks, add two-factor login and passkeys, and brand every login screen. Built so you never lock yourself out.
- * Version:           3.0.1
+ * Version:           3.1.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Tested up to:      7.1
@@ -24,7 +24,7 @@ defined('ABSPATH') || exit;
 
 // The version, in one place: MODIFY_LOGIN_VERSION (the 2.x name, which the
 // CI version check reads) holds it, and AUTHLIFY_VERSION follows.
-define('MODIFY_LOGIN_VERSION', '3.0.1');
+define('MODIFY_LOGIN_VERSION', '3.1.0');
 define('AUTHLIFY_VERSION', MODIFY_LOGIN_VERSION);
 define('AUTHLIFY_FILE', __FILE__);
 define('AUTHLIFY_DIR', plugin_dir_path(__FILE__));

@@ -70,6 +70,11 @@ final class Captcha
             Admin::init();
         }
 
+        // Forms of other plugins (each loads only while that plugin is active).
+        // Loaded even with the CAPTCHA switched off: they also carry the
+        // lockout messages, and check() and render() skip a disabled CAPTCHA.
+        Integrations::init();
+
         if (self::disabled()) {
             return;
         }
@@ -80,7 +85,12 @@ final class Captcha
         add_filter('login_form_middle', array(__CLASS__, 'login_form_middle'), 10, 2);
         add_action('login_enqueue_scripts', array(__CLASS__, 'login_styles'));
 
+        // Checked before the password (core checks it at priority 20), so a
+        // bot that skips the CAPTCHA never costs a password hash (CMPT-10),
+        // and again at the end of the chain, which no earlier filter can undo.
+        add_filter('authenticate', array(__CLASS__, 'check_login_early'), 15, 3);
         add_filter('authenticate', array(__CLASS__, 'check_login'), 99990, 3);
+        add_action('wp_login_failed', array(__CLASS__, 'restore_password_check'), 1);
         add_filter('registration_errors', array(__CLASS__, 'check_register'), 20, 3);
         add_action('lostpassword_post', array(__CLASS__, 'check_lostpassword'), 10, 2);
         add_filter('preprocess_comment', array(__CLASS__, 'check_comment'), 1);
@@ -103,7 +113,7 @@ final class Captcha
             'woo_login' => __('WooCommerce login', 'modify-login'),
             'woo_register' => __('WooCommerce registration', 'modify-login'),
             'woo_lostpassword' => __('WooCommerce lost password', 'modify-login'),
-            'woo_checkout' => __('WooCommerce checkout (guest orders, classic checkout)', 'modify-login'),
+            'woo_checkout' => __('WooCommerce checkout (guest orders, classic and block checkout)', 'modify-login'),
         );
     }
 
@@ -255,9 +265,13 @@ final class Captcha
      * Markup for a form.
      *
      * @param string $form Form key.
+     * @param array  $args Optional. before: CSS selector inside the same form
+     *                     the box is moved in front of (for forms whose only
+     *                     hook sits after the submit button); attrs: extra
+     *                     data-* attributes (name => value).
      * @return string HTML.
      */
-    public static function render($form)
+    public static function render($form, array $args = array())
     {
         if (!self::form_enabled($form)) {
             return '';
@@ -283,11 +297,21 @@ final class Captcha
             return '';
         }
 
+        $attrs = isset($args['attrs']) && is_array($args['attrs']) ? $args['attrs'] : array();
+        if (!empty($args['before'])) {
+            $attrs['before'] = (string) $args['before'];
+        }
+        $extra = '';
+        foreach ($attrs as $name => $value) {
+            $extra .= sprintf(' data-%s="%s"', esc_attr(sanitize_key($name)), esc_attr((string) $value));
+        }
+
         return sprintf(
-            '<div class="authlify-captcha%1$s" data-form="%2$s">%3$s</div>',
+            '<div class="authlify-captcha%1$s" data-form="%2$s"%4$s>%3$s</div>',
             $widget ? ' authlify-captcha--' . esc_attr($provider->id()) : ' authlify-captcha--hp-only',
             esc_attr($form),
-            $inner
+            $inner,
+            $extra
         );
     }
 
@@ -565,18 +589,110 @@ final class Captcha
             return $user;
         }
 
-        // No password, no password guessing (passkeys and other flows post without one).
-        if ('' === (string) $password || self::is_api_request() || !self::is_post()) {
+        $form = self::login_form((string) $username, (string) $password);
+        if ('' === $form) {
             return $user;
+        }
+
+        $error = self::check($form, $username);
+
+        return $error ? $error : $user;
+    }
+
+    /**
+     * The same check before the password is checked. On a failed check the
+     * core password filters are skipped for this request, so a bot that
+     * leaves the CAPTCHA out gets its answer without a password hash being
+     * computed. The late check_login() still returns the error at the end.
+     *
+     * @param \WP_User|\WP_Error|null $user     User.
+     * @param string                  $username Username.
+     * @param string                  $password Password.
+     * @return \WP_User|\WP_Error|null
+     * @since 3.1.0
+     */
+    public static function check_login_early($user, $username = '', $password = '')
+    {
+        if ($user instanceof \WP_User || ($user instanceof \WP_Error && in_array($user->get_error_code(), array('authlify_locked', 'authlify_denied'), true))) {
+            return $user;
+        }
+
+        $form = self::login_form((string) $username, (string) $password);
+        if ('' === $form) {
+            return $user;
+        }
+
+        $error = self::check($form, $username);
+        if (!$error) {
+            return $user;
+        }
+
+        foreach (array('wp_authenticate_username_password', 'wp_authenticate_email_password') as $callback) {
+            $priority = has_filter('authenticate', $callback);
+            if (false !== $priority) {
+                remove_filter('authenticate', $callback, $priority);
+                self::$skipped[$callback] = $priority;
+            }
+        }
+
+        return $error;
+    }
+
+    /**
+     * Core password filters skipped by check_login_early(): callback => priority.
+     *
+     * @var array
+     */
+    private static $skipped = array();
+
+    /**
+     * Put the core password filters back once the refused login has finished.
+     */
+    public static function restore_password_check()
+    {
+        foreach (self::$skipped as $callback => $priority) {
+            add_filter('authenticate', $callback, $priority, 3);
+        }
+        self::$skipped = array();
+    }
+
+    /**
+     * Which login form this authenticate call comes from, or '' when the
+     * CAPTCHA does not apply to it.
+     *
+     * @param string $username Username.
+     * @param string $password Password.
+     * @return string Form key.
+     */
+    private static function login_form($username, $password)
+    {
+        // WooCommerce processes its login form on any front-end URL, xmlrpc.php
+        // included, so a genuine Woo form post is never an API request.
+        $woo = !did_action('login_init') && self::is_woo_post('woo_login');
+
+        // No password, no password guessing (passkeys and other flows post without one).
+        if ('' === $password || (!$woo && self::is_api_request()) || !self::is_post()) {
+            return '';
         }
 
         // Decide by where the request really came from: posted fields can be forged.
         if (did_action('login_init')) {
             $form = 'login';
-        } elseif (self::valid_nonce('woocommerce-login-nonce', 'woocommerce-login')) {
+        } elseif ($woo) {
             $form = 'woo_login';
         } else {
-            return $user;
+            /**
+             * Filters the form key of a login that another plugin's form
+             * started (the integrations answer "login" for their own forms).
+             *
+             * @param string $form     '' when no integration claims the request.
+             * @param string $username Username.
+             * @since 3.1.0
+             */
+            $form = (string) apply_filters('authlify_captcha_login_form', '', $username);
+            if ('' === $form) {
+                return '';
+            }
         }
 
         /**
@@ -587,13 +703,7 @@ final class Captcha
          * @param string $username Username.
          * @since 3.0.0
          */
-        if (!apply_filters('authlify_captcha_check_login', true, $form, $username)) {
-            return $user;
-        }
-
-        $error = self::check($form, $username);
-
-        return $error ? $error : $user;
+        return apply_filters('authlify_captcha_check_login', true, $form, $username) ? $form : '';
     }
 
     /**
@@ -632,10 +742,20 @@ final class Captcha
 
         if (did_action('login_init')) {
             $form = 'lostpassword';
-        } elseif (isset($_POST['wc_reset_password']) && self::valid_nonce('woocommerce-lost-password-nonce', 'lost_password')) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        } elseif (self::is_woo_post('woo_lostpassword')) {
             $form = 'woo_lostpassword';
         } else {
-            return;
+            /**
+             * Filters the form key of a lost-password request another
+             * plugin's form started (the integrations answer "lostpassword").
+             *
+             * @param string $form '' when no integration claims the request.
+             * @since 3.1.0
+             */
+            $form = (string) apply_filters('authlify_captcha_lostpassword_form', '');
+            if ('' === $form) {
+                return;
+            }
         }
 
         $error = self::check($form, $user_data instanceof \WP_User ? $user_data->user_login : '');
@@ -704,7 +824,9 @@ final class Captcha
      */
     public static function check_woo_checkout($data, $errors)
     {
-        if (is_user_logged_in() || self::is_api_request()) {
+        // WooCommerce processes a checkout post on any URL, xmlrpc.php included:
+        // a post with its checkout nonce is a checkout, whatever the endpoint.
+        if (is_user_logged_in() || (self::is_api_request() && !self::is_woo_post('woo_checkout'))) {
             return;
         }
 
@@ -733,16 +855,42 @@ final class Captcha
     }
 
     /**
-     * Whether a posted WooCommerce nonce is genuine.
+     * Whether this request is a WooCommerce login or lost-password post, by
+     * WooCommerce's own test: its form fields plus a valid nonce in either
+     * field name it accepts (the named nonce or the legacy _wpnonce, from the
+     * query string or the body). Checking only the named field would let a
+     * renamed nonce skip the CAPTCHA while WooCommerce still signs in.
      *
-     * @param string $field  POST field.
-     * @param string $action Nonce action.
+     * @param string $form woo_login, woo_lostpassword or woo_checkout.
      * @return bool
      */
-    private static function valid_nonce($field, $action)
+    private static function is_woo_post($form)
     {
-        // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput
-        return !empty($_POST[$field]) && false !== wp_verify_nonce(sanitize_text_field(wp_unslash($_POST[$field])), $action);
+        // phpcs:disable WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput
+        if ('woo_checkout' === $form) {
+            $fields = array();
+            $field = 'woocommerce-process-checkout-nonce';
+            $action = 'woocommerce-process_checkout';
+        } elseif ('woo_lostpassword' === $form) {
+            $fields = array('wc_reset_password', 'user_login');
+            $field = 'woocommerce-lost-password-nonce';
+            $action = 'lost_password';
+        } else {
+            $fields = array('login', 'username');
+            $field = 'woocommerce-login-nonce';
+            $action = 'woocommerce-login';
+        }
+
+        foreach ($fields as $name) {
+            if (!isset($_POST[$name])) {
+                return false;
+            }
+        }
+
+        $nonce = isset($_REQUEST[$field]) ? $_REQUEST[$field] : (isset($_REQUEST['_wpnonce']) ? $_REQUEST['_wpnonce'] : '');
+        // phpcs:enable
+
+        return is_string($nonce) && '' !== $nonce && false !== wp_verify_nonce(sanitize_text_field(wp_unslash($nonce)), $action);
     }
 
     /**

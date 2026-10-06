@@ -377,7 +377,13 @@ final class Recovery
         $user = self::check_link($uid, $key);
 
         if (!$user) {
-            Log::add('twofa_recovery_refused', array('user_id' => (int) $uid, 'context' => array('reason' => 'invalid_link')));
+            // At most one log row per address a minute: anyone can request
+            // made-up links, and each must not add a row (SEC2-16).
+            $throttle = 'authlify_2fa_rec_log_' . md5(Limiter::ip_key(\Authlify\Net\Ip::client()));
+            if (!get_transient($throttle)) {
+                set_transient($throttle, 1, MINUTE_IN_SECONDS);
+                Log::add('twofa_recovery_refused', array('user_id' => (int) $uid, 'context' => array('reason' => 'invalid_link')));
+            }
             self::screen(new \WP_Error('authlify_2fa_recovery', __('<strong>Error:</strong> This recovery link is invalid, used or expired. Links work once, for 15 minutes. Ask for a new one.', 'modify-login')));
         }
 

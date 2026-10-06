@@ -52,6 +52,14 @@ final class Limiter
     }
 
     /**
+     * End of a lockout this request started (0 when none), for the notice on
+     * the same response (FQA-05).
+     *
+     * @var int
+     */
+    private static $locked_now = 0;
+
+    /**
      * Wire up.
      */
     public static function init()
@@ -270,18 +278,92 @@ final class Limiter
      */
     private static function has_pass($ip, $username)
     {
-        $pass = get_transient('authlify_unlock_pass_' . md5(self::ip_key($ip)));
-        if (!$pass) {
-            return false;
-        }
-
-        foreach ((array) $pass as $user_id) {
-            if (self::same_user($user_id, $username)) {
+        foreach (self::passes($ip) as $user_id => $left) {
+            if ($left > 0 && self::same_user($user_id, $username)) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Unlock passes for an address: user ID => attempts left.
+     *
+     * @param string $ip IP.
+     * @return int[]
+     */
+    private static function passes($ip)
+    {
+        $stored = get_transient('authlify_unlock_pass_' . md5(self::ip_key($ip)));
+        if (!is_array($stored)) {
+            return array();
+        }
+
+        // 3.0.x stored a plain list of user IDs: each gets a fresh allowance.
+        if (!isset($stored['users'])) {
+            return array_fill_keys(array_filter(array_map('intval', $stored)), self::pass_allowance());
+        }
+
+        $passes = array();
+        foreach ((array) $stored['users'] as $user_id => $left) {
+            if ((int) $user_id > 0) {
+                $passes[(int) $user_id] = (int) $left;
+            }
+        }
+
+        return $passes;
+    }
+
+    /**
+     * Password attempts an unlock link gives: the normal attempt count.
+     *
+     * @return int
+     */
+    private static function pass_allowance()
+    {
+        return max(1, (int) Settings::get('limit_attempts', 5));
+    }
+
+    /**
+     * Use up an unlock pass: a successful login ends it, each failed one
+     * spends an attempt. The pass is a fresh allowance, not unlimited guesses
+     * for whoever shares the address.
+     *
+     * @param string $ip       IP.
+     * @param string $username Username or email.
+     * @param bool   $success  Whether the login succeeded.
+     */
+    private static function spend_pass($ip, $username, $success)
+    {
+        $passes = self::passes($ip);
+        $changed = false;
+        foreach ($passes as $user_id => $left) {
+            if (!self::same_user($user_id, (string) $username)) {
+                continue;
+            }
+            $left = $success ? 0 : $left - 1;
+            if ($left > 0) {
+                $passes[$user_id] = $left;
+            } else {
+                unset($passes[$user_id]);
+            }
+            $changed = true;
+        }
+
+        if (!$changed) {
+            return;
+        }
+
+        $key = 'authlify_unlock_pass_' . md5(self::ip_key($ip));
+        $stored = get_transient($key);
+        // Spending never extends the pass's 30 minutes.
+        $expires = is_array($stored) && isset($stored['expires']) ? (int) $stored['expires'] : time() + 30 * MINUTE_IN_SECONDS;
+        if ($passes && $expires > time()) {
+            set_transient($key, array('users' => $passes, 'expires' => $expires), $expires - time());
+        } else {
+            delete_transient($key);
+        }
     }
 
     /**
@@ -296,7 +378,17 @@ final class Limiter
             return $errors;
         }
 
-        $left = max(1, (int) Settings::get('limit_attempts', 5)) - self::ip_failures(Ip::client());
+        // This failure has just started a lockout: say so now, not on the next try (FQA-05).
+        $ip = Ip::client();
+        if (self::$locked_now > time() && self::locked_until($ip) > time()) {
+            if (!$errors->get_error_message('authlify_locked')) {
+                $errors->add('authlify_locked', self::lockout_message(self::$locked_now));
+            }
+
+            return $errors;
+        }
+
+        $left = max(1, (int) Settings::get('limit_attempts', 5)) - self::ip_failures($ip);
         if ($left > 0 && $left <= 2) {
             /* translators: %d: attempts left */
             $errors->add('authlify_attempts_left', sprintf(_n('%d attempt left before a short lockout.', '%d attempts left before a short lockout.', $left, 'modify-login'), $left));
@@ -329,11 +421,14 @@ final class Limiter
     public static function grant_pass($ip, $user_id)
     {
         $key = 'authlify_unlock_pass_' . md5(self::ip_key($ip));
-        $users = array_filter(array_map('intval', (array) get_transient($key)));
-        $users[] = (int) $user_id;
+        $passes = self::passes($ip);
+        unset($passes[(int) $user_id]);
+        // The normal number of attempts, used up by failures and ended by a
+        // successful login (spend_pass()).
+        $passes[(int) $user_id] = self::pass_allowance();
 
         // Several people behind one address can each unlock their own account.
-        set_transient($key, array_slice(array_values(array_unique($users)), -10), 30 * MINUTE_IN_SECONDS);
+        set_transient($key, array('users' => array_slice($passes, -10, null, true), 'expires' => time() + 30 * MINUTE_IN_SECONDS), 30 * MINUTE_IN_SECONDS);
     }
 
     /**
@@ -451,6 +546,8 @@ final class Limiter
             return;
         }
 
+        self::spend_pass($ip, (string) $username, false);
+
         $window = max(1, (int) Settings::get('limit_window', 15)) * MINUTE_IN_SECONDS;
         $attempts = max(1, (int) Settings::get('limit_attempts', 5));
 
@@ -517,7 +614,7 @@ final class Limiter
         // Only the account's own counter is cleared. The IP counter keeps running
         // until its window ends: otherwise an attacker with any account could
         // log into it between guesses and never be locked out.
-        unset($ip);
+        self::spend_pass($ip, (string) $user_login, true);
         $wpdb->query($wpdb->prepare('UPDATE ' . self::table() . ' SET failures = 0 WHERE scope = %s AND subject = %s', 'user', self::user_key($user_login))); // phpcs:ignore
     }
 
@@ -588,6 +685,7 @@ final class Limiter
         if (!$changed) {
             return;
         }
+        self::$locked_now = max(self::$locked_now, $until);
 
         Log::add('lockout', array(
             'username' => $username,
@@ -605,6 +703,152 @@ final class Limiter
          * @since 3.0.0
          */
         do_action('authlify_lockout', $scope, $subject, $until, $username);
+
+        if ('ip' === $scope) {
+            self::maybe_auto_block($subject, $lockouts + 1);
+        }
+    }
+
+    /**
+     * Most addresses the automatic block may add to the block list.
+     *
+     * @return int
+     */
+    public static function auto_block_cap()
+    {
+        /**
+         * Filters how many lines the block list may hold before automatic
+         * blocking stops adding to it (each login checks every line).
+         *
+         * @param int $cap Lines. Default 2000.
+         * @since 3.1.0
+         */
+        return max(10, (int) apply_filters('authlify_auto_block_cap', 2000));
+    }
+
+    /**
+     * Add a repeat offender to the block list ("block after N lockouts").
+     *
+     * Lockouts of one address count up while each comes within a day of the
+     * last (the same history that makes lockouts longer). Never blocks a
+     * private or reserved address (a proxy that is not set up would make
+     * every visitor look like one), nor one an administrator has logged in
+     * from.
+     *
+     * @param string $subject  Address key (an IPv6 address is its /64).
+     * @param int    $lockouts Lockouts in a row, this one included.
+     * @return bool Whether it was blocked.
+     */
+    public static function maybe_auto_block($subject, $lockouts)
+    {
+        $limit = (int) Settings::get('auto_block_lockouts', 0);
+        if ($limit < 1 || (int) $lockouts < $limit) {
+            return false;
+        }
+
+        $ip = false !== strpos((string) $subject, '/') ? strstr((string) $subject, '/', true) : (string) $subject;
+        if (!Ip::valid($ip) || Ip::is_private($ip) || self::is_allowlisted($ip) || self::is_denylisted($ip)) {
+            return false;
+        }
+
+        if (self::admin_used_address($ip, (string) $subject)) {
+            Log::add('auto_block_skipped', array('ip' => $ip, 'context' => array('subject' => $subject, 'lockouts' => (int) $lockouts, 'why' => 'admin_address')));
+
+            return false;
+        }
+
+        if (count(Settings::lines('ip_denylist')) >= self::auto_block_cap()) {
+            Log::add('auto_block_skipped', array('ip' => $ip, 'context' => array('subject' => $subject, 'lockouts' => (int) $lockouts, 'why' => 'list_full')));
+
+            return false;
+        }
+
+        return true === self::deny((string) $subject, array('auto' => true, 'lockouts' => (int) $lockouts));
+    }
+
+    /**
+     * Whether an account that can manage Authlify has logged in from an address or range.
+     *
+     * @param string $ip      Address.
+     * @param string $subject Address or CIDR range.
+     * @return bool
+     */
+    private static function admin_used_address($ip, $subject)
+    {
+        global $wpdb;
+
+        $ids = get_users(array('capability' => \Authlify\Plugin::cap(), 'fields' => 'ID', 'number' => 200));
+        if (is_multisite()) {
+            foreach (get_super_admins() as $login) {
+                $user = get_user_by('login', $login);
+                if ($user) {
+                    $ids[] = $user->ID;
+                }
+            }
+        }
+        $ids = array_unique(array_filter(array_map('intval', (array) $ids)));
+        if (!$ids) {
+            return false;
+        }
+
+        $table = Log::table();
+        $in = implode(',', $ids);
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- integers only.
+        $seen = (array) $wpdb->get_col("SELECT DISTINCT ip FROM {$table} WHERE event = 'login_success' AND user_id IN ({$in}) ORDER BY id DESC LIMIT 1000");
+        $anonymized = Settings::get('log_anonymize_ip', false) ? Ip::anonymize($ip) : '';
+        foreach ($seen as $address) {
+            if ($address === $ip || ('' !== $anonymized && $address === $anonymized) || Ip::in_range((string) $address, (string) $subject)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Add an address or CIDR range to the block list ("Always block").
+     *
+     * @param string $subject Address or CIDR range.
+     * @param array  $context Log context (auto, lockouts, by).
+     * @return true|\WP_Error
+     * @since 3.1.0
+     */
+    public static function deny($subject, array $context = array())
+    {
+        $subject = trim((string) $subject);
+        $ip = false !== strpos($subject, '/') ? strstr($subject, '/', true) : $subject;
+        $bits = false !== strpos($subject, '/') ? substr(strrchr($subject, '/'), 1) : '';
+        $max = false !== strpos((string) $ip, ':') ? 128 : 32;
+
+        if (!Ip::valid($ip) || ('' !== $bits && (!ctype_digit($bits) || (int) $bits > $max))) {
+            return new \WP_Error('authlify_bad_ip', __('That is not a valid IP address or range.', 'modify-login'));
+        }
+        if (self::is_allowlisted($ip)) {
+            return new \WP_Error('authlify_allowlisted', __('That address is on the "Never lock out" list. Remove it there first.', 'modify-login'));
+        }
+
+        $lines = Settings::lines('ip_denylist');
+        foreach ($lines as $line) {
+            if ($line === $subject || ('' === $bits && Ip::in_range($ip, $line))) {
+                return new \WP_Error('authlify_already_blocked', __('That address is already blocked.', 'modify-login'));
+            }
+        }
+
+        $lines[] = $subject;
+        Settings::update(array('ip_denylist' => implode("\n", $lines)));
+
+        Log::add('ip_blocked', array('ip' => $ip, 'context' => array_merge(array('subject' => $subject), $context)));
+
+        /**
+         * Fires after an address or range was added to the block list.
+         *
+         * @param string $subject Address or CIDR range.
+         * @param array  $context auto (bool), lockouts (int), by (login).
+         * @since 3.1.0
+         */
+        do_action('authlify_ip_blocked', $subject, $context);
+
+        return true;
     }
 
     /**

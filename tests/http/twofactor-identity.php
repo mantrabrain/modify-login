@@ -56,7 +56,13 @@ function b64u_decode($data)
  */
 function id_passkey($user_id)
 {
+    if (PHP_VERSION_ID < 80000) {
+        skip('passkeys need PHP 8.0 (by design; the test site runs this PHP too)');
+    }
     $key = openssl_pkey_new(array('private_key_type' => OPENSSL_KEYTYPE_EC, 'curve_name' => 'prime256v1'));
+    if (!$key) {
+        skip('this PHP build cannot create EC keys');
+    }
     $pem = openssl_pkey_get_details($key)['key'];
     $id = b64u(random_bytes(16));
     $row = (int) wp_eval('global $wpdb; $wpdb->insert(\Authlify\TwoFactor\Passkeys::table(), array("user_id" => ' . (int) $user_id . ', "rp_id" => \Authlify\TwoFactor\Passkeys::rp_id(), "credential_hash" => hash("sha256", "' . $id . '"), "credential_id" => "' . $id . '", "public_key" => base64_decode("' . base64_encode($pem) . '"), "sign_count" => 0, "name" => "soft", "created_at" => gmdate("Y-m-d H:i:s"))); \Authlify\TwoFactor\Passkeys::flush(' . (int) $user_id . ', true); echo $wpdb->insert_id;');
@@ -86,6 +92,9 @@ function id_assert(array $pk, $challenge_b64u, $counter = 1)
 
 function id_pk_options($ip)
 {
+    if (PHP_VERSION_ID < 80000) {
+        skip('passkeys need PHP 8.0 (by design; the test site runs this PHP too)');
+    }
     $res = post(login_url(ISLUG) . '?action=authlify_passkey_options', array('authlify' => '1'), array('ip' => $ip));
     $json = json_decode($res->body, true);
     ok(!empty($json['success']), 'passkey options: ' . $res->code . ' ' . substr($res->body, 0, 200));
@@ -175,6 +184,9 @@ t('F5: anonymous passkey options store nothing; the token is signed and expires'
 });
 
 t('F5: a signed challenge signs in once; replaying the same assertion is refused', function () {
+    if (empty($GLOBALS['pk']['user_id'])) {
+        skip('no test passkey (passkeys need PHP 8.0 and EC keys)');
+    }
     $pk = $GLOBALS['pk'];
     $data = id_pk_options('198.51.100.51');
     $challenge = explode('.', $data['token'])[0];
@@ -190,6 +202,9 @@ t('F5: a signed challenge signs in once; replaying the same assertion is refused
 // ---------------------------------------------------------------- F6 / ARCH-02: sign-in blocks.
 
 t('F6: a blocked account cannot sign in with a passkey, and is told why', function () {
+    if (empty($GLOBALS['pk']['user_id'])) {
+        skip('no test passkey (passkeys need PHP 8.0 and EC keys)');
+    }
     $pk = $GLOBALS['pk'];
     id_meta($pk['user_id'], 'authlify_sign_in_blocked', array('reason' => 'test', 'by' => 'test', 'message' => 'Paused for the test.'));
     try {
@@ -251,6 +266,8 @@ t('ARCH-02: temporary accounts (authlify_temp_expires) never use a password or r
 
 t('F7: the recovery request form applies the login CAPTCHA/honeypot and counts wrong passwords once', function () {
     $u = $GLOBALS['u'];
+    // The recovery form allows a few requests per address and hour; earlier runs in the same hour must not count.
+    wp_eval('foreach (array("198.51.100.70", "198.51.100.71", "198.51.100.72") as $ip) { delete_transient("authlify_2fa_rec_ip_" . md5($ip)); }');
     settings(array('honeypot' => true, 'captcha_forms' => array('login')));
     $form = get(login_url(ISLUG) . '?action=authlify_2fa_recover', array('ip' => '198.51.100.70'));
     contains('authlify-captcha', $form->body, 'the form carries the login honeypot');
