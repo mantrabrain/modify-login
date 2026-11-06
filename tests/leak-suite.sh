@@ -14,6 +14,10 @@
 #   --plain            Site uses plain permalinks (login URL is /?slug).
 #   --user <login>     Also log in through the slug and log out again.
 #   --pass <password>  Password for --user.
+#   --member <login>   Also check what a logged-in subscriber or customer sees: no
+#                      login address on the home page or in wp-admin, /login and
+#                      their log-out link do not reveal it, and log-out works.
+#   --member-pass <p>  Password for --member.
 #   --site-url <url>   WordPress address when it differs from the site URL
 #                      (WordPress in its own folder, e.g. https://example.com/wp).
 #   --multisite        wp-signup.php / wp-activate.php are real multisite pages; skip them.
@@ -29,7 +33,7 @@
 set -u
 
 usage() {
-    sed -n '2,27p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,31p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
 }
 
@@ -42,6 +46,8 @@ shift 2
 PLAIN=0
 USER_LOGIN=""
 USER_PASS=""
+MEMBER_LOGIN=""
+MEMBER_PASS=""
 SITE=""
 MULTISITE=0
 INSECURE=""
@@ -52,6 +58,8 @@ while [ $# -gt 0 ]; do
         --plain) PLAIN=1 ;;
         --user) USER_LOGIN="${2:-}"; shift ;;
         --pass) USER_PASS="${2:-}"; shift ;;
+        --member) MEMBER_LOGIN="${2:-}"; shift ;;
+        --member-pass) MEMBER_PASS="${2:-}"; shift ;;
         --site-url) SITE="${2%/}"; shift ;;
         --multisite) MULTISITE=1 ;;
         --insecure) INSECURE="-k" ;;
@@ -218,6 +226,8 @@ probe "GET wp-admin/?gf_page=x (CVE-2024-6289 style)" "$SITE/wp-admin/?gf_page=x
 # --- Core shortcuts ----------------------------------------------------------------
 probe "GET /login" "$BASE/login"
 probe "GET /admin" "$BASE/admin"
+probe "GET /?authlify_unlock_public=1 (public unlock screen)" "$BASE/?authlify_unlock_public=1"
+probe "GET /?authlify_lost_public=1 (public lost-password screen)" "$BASE/?authlify_lost_public=1"
 probe "GET /dashboard" "$BASE/dashboard"
 
 # --- 2.x back doors --------------------------------------------------------------
@@ -339,7 +349,7 @@ elif [ -n "$USER_LOGIN" ] && [ -n "$USER_PASS" ]; then
             row FAIL "wp-admin works when logged in" "$CODE" "$(describe)"
         fi
 
-        LOGOUT="$(grep -Eo "href=[\"'][^\"']*action=logout[^\"']*" "$BODY" | head -1 | sed -E "s/^href=[\"']//; s/&amp;/\\&/g; s/&#038;/\\&/g")"
+        LOGOUT="$(grep -Eo "href=[\"'][^\"']*(action=logout|authlify_logout)[^\"']*" "$BODY" | head -1 | sed -E "s/^href=[\"']//; s/&amp;/\\&/g; s/&#038;/\\&/g")"
         if [ -n "$LOGOUT" ]; then
             fetch -c "$JAR" -b "$JAR" "$LOGOUT"
             if [ "${CODE:0:1}" = "3" ] && ! printf '%s' "$LOCATION" | grep -q 'wp-login.php'; then
@@ -363,6 +373,47 @@ elif [ -n "$USER_LOGIN" ] && [ -n "$USER_PASS" ]; then
     fi
 else
     row SKIP "Log in / log out through the slug" "-" "pass --user and --pass"
+fi
+
+# --- What a logged-in member is given ---------------------------------------------
+if [ -n "$MEMBER_LOGIN" ] && [ -n "$MEMBER_PASS" ]; then
+    : >"$JAR"
+    fetch -c "$JAR" -b "$JAR" "$LOGIN_URL"
+    fetch -c "$JAR" -b "$JAR" --data-urlencode "log=$MEMBER_LOGIN" --data-urlencode "pwd=$MEMBER_PASS" \
+        --data "wp-submit=Log+In&testcookie=1" --data-urlencode "redirect_to=$SITE/wp-admin/profile.php" "$LOGIN_URL"
+    if grep -q 'wordpress_logged_in' "$JAR"; then
+        for MEMBER_PATH in "$BASE/" "$SITE/wp-admin/profile.php" "$BASE/login"; do
+            fetch -c "$JAR" -b "$JAR" "$MEMBER_PATH"
+            if location_leaks || grep -q "$SLUG" "$BODY"; then
+                row LEAK "Member: $MEMBER_PATH" "$CODE" "shows the slug to a logged-in member $(describe)"
+            else
+                row PASS "Member: $MEMBER_PATH" "$CODE" "$(describe)"
+            fi
+        done
+        fetch -c "$JAR" -b "$JAR" "$SITE/wp-admin/profile.php"
+        LOGOUT="$(grep -Eo "href=[\"'][^\"']*(action=logout|authlify_logout)[^\"']*" "$BODY" | head -1 | sed -E "s/^href=[\"']//; s/&amp;/\\&/g; s/&#038;/\\&/g")"
+        if [ -z "$LOGOUT" ]; then
+            # WooCommerce sends customers from wp-admin to My Account, which has its own log-out link.
+            row SKIP "Member log out" "-" "no log-out link in wp-admin (a store customer?); test on the store's own page"
+        else
+            fetch -c "$JAR" -b "$JAR" "$LOGOUT"
+            if [ "${CODE:0:1}" = "3" ] && ! location_leaks; then
+                row PASS "Member log out" "$CODE" "$(describe)"
+            else
+                row FAIL "Member log out" "$CODE" "$(describe)"
+            fi
+            fetch -b "$JAR" "$SITE/wp-admin/profile.php"
+            if [ "$CODE" = "200" ]; then
+                row FAIL "Member logged out for real" "$CODE" "wp-admin still open"
+            else
+                row PASS "Member logged out for real" "$CODE" "$(describe)"
+            fi
+        fi
+    else
+        row FAIL "Member log in" "$CODE" "no auth cookie $(describe)"
+    fi
+else
+    row SKIP "What a logged-in member sees" "-" "pass --member and --member-pass"
 fi
 
 printf "%s\n" "---------------------------------------------------------------------------------------------"

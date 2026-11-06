@@ -109,6 +109,8 @@ final class AdminPage
                 <div class="notice notice-warning"><p><?php echo wp_kses(__('Two-factor login is switched off by <code>AUTHLIFY_DISABLE_2FA</code> in wp-config.php. Remove that line to turn it back on.', 'modify-login'), UI::inline_html()); ?></p></div>
             <?php endif; ?>
 
+            <?php \Authlify\Admin\Nudges::render('two-factor'); ?>
+
             <?php UI::form_start('two-factor'); ?>
             <?php UI::panel_start(__('Methods', 'modify-login'), __('Two-factor login is opt-in: each person turns it on from their own profile.', 'modify-login')); ?>
                 <?php UI::toggle_row('twofa_enabled', __('Let users turn on two-factor login', 'modify-login'), __('When off, nobody is asked for a second step and the profile section is hidden. Existing setups are kept.', 'modify-login'), __('Two-factor login', 'modify-login')); ?>

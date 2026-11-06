@@ -106,11 +106,16 @@ function perm_endpoints()
         array('post', 'GET', 'authlify_pro_temp_revoke', array('user_id' => '{victim}'), 'admin-refused', 'not a temporary user: refused for everyone', 'pro', array('authlify_pro_temp_revoke_{victim}')),
         array('post', 'GET', 'authlify_pro_social_unlink', array('user_id' => '{victim}', 'provider' => 'google'), 'admin', 'another user', 'pro', array('authlify_pro_social_unlink_{victim}_google')),
         array('post', 'GET', 'authlify_pro_social_unlink', array('user_id' => '{self}', 'provider' => 'google'), 'self', 'own account', 'pro', array('authlify_pro_social_unlink_{self}_google')),
+        array('post', 'GET', 'authlify_pro_access_review', array('format' => 'csv'), 'admin', 'report with user details', 'pro'),
+        array('post', 'GET', 'authlify_pro_inactive_unblock', array('user_id' => '{victim}'), 'admin', 'lifts a block', 'pro', array('authlify_pro_inactive_unblock_{victim}')),
+        array('post', 'GET', 'authlify_pro_welcome_dismiss', array(), 'admin', '', 'pro'),
+        array('post', 'GET', 'authlify_pro_use_local_geo', array(), 'admin', 'download blocked by the harness', 'pro'),
         array('post', 'POST', 'authlify_pro_site_overrides', array(), 'multisite', 'multisite only', 'pro'),
         array('post', 'POST', 'authlify_pro_clear_site', array(), 'multisite', 'multisite only', 'pro'),
         array('post', 'POST', 'authlify_pro_signed_in', array('do' => 'user', 'user' => '{victim}'), 'admin', 'sign out another user', 'pro'),
 
         // ------------------------------------------------ AJAX.
+        array('ajax', 'POST', 'authlify_dismiss_nudge', array('id' => 'review'), 'admin', 'nonce field "nonce"', '', array('authlify_nudge', 'nonce')),
         array('ajax', 'POST', 'authlify_pro_social_test', array('provider' => 'google'), 'admin', 'nonce field "nonce"', 'pro', array('authlify_pro_social_test', 'nonce')),
         array('ajax', 'POST', 'authlify_pro_ping', array(), 'self-signed-in', 'idle ping, nonce field "nonce"', 'pro', array('authlify_pro_ping', 'nonce')),
     );
@@ -333,7 +338,8 @@ t('AJAX authlify_altcha is public on purpose (a fresh challenge, no secrets)', f
         eq(200, $res->code);
         $json = json_decode($res->body, true);
         eq(array('algorithm', 'challenge', 'maxnumber', 'salt', 'signature'), array_keys($json));
-        contains('no-store', strtolower(implode(',', isset($res->headers['cache-control']) ? $res->headers['cache-control'] : array())), 'never cached');
+        // Core's nocache_headers(): "no-store" on current WordPress, "no-cache" on 6.4.
+        ok(1 === preg_match('/no-(store|cache)/', strtolower(implode(',', isset($res->headers['cache-control']) ? $res->headers['cache-control'] : array()))), 'never cached');
     }
 });
 

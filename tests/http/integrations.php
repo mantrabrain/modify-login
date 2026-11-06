@@ -276,7 +276,7 @@ function int_checkout_page($path, $ip)
 t('WooCommerce block checkout: guest orders need the CAPTCHA (token sent as Store API extension data); with only "WooCommerce registration" ticked, only orders that create an account; no new slug leak', function () {
     int_activate('woocommerce');
     try {
-        $GLOBALS['int_product'] = wp_eval('wp_set_current_user(1); WC_Install::create_pages(); update_option("woocommerce_cod_settings", array("enabled" => "yes", "title" => "COD")); update_option("woocommerce_enable_guest_checkout", "yes"); update_option("woocommerce_enable_signup_and_login_from_checkout", "yes");'
+        $GLOBALS['int_product'] = wp_eval('wp_set_current_user(1); WC_Install::create_pages(); update_option("woocommerce_cod_settings", array("enabled" => "yes", "title" => "COD")); update_option("woocommerce_coming_soon", "no"); update_option("woocommerce_enable_guest_checkout", "yes"); update_option("woocommerce_enable_signup_and_login_from_checkout", "yes");'
             . ' $p = new WC_Product_Simple(); $p->set_name("Int Tee"); $p->set_regular_price("10"); $p->set_status("publish"); $p->save(); echo $p->get_id();');
         $checkout = wp_eval('echo wp_make_link_relative(wc_get_checkout_url());');
         contains('wp:woocommerce/checkout', wp_eval('echo get_post(wc_get_page_id("checkout"))->post_content;'), 'block checkout page');

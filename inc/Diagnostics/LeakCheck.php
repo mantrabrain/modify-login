@@ -510,6 +510,8 @@ final class LeakCheck
                 'backdoor',
             ),
             'home' => array(__('Homepage HTML', 'modify-login'), $home . '/', 'GET', array(), null, 'public'),
+            'public_unlock' => array(__('Public unlock screen', 'modify-login'), $home . '/?' . \Authlify\Login\Recovery::PUBLIC_UNLOCK . '=1', 'GET', array(), null, 'public'),
+            'public_lost' => array(__('Public lost-password screen', 'modify-login'), $home . '/?' . \Authlify\Login\Recovery::PUBLIC_LOST . '=1', 'GET', array(), null, 'public'),
         );
 
         $post = get_posts(array('numberposts' => 1, 'post_type' => 'post', 'post_status' => 'publish', 'has_password' => false, 'suppress_filters' => false));
@@ -637,7 +639,7 @@ final class LeakCheck
 
     /**
      * Published pages and posts that use an Authlify shortcode or block, or
-     * another plugin's login form shortcode or block (EDD, PMPro), at most eight.
+     * another plugin's login form shortcode or block (EDD, PMPro, LearnDash), at most eight.
      *
      * @return array post ID => whether it holds a login-type form.
      * @since 3.0.2
@@ -648,12 +650,12 @@ final class LeakCheck
 
         $rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
             "SELECT ID, post_content FROM {$wpdb->posts} WHERE post_status = 'publish' AND post_password = '' AND post_type IN ('page', 'post')"
-            . " AND (post_content LIKE '%[authlify\\_%' OR post_content LIKE '%<!-- wp:authlify%' OR post_content LIKE '%[edd\\_login%' OR post_content LIKE '%<!-- wp:edd/login%' OR post_content LIKE '%[pmpro\\_login%') ORDER BY ID ASC LIMIT 8"
+            . " AND (post_content LIKE '%[authlify\\_%' OR post_content LIKE '%<!-- wp:authlify%' OR post_content LIKE '%[edd\\_login%' OR post_content LIKE '%<!-- wp:edd/login%' OR post_content LIKE '%[pmpro\\_login%' OR post_content LIKE '%[learndash\\_login%' OR post_content LIKE '%[ld\\_registration%') ORDER BY ID ASC LIMIT 8"
         );
 
         $out = array();
         foreach ((array) $rows as $row) {
-            $out[(int) $row->ID] = (bool) preg_match('#wp:authlify-pro/(login-form|login-popup|register-form|lost-password-form|account-menu)|\[authlify_login_popup|\[edd_login|wp:edd/login|\[pmpro_login#', (string) $row->post_content);
+            $out[(int) $row->ID] = (bool) preg_match('#wp:authlify-pro/(login-form|login-popup|register-form|lost-password-form|account-menu)|\[authlify_login_popup|\[edd_login|wp:edd/login|\[pmpro_login|\[learndash_login|\[ld_registration#', (string) $row->post_content);
         }
 
         return $out;

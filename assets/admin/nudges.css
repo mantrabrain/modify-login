@@ -1,0 +1,190 @@
+/**
+ * Authlify: inline cards, the Dashboard's impact line and its 7-day chart.
+ *
+ * @package Authlify
+ * @since   3.2.0
+ */
+
+/* Inline card: a fact, what Pro does, one link, "Don't show again". */
+
+.authlify-nudge {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 0 0 16px;
+    padding: 12px 16px;
+    border: 1px solid var(--al-border);
+    border-inline-start: 3px solid var(--al-pro);
+    border-radius: var(--al-radius-sm);
+    background: var(--al-card);
+}
+
+.authlify-nudge[hidden] {
+    display: none;
+}
+
+.authlify-nudge--review {
+    border-inline-start-color: var(--al-accent);
+}
+
+.authlify-page .authlify-nudge__text {
+    flex: 1 1 320px;
+    min-width: 0;
+    margin: 0;
+    color: var(--al-text-2);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.authlify-nudge__text strong {
+    color: var(--al-text);
+    font-weight: 600;
+}
+
+.authlify-page .authlify-nudge__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin: 0;
+    font-size: 13px;
+}
+
+.authlify-page .authlify-nudge__actions a:not(.button) {
+    color: var(--al-accent);
+    font-weight: 500;
+}
+
+.authlify-page .authlify-nudge__actions .button-link,
+.authlify-page .authlify-upsell__hide,
+.authlify-page .authlify-upsell-card__hide {
+    color: var(--al-muted);
+    font-size: 13px;
+    text-decoration: underline;
+}
+
+.authlify-page .authlify-nudge__actions .button-link:hover,
+.authlify-page .authlify-nudge__actions .button-link:focus,
+.authlify-page .authlify-upsell__hide:hover,
+.authlify-page .authlify-upsell__hide:focus,
+.authlify-page .authlify-upsell-card__hide:hover,
+.authlify-page .authlify-upsell-card__hide:focus {
+    color: var(--al-text);
+}
+
+/* Focus lands on the page after a card is dismissed: nothing to outline. */
+
+.authlify-page[tabindex="-1"]:focus {
+    outline: none;
+}
+
+/* The Designer has no page heading above its card. */
+
+.authlify-designer-page .authlify-nudge {
+    margin: 12px 0;
+}
+
+/* The Dashboard's Pro card. */
+
+.authlify-page .authlify-upsell-card__price {
+    margin: 12px 0;
+    color: var(--al-text-2);
+    font-size: 13px;
+}
+
+.authlify-upsell-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 14px;
+}
+
+/* Dashboard: impact line. */
+
+.authlify-page .authlify-impact {
+    margin: 0 0 16px;
+    color: var(--al-text-2);
+    font-size: 13px;
+}
+
+.authlify-impact strong {
+    color: var(--al-text);
+    font-weight: 600;
+}
+
+/* The review card quotes the same numbers: never say it twice in a row. */
+
+.authlify-page .authlify-impact:has(+ .authlify-nudge--review) {
+    display: none;
+}
+
+/* Nor ask for a review twice on one screen. */
+
+body:has(.authlify-nudge--review) .authlify-foot {
+    display: none;
+}
+
+/* Dashboard: failed logins per day, last 7 days. Bars with the numbers in text. */
+
+.authlify-page .authlify-week {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.authlify-page .authlify-week li {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+    margin: 0;
+    color: var(--al-muted);
+    font-size: 12px;
+    line-height: 1.3;
+}
+
+.authlify-week__value {
+    color: var(--al-text);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.authlify-week__track {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    max-width: 44px;
+    height: 72px;
+    margin: 4px 0 6px;
+    border-radius: 4px;
+    background: var(--al-divider);
+}
+
+.authlify-week__bar {
+    display: block;
+    width: 100%;
+    min-height: 2px;
+    border-radius: 4px;
+    background: var(--al-accent);
+}
+
+.authlify-week li.is-zero .authlify-week__bar {
+    background: transparent;
+}
+
+.authlify-week li.is-zero .authlify-week__value {
+    color: var(--al-muted);
+    font-weight: 400;
+}
+
+@media (forced-colors: active) {
+    .authlify-week__bar {
+        background: CanvasText;
+    }
+}

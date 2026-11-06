@@ -41,6 +41,7 @@ final class UltimateMember
         add_action('um_submit_form_errors_hook__registration', array(__CLASS__, 'check_register'), 1, 1);
         add_action('um_reset_password_errors_hook', array(__CLASS__, 'check_lostpassword'), 1, 1);
         add_filter('um_custom_authenticate_error_codes', array(__CLASS__, 'error_codes'));
+        add_action('wp_login_failed', array(__CLASS__, 'locked_now'), 20);
         add_filter('authlify_captcha_login_form', array(__CLASS__, 'login_form'));
     }
 
@@ -123,10 +124,23 @@ final class UltimateMember
             return;
         }
 
-        UM()->form()->add_error($error->get_error_code(), $error->get_error_message());
+        UM()->form()->add_error($error->get_error_code(), Integrations::with_unlock($error));
         // Refused before the password: UM's own check would say "Password is
         // incorrect" (or confirm a right one) and cost a password hash.
         remove_action('um_submit_form_errors_hook_login', 'um_submit_form_errors_hook_login', 10);
+    }
+
+    /**
+     * The attempt that starts a lockout says so at once (Limiter counts at priority 10).
+     */
+    public static function locked_now()
+    {
+        $message = \Authlify\Security\Limiter::just_locked_message();
+        if ('' === $message || !doing_action('um_submit_form_errors_hook_login') || !self::form()) {
+            return;
+        }
+
+        UM()->form()->add_error('authlify_locked', Integrations::with_unlock(new \WP_Error('authlify_locked', $message)));
     }
 
     /**

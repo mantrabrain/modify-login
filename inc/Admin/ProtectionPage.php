@@ -66,6 +66,7 @@ final class ProtectionPage
             UI::header(__('Security', 'modify-login'), __('Stop password-guessing bots without getting in the way of real people.', 'modify-login'), array(), isset($docs[$tab]) ? $docs[$tab] : '');
             ?>
             <?php UI::tabs($labels, $tab, 'protection'); ?>
+            <?php Nudges::render('security'); ?>
             <?php call_user_func($tabs[$tab][1]); ?>
             <?php Upsell::render('security'); ?>
         </div>
@@ -118,6 +119,18 @@ final class ProtectionPage
         UI::textarea_row('ip_allowlist', __('Never lock out', 'modify-login'), __('Your office or home IP. One IP or CIDR range per line.', 'modify-login'), /* translators: example value shown in an empty field */ sprintf(__('e.g. %s', 'modify-login'), '203.0.113.7'));
         UI::textarea_row('ip_denylist', __('Always block', 'modify-login'), __('These addresses can never log in. One IP or CIDR range per line.', 'modify-login'));
         UI::input_row('auto_block_lockouts', __('Block repeat offenders', 'modify-login'), __('Adds an address to "Always block" after this many lockouts in a row (a day without one starts the count again). Addresses an administrator has logged in from are never added. 0 turns it off.', 'modify-login'), array('type' => 'number', 'min' => 0, 'max' => 100, 'suffix' => __('lockouts', 'modify-login')));
+        UI::panel_end();
+
+        UI::panel_start(__('Refused usernames', 'modify-login'), __('Names bots try first and that nobody on this site should use. Off until you add names. A name that belongs to a real account is always skipped.', 'modify-login') . ' ' . UI::learn_more('brute-force'));
+        UI::textarea_row('username_denylist', __('Usernames', 'modify-login'), __('One per line. Nobody can register these names. Administrators can still create such a user on purpose.', 'modify-login'), "admin\nadministrator\ntest");
+        $in_use = \Authlify\Security\Limiter::denied_usernames_in_use();
+        if ($in_use) {
+            UI::field_start('');
+            echo '<p>' . UI::pill(__('Skipped', 'modify-login'), 'warning') . ' ' . esc_html(sprintf(/* translators: %s: comma-separated usernames */ __('These names belong to real accounts, so nothing changes for them: %s', 'modify-login'), implode(', ', $in_use))) . '</p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+            UI::field_end();
+        }
+        UI::toggle_row('username_deny_login', __('Refuse login attempts with these names at once', 'modify-login'), __('Each attempt is logged as "Refused username". The visitor sees an ordinary error. Someone signing in with an email address is never affected.', 'modify-login'), __('Login attempts', 'modify-login'));
+        UI::toggle_row('username_deny_lockout', __('Lock out the address on the first such attempt', 'modify-login'), __('Needs the option above and brute-force protection on. Never applies to private addresses or an address an administrator has logged in from. A visitor who only mistypes a listed name is locked out too, so keep the list to names no real person would try. Behind a CDN or proxy, set "Where visitors connect from" first, or the proxy\'s own address can be locked out.', 'modify-login'), __('Immediate lockout', 'modify-login'));
         UI::panel_end();
 
         UI::form_end();
@@ -270,6 +283,26 @@ final class ProtectionPage
             if ($bad) {
                 return new \WP_Error('bad_ip', sprintf(__('These are not valid IP addresses or ranges: %s', 'modify-login'), esc_html(implode(', ', $bad))));
             }
+        }
+
+        if (isset($values['username_denylist'])) {
+            $bad = array();
+            $names = array();
+            foreach (preg_split('/[\r\n,]+/', (string) $values['username_denylist']) as $line) {
+                $line = trim($line);
+                if ('' === $line) {
+                    continue;
+                }
+                if (is_email($line) || strtolower(sanitize_user($line, true)) !== strtolower($line)) {
+                    $bad[] = $line;
+                } else {
+                    $names[] = strtolower($line);
+                }
+            }
+            if ($bad) {
+                return new \WP_Error('bad_username', sprintf(/* translators: %s: comma-separated values */ __('These are not usernames: %s', 'modify-login'), esc_html(implode(', ', $bad))));
+            }
+            $values['username_denylist'] = implode("\n", array_unique($names));
         }
 
         // Never let the admin deny their own address.

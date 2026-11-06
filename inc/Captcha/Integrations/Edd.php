@@ -47,6 +47,7 @@ final class Edd
         add_filter('authlify_captcha_lostpassword_form', array(__CLASS__, 'lostpassword_form'));
         add_filter('authlify_captcha_message', array(__CLASS__, 'plain_message'), 10, 2);
         add_action('wp_login_failed', array(__CLASS__, 'login_failed'), 5, 2);
+        add_action('wp_login_failed', array(__CLASS__, 'locked_now'), 20);
         add_action('template_redirect', array(__CLASS__, 'drop_generic_error'), 0);
         add_action('edd_process_register_form', array(__CLASS__, 'check_register'));
     }
@@ -149,7 +150,21 @@ final class Edd
         }
 
         self::$refused = true;
-        edd_set_error('authlify_login', Integrations::plain($error));
+        edd_set_error('authlify_login', Integrations::with_unlock($error));
+    }
+
+    /**
+     * The attempt that starts a lockout says so at once (Limiter counts at priority 10).
+     */
+    public static function locked_now()
+    {
+        $message = \Authlify\Security\Limiter::just_locked_message();
+        if ('' === $message || !self::is_login_post() || !function_exists('edd_set_error')) {
+            return;
+        }
+
+        self::$refused = true;
+        edd_set_error('authlify_login', Integrations::with_unlock(new \WP_Error('authlify_locked', $message)));
     }
 
     /**

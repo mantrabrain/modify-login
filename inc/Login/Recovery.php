@@ -30,6 +30,21 @@ final class Recovery
     const UNLOCK_ACTION = 'authlify_unlock';
 
     /**
+     * Public lost-password screen: reset emails per hour for one account, from
+     * anywhere, and requests per hour from one address (an IPv6 /64 is one
+     * address). The second is high because an office or carrier shares one.
+     */
+    const LOST_PER_ACCOUNT = 3;
+    const LOST_PER_ADDRESS = 30;
+
+    /**
+     * Query keys of the public screens: they work on the home page, so they
+     * need no login address, and they never print it.
+     */
+    const PUBLIC_UNLOCK = 'authlify_unlock_public';
+    const PUBLIC_LOST = 'authlify_lost_public';
+
+    /**
      * Unlock emails one account can receive an hour, whoever asks.
      */
     const UNLOCK_PER_ACCOUNT = 3;
@@ -46,6 +61,9 @@ final class Recovery
         add_filter('login_message', array(__CLASS__, 'unlocked_message'));
         // WooCommerce My Account: ask for an unlock link without the login URL (FQA-09).
         add_action('woocommerce_before_customer_login_form', array(__CLASS__, 'woo_unlock_form'), 5);
+        // Any other front-end form: the same, on an address that names no login page.
+        add_action('wp_loaded', array(__CLASS__, 'public_screens'), 3);
+        add_filter('lostpassword_url', array(__CLASS__, 'public_lostpassword_url'), 99);
     }
 
     /**
@@ -113,7 +131,7 @@ final class Recovery
             'pending_expires' => 0,
         ));
 
-        wp_safe_redirect(add_query_arg('authlify_notice', 'slug_confirmed', \Authlify\Admin\Menu::url('login-url')));
+        wp_safe_redirect(add_query_arg('authlify_notice', false === self::$last_mail ? 'slug_confirmed_nomail' : 'slug_confirmed', \Authlify\Admin\Menu::url('login-url')));
         exit;
     }
 
@@ -138,9 +156,18 @@ final class Recovery
     }
 
     /**
+     * Whether the last login-URL email was accepted for sending (null: none tried).
+     *
+     * @var bool|null
+     */
+    private static $last_mail = null;
+
+    /**
      * Send the login URL to the site admin email and the current user.
      *
-     * @param string $slug Slug ('' = back to wp-login.php).
+     * @param string $slug     Slug ('' = back to wp-login.php).
+     * @param bool   $reminder Whether someone asked for it.
+     * @return bool Whether the mail was accepted for sending.
      */
     public static function email_login_url($slug, $reminder = false)
     {
@@ -181,9 +208,9 @@ final class Recovery
          */
         $email = apply_filters('authlify_login_url_email', array('to' => $recipients, 'subject' => $subject, 'message' => $body), $url);
 
-        if (!empty($email['to'])) {
-            wp_mail($email['to'], $email['subject'], $email['message']);
-        }
+        self::$last_mail = !empty($email['to']) && wp_mail($email['to'], $email['subject'], $email['message']);
+
+        return self::$last_mail;
     }
 
     /**
@@ -221,11 +248,9 @@ final class Recovery
             // A WooCommerce My Account login gets a link to the same page,
             // where the request form is shown (FQA-09).
             $woo = self::woo_unlock_url();
-            if ('' !== $woo && isset($_POST['login'], $_POST['username'])) { // phpcs:ignore WordPress.Security.NonceVerification
-                return $message . '<br><a href="' . esc_url($woo) . '">' . esc_html__('Is this your account? Email me an unlock link.', 'modify-login') . '</a>';
-            }
+            $public = '' !== $woo && isset($_POST['login'], $_POST['username']) ? $woo : self::public_url(self::PUBLIC_UNLOCK); // phpcs:ignore WordPress.Security.NonceVerification
 
-            return $message;
+            return $message . '<br><a href="' . esc_url($public) . '">' . esc_html__('Is this your account? Email me an unlock link.', 'modify-login') . '</a>';
         }
 
         $url = add_query_arg('action', self::UNLOCK_ACTION, wp_login_url());
@@ -291,6 +316,314 @@ final class Recovery
     }
 
     /**
+     * A public screen's address.
+     *
+     * @param string $key PUBLIC_UNLOCK or PUBLIC_LOST.
+     * @return string
+     * @since 3.2.0
+     */
+    public static function public_url($key)
+    {
+        return add_query_arg($key, '1', home_url('/'));
+    }
+
+    /**
+     * Use an emailed unlock link: spend it and let that account in from this address.
+     *
+     * @param int    $user_id User ID.
+     * @param string $key     Key from the link.
+     * @param string $ip      Address.
+     * @return bool Whether the link was valid.
+     */
+    private static function use_unlock_key($user_id, $key, $ip)
+    {
+        $stored = self::unlock_keys($user_id);
+        $hash = wp_hash($key . '|' . $user_id);
+        $match = null;
+        foreach ($stored as $i => $item) {
+            if (hash_equals($item['hash'], $hash) && $item['expires'] > time()) {
+                $match = $i;
+            }
+        }
+
+        if (null === $match) {
+            return false;
+        }
+
+        // Single use: only this link is spent; other valid links stay valid.
+        unset($stored[$match]);
+        self::save_unlock_keys($user_id, $stored);
+        // Only this account may log in from the locked address; the lockout
+        // itself stays, so the link cannot be used to reset an attack.
+        Limiter::grant_pass($ip, $user_id);
+
+        return true;
+    }
+
+    /**
+     * Public unlock and lost-password screens, for people who log in on a
+     * front-end form and were never given the login address.
+     *
+     * @since 3.2.0
+     */
+    public static function public_screens()
+    {
+        // phpcs:disable WordPress.Security.NonceVerification
+        if (!empty($_GET[self::PUBLIC_UNLOCK])) {
+            self::public_unlock_screen();
+        } elseif (!empty($_GET[self::PUBLIC_LOST])) {
+            self::public_lost_screen();
+        }
+        // phpcs:enable
+    }
+
+    /**
+     * Print a small page outside the theme and stop.
+     *
+     * @param string $title Title.
+     * @param string $html  Body (already escaped).
+     */
+    private static function public_page($title, $html)
+    {
+        nocache_headers();
+        if (!defined('DONOTCACHEPAGE')) {
+            define('DONOTCACHEPAGE', true);
+        }
+        header('X-Robots-Tag: noindex, nofollow', true);
+        wp_die('<h1>' . esc_html($title) . '</h1>' . $html, esc_html($title), array('response' => 200)); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped by the callers.
+    }
+
+    /**
+     * A one-field form for the public screens.
+     *
+     * @param string $key    PUBLIC_UNLOCK or PUBLIC_LOST.
+     * @param string $button Button label.
+     * @param string $extra  Extra markup (the CAPTCHA, already escaped).
+     * @return string
+     */
+    private static function public_form($key, $button, $extra = '')
+    {
+        return '<form method="post" action="' . esc_url(self::public_url($key)) . '">'
+            . '<p><label for="authlify_public_login">' . esc_html__('Username or Email Address', 'modify-login') . '</label><br>'
+            . '<input type="text" name="authlify_public_login" id="authlify_public_login" autocomplete="username" required style="box-sizing:border-box;width:100%;max-width:24em;padding:.5em"></p>'
+            . $extra
+            . '<input type="hidden" name="authlify_public_nonce" value="' . esc_attr(wp_create_nonce($key)) . '">'
+            . '<p><button type="submit" class="button">' . esc_html($button) . '</button></p></form>';
+    }
+
+    /**
+     * Where someone can log in, as a link that does not name the login address.
+     *
+     * @return string
+     */
+    private static function public_back_link()
+    {
+        return '<p><a href="' . esc_url(Router::public_login_url()) . '">' . esc_html__('Back to the site', 'modify-login') . '</a></p>';
+    }
+
+    /**
+     * Whether a public form was posted with its nonce.
+     *
+     * @param string $key PUBLIC_UNLOCK or PUBLIC_LOST.
+     * @return bool
+     */
+    private static function public_posted($key)
+    {
+        // phpcs:disable WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput
+        return isset($_POST['authlify_public_login'], $_POST['authlify_public_nonce']) && is_string($_POST['authlify_public_login']) && is_string($_POST['authlify_public_nonce'])
+            && false !== wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['authlify_public_nonce'])), $key);
+        // phpcs:enable
+    }
+
+    /**
+     * ?authlify_unlock_public=1: request an unlock link, or use one.
+     */
+    private static function public_unlock_screen()
+    {
+        if (!apply_filters('authlify_unlock_by_email', true)) {
+            return;
+        }
+
+        $title = __('Unlock your account', 'modify-login');
+        $ip = Ip::client();
+
+        // phpcs:disable WordPress.Security.NonceVerification
+        if (!empty($_GET['unlock_key']) && !empty($_GET['u'])) {
+            if (self::use_unlock_key((int) $_GET['u'], sanitize_text_field(wp_unslash($_GET['unlock_key'])), $ip)) {
+                self::public_page($title, '<p>' . esc_html__('Unlock link accepted. You can now log in to that account from this device.', 'modify-login') . '</p>' . self::public_back_link());
+            }
+
+            self::public_page($title, '<p>' . esc_html__('This unlock link is invalid or has expired. Request a new one below.', 'modify-login') . '</p>' . self::public_form(self::PUBLIC_UNLOCK, __('Email unlock link', 'modify-login')) . self::public_back_link());
+        }
+
+        if (self::public_posted(self::PUBLIC_UNLOCK)) {
+            self::send_unlock_email(sanitize_text_field(wp_unslash($_POST['authlify_public_login'])), $ip); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+            self::public_page($title, '<p>' . esc_html__('If that account exists, an unlock link is on its way to its email address. The link works from this device for 30 minutes.', 'modify-login') . '</p>' . self::public_back_link());
+        }
+        // phpcs:enable
+
+        self::public_page($title, '<p>' . esc_html__('Locked out after too many attempts? Enter your username or email address and we will email you a link that lets you log in to your account from this device.', 'modify-login') . '</p>' . self::public_form(self::PUBLIC_UNLOCK, __('Email unlock link', 'modify-login')) . self::public_back_link());
+    }
+
+    /**
+     * Lost-password links on public pages point here while the login URL is
+     * hidden (EDD's login form prints one). Core sends the email; the reset
+     * link in it is on the login address, so only the account's owner sees it.
+     *
+     * @param string $url Lost-password URL.
+     * @return string
+     * @since 3.2.0
+     */
+    public static function public_lostpassword_url($url)
+    {
+        if (is_admin() || is_user_logged_in() || !Router::is_hiding() || Router::is_login_request() || !Router::points_to_login((string) $url)) {
+            return $url;
+        }
+
+        return self::public_url(self::PUBLIC_LOST);
+    }
+
+    /**
+     * ?authlify_lost_public=1: ask for a password-reset email.
+     */
+    private static function public_lost_screen()
+    {
+        if (is_user_logged_in() || !Router::is_hiding()) {
+            wp_safe_redirect(home_url('/'));
+            exit;
+        }
+
+        $title = __('Lost your password?', 'modify-login');
+        $widget = \Authlify\Captcha\Captcha::render('lostpassword');
+        $scripts = '';
+        if ('' !== $widget) {
+            ob_start();
+            // With named handles: no handles fires `wp_print_styles`, and core's deprecated emoji printer with it.
+            if (wp_styles()->queue) {
+                wp_print_styles(wp_styles()->queue);
+            }
+            wp_print_scripts();
+            $scripts = (string) ob_get_clean();
+        }
+
+        if (self::public_posted(self::PUBLIC_LOST)) {
+            $login = sanitize_text_field(wp_unslash($_POST['authlify_public_login'])); // phpcs:ignore WordPress.Security.NonceVerification, WordPress.Security.ValidatedSanitizedInput
+            $quota = self::lost_quota($login, Ip::client());
+
+            // About the address only, so it says nothing about any account.
+            if ('address' === $quota) {
+                self::public_page($title, '<p>' . esc_html__('Too many password-reset requests from this network. Please try again in an hour.', 'modify-login') . '</p>' . self::public_back_link());
+            }
+
+            if ('' === $quota) {
+                add_filter('authlify_captcha_lostpassword_form', array(__CLASS__, 'claim_public_lost'));
+                $result = retrieve_password($login);
+                if (is_wp_error($result) && $result->get_error_message('authlify_captcha')) {
+                    self::public_page($title, '<p>' . esc_html(\Authlify\Captcha\Integrations::plain(new \WP_Error('authlify_captcha', $result->get_error_message('authlify_captcha')))) . '</p>' . self::public_form(self::PUBLIC_LOST, __('Get new password', 'modify-login'), $widget) . $scripts . self::public_back_link());
+                }
+                self::lost_count($login, Ip::client());
+            }
+
+            // The same answer either way: this page must not confirm who has an account.
+            self::public_page($title, '<p>' . esc_html__('If that account exists, a password-reset link is on its way to its email address.', 'modify-login') . '</p>' . self::public_back_link());
+        }
+
+        self::public_page($title, '<p>' . esc_html__('Enter your username or email address and we will email you a link to choose a new password.', 'modify-login') . '</p>' . self::public_form(self::PUBLIC_LOST, __('Get new password', 'modify-login'), $widget) . $scripts . self::public_back_link());
+    }
+
+    /**
+     * Transient keys of the public lost-password quotas.
+     *
+     * @param string $login Username or email.
+     * @param string $ip    Address.
+     * @return array address, account ('' when no such account).
+     */
+    private static function lost_keys($login, $ip)
+    {
+        $user = get_user_by(is_email($login) ? 'email' : 'login', $login);
+
+        return array(
+            'address' => 'authlify_lost_rate_' . md5(Limiter::ip_key($ip)),
+            'account' => $user ? 'authlify_lost_rate_u' . $user->ID : '',
+        );
+    }
+
+    /**
+     * The limits of the public lost-password screen.
+     *
+     * @return array account, address.
+     */
+    private static function lost_limits()
+    {
+        /**
+         * Filters how many reset emails the public lost-password screen sends
+         * per hour for one account, and how many requests one address may make.
+         *
+         * @param array $limits account (default 3), address (default 30).
+         * @since 3.2.0
+         */
+        $limits = (array) apply_filters('authlify_lost_public_limits', array('account' => self::LOST_PER_ACCOUNT, 'address' => self::LOST_PER_ADDRESS));
+
+        return array(
+            'account' => max(1, isset($limits['account']) ? (int) $limits['account'] : self::LOST_PER_ACCOUNT),
+            'address' => max(1, isset($limits['address']) ? (int) $limits['address'] : self::LOST_PER_ADDRESS),
+        );
+    }
+
+    /**
+     * Whether a request may send a reset email.
+     *
+     * @param string $login Username or email.
+     * @param string $ip    Address.
+     * @return string '' when it may, 'address' when this address asked too often,
+     *                'account' when no email goes out and the answer must stay the same.
+     */
+    private static function lost_quota($login, $ip)
+    {
+        if (Limiter::is_denylisted($ip)) {
+            return 'account';
+        }
+
+        $keys = self::lost_keys($login, $ip);
+        $limits = self::lost_limits();
+        if (!Limiter::is_allowlisted($ip) && (int) get_transient($keys['address']) >= $limits['address']) {
+            return 'address';
+        }
+
+        return '' !== $keys['account'] && (int) get_transient($keys['account']) >= $limits['account'] ? 'account' : '';
+    }
+
+    /**
+     * Count a request that got past the CAPTCHA.
+     *
+     * @param string $login Username or email.
+     * @param string $ip    Address.
+     */
+    private static function lost_count($login, $ip)
+    {
+        $keys = self::lost_keys($login, $ip);
+        $sent = (int) get_transient($keys['address']) + 1;
+        set_transient($keys['address'], $sent, HOUR_IN_SECONDS);
+        if ($sent === self::lost_limits()['address']) {
+            Log::add('lost_limited', array('context' => array('limit' => $sent)));
+        }
+        if ('' !== $keys['account']) {
+            set_transient($keys['account'], (int) get_transient($keys['account']) + 1, HOUR_IN_SECONDS);
+        }
+    }
+
+    /**
+     * The public lost-password form follows the "Lost password" CAPTCHA switch.
+     *
+     * @param string $form Form key so far.
+     * @return string
+     */
+    public static function claim_public_lost($form)
+    {
+        return '' === $form ? 'lostpassword' : $form;
+    }
+
+    /**
      * wp-login.php?action=authlify_unlock: request and use unlock links.
      */
     public static function unlock_screen()
@@ -301,24 +634,7 @@ final class Recovery
 
         // phpcs:disable WordPress.Security.NonceVerification
         if (!empty($_GET['unlock_key']) && !empty($_GET['u'])) {
-            $user_id = (int) $_GET['u'];
-            $key = sanitize_text_field(wp_unslash($_GET['unlock_key']));
-            $stored = self::unlock_keys($user_id);
-            $hash = wp_hash($key . '|' . $user_id);
-            $match = null;
-            foreach ($stored as $i => $item) {
-                if (hash_equals($item['hash'], $hash) && $item['expires'] > time()) {
-                    $match = $i;
-                }
-            }
-
-            if (null !== $match) {
-                // Single use: only this link is spent; other valid links stay valid.
-                unset($stored[$match]);
-                self::save_unlock_keys($user_id, $stored);
-                // Only this account may log in from the locked address; the lockout
-                // itself stays, so the link cannot be used to reset an attack.
-                Limiter::grant_pass($ip, $user_id);
+            if (self::use_unlock_key((int) $_GET['u'], sanitize_text_field(wp_unslash($_GET['unlock_key'])), $ip)) {
                 wp_safe_redirect(add_query_arg('authlify_unlocked', '1', wp_login_url()));
                 exit;
             }
@@ -449,11 +765,17 @@ final class Recovery
         $keys[] = array('hash' => wp_hash($key . '|' . $user->ID), 'expires' => time() + 30 * MINUTE_IN_SECONDS);
         self::save_unlock_keys($user->ID, array_slice($keys, -5));
 
-        $url = add_query_arg(array(
-            'action' => self::UNLOCK_ACTION,
-            'u' => $user->ID,
-            'unlock_key' => $key,
-        ), wp_login_url());
+        // Someone asking from a public form may not know the login address and
+        // may have made an account just to learn it: the link must not name it.
+        if (Router::is_hiding() && !Router::is_login_request()) {
+            $url = add_query_arg(array('u' => $user->ID, 'unlock_key' => $key), self::public_url(self::PUBLIC_UNLOCK));
+        } else {
+            $url = add_query_arg(array(
+                'action' => self::UNLOCK_ACTION,
+                'u' => $user->ID,
+                'unlock_key' => $key,
+            ), wp_login_url());
+        }
 
         $site = wp_specialchars_decode(get_bloginfo('name'), ENT_QUOTES);
 

@@ -30,6 +30,11 @@ function run_first_upgrade(array $options, array $log_rows = array())
     delete_site_option('authlify_migrated_from');
     delete_site_option('authlify_fresh_install');
     delete_site_transient('authlify_upgrading');
+    // Per-site activation on a network keeps the upgrade state per site (PERF-11).
+    delete_option('authlify_version');
+    delete_option('authlify_migrated_from');
+    delete_option('authlify_fresh_install');
+    delete_transient('authlify_upgrading');
     foreach ($options as $name => $value) {
         update_option($name, $value);
     }

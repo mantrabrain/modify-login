@@ -48,6 +48,9 @@ final class Router
      */
     public static function init()
     {
+        // Answers even if the login URL was turned off after the page was shown.
+        add_action('wp_loaded', array(__CLASS__, 'member_logout'), 2);
+
         // Authlify boots while plugins load. On a network, Authlify Pro applies
         // a site's own settings (per-site overrides) on plugins_loaded, so look
         // at the settings again once it has: a site may have a login URL even
@@ -92,6 +95,111 @@ final class Router
         add_action('template_redirect', array(__CLASS__, 'privacy_confirm'), 1);
         add_action('template_redirect', array(__CLASS__, 'disable_admin_shortcuts'), 1);
         add_action('login_init', array(__CLASS__, 'no_cache'), 1);
+
+        // Low-privilege members never had to be told the address (C3-05).
+        add_filter('logout_url', array(__CLASS__, 'member_logout_url'), 10, 2);
+        add_filter('wp_auth_check_load', array(__CLASS__, 'member_auth_check'));
+    }
+
+    /**
+     * Whether the login URL is kept from this logged-in person: someone who
+     * cannot write or manage anything (subscribers, customers, members). They
+     * may have signed up and logged in on another plugin's form, and on a site
+     * with open registration anyone can become one.
+     *
+     * Staff keep the session-expired popup and the normal logout page.
+     *
+     * @return bool
+     * @since 3.2.0
+     */
+    public static function hides_from_current_user()
+    {
+        if (!self::is_hiding() || !is_user_logged_in()) {
+            return false;
+        }
+
+        $user = wp_get_current_user();
+        $hide = !user_can($user, 'edit_posts') && !user_can($user, \Authlify\Plugin::cap());
+
+        /**
+         * Filters whether the login URL is kept from a logged-in person.
+         * Return false to give members the normal logout link and page.
+         *
+         * @param bool     $hide Hide. Default: people without edit_posts or the Authlify capability.
+         * @param \WP_User $user User.
+         * @since 3.2.0
+         */
+        return (bool) apply_filters('authlify_hide_login_from_member', $hide, $user);
+    }
+
+    /**
+     * Log-out link without the login URL in it: a nonce-checked address on the
+     * home page, answered by member_logout().
+     *
+     * @param string $url      Logout URL.
+     * @param string $redirect Where to go afterwards.
+     * @return string
+     * @since 3.2.0
+     */
+    public static function member_logout_url($url, $redirect = '')
+    {
+        if (!self::hides_from_current_user()) {
+            return $url;
+        }
+
+        $args = array('authlify_logout' => '1');
+        if ('' !== (string) $redirect) {
+            $args['redirect_to'] = rawurlencode((string) $redirect);
+        }
+
+        return wp_nonce_url(add_query_arg($args, home_url('/')), 'log-out');
+    }
+
+    /**
+     * Log out through the address member_logout_url() gives: the same nonce,
+     * the same hooks and the same redirect filter as wp-login.php?action=logout.
+     * Afterwards the person lands on the home page unless a redirect is set.
+     *
+     * @since 3.2.0
+     */
+    public static function member_logout()
+    {
+        if (empty($_GET['authlify_logout'])) { // phpcs:ignore WordPress.Security.NonceVerification
+            return;
+        }
+
+        nocache_headers();
+
+        if (!is_user_logged_in()) {
+            wp_safe_redirect(home_url('/'));
+            exit;
+        }
+
+        check_admin_referer('log-out');
+
+        $user = wp_get_current_user();
+        wp_logout();
+
+        $requested = isset($_GET['redirect_to']) ? esc_url_raw(wp_unslash($_GET['redirect_to'])) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+        /** This filter is documented in wp-login.php */
+        $to = apply_filters('logout_redirect', '' !== $requested ? $requested : home_url('/'), $requested, $user);
+
+        wp_safe_redirect(wp_validate_redirect((string) $to, home_url('/')));
+        exit;
+    }
+
+    /**
+     * The session-expired popup prints the login URL on every wp-admin screen.
+     * Members are not given it. An expired session then shows the normal
+     * response when they next load a page.
+     *
+     * @param bool $show Show.
+     * @return bool
+     * @since 3.2.0
+     */
+    public static function member_auth_check($show)
+    {
+        return self::hides_from_current_user() ? false : $show;
     }
 
     /**
@@ -573,7 +681,8 @@ final class Router
         // out the slug. The redirect keeps pointing at wp-login.php, which
         // answers with the blocked response. Lost password, registration,
         // logout, interim login and the 2FA screens all run on the login page.
-        if (self::is_hiding() && !self::is_login_request() && !is_user_logged_in()) {
+        // The same goes for a logged-in member (C3-05): redirect_to=/wp-login.php on a comment.
+        if (self::is_hiding() && !self::is_login_request() && (!is_user_logged_in() || self::hides_from_current_user())) {
             return $location;
         }
 
@@ -591,7 +700,7 @@ final class Router
      */
     public static function filter_canonical($redirect_url, $requested_url = '')
     {
-        if (!is_string($redirect_url) || '' === $redirect_url || !self::is_hiding() || self::is_login_request() || is_user_logged_in()) {
+        if (!is_string($redirect_url) || '' === $redirect_url || !self::is_hiding() || self::is_login_request() || (is_user_logged_in() && !self::hides_from_current_user())) {
             return $redirect_url;
         }
 
@@ -625,7 +734,8 @@ final class Router
 
     /**
      * Where a public page may send visitors to log in while the login URL is
-     * hidden: WooCommerce My Account when it exists, else the home page.
+     * hidden: the login page of WooCommerce, Easy Digital Downloads, Ultimate
+     * Member or Paid Memberships Pro when there is one, else the home page.
      *
      * @return string
      * @since 3.0.2
@@ -635,6 +745,12 @@ final class Router
         $url = '';
         if (function_exists('wc_get_page_id') && wc_get_page_id('myaccount') > 0) {
             $url = (string) wc_get_page_permalink('myaccount');
+        } elseif (function_exists('edd_get_option') && (int) edd_get_option('login_page') > 0) {
+            $url = (string) get_permalink((int) edd_get_option('login_page'));
+        } elseif (function_exists('um_get_core_page')) {
+            $url = (string) um_get_core_page('login');
+        } elseif (function_exists('pmpro_url')) {
+            $url = (string) pmpro_url('login');
         }
 
         /**
@@ -868,6 +984,9 @@ final class Router
     public static function disable_admin_shortcuts()
     {
         if (self::is_hiding() && !is_user_logged_in()) {
+            remove_action('template_redirect', 'wp_redirect_admin_locations', 1000);
+        } elseif (self::hides_from_current_user() && 'login' === basename(self::request_path())) {
+            // /admin and /dashboard still take a logged-in member to their dashboard.
             remove_action('template_redirect', 'wp_redirect_admin_locations', 1000);
         }
     }

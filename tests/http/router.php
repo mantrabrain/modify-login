@@ -199,7 +199,9 @@ t('slug change: an expired pending slug stops working and cannot be confirmed', 
 
 t('login URL helpers point at the slug; wp-login.php links are rewritten', function () {
     eq(BASE . '/' . SLUG . '/', wp_eval('echo wp_login_url();'));
-    eq(BASE . '/' . SLUG . '/?action=lostpassword', wp_eval('echo wp_lostpassword_url();'));
+    // Logged out and away from the login page, the link names no login address (public screen).
+    eq(BASE . '/?authlify_lost_public=1', wp_eval('echo wp_lostpassword_url();'));
+    contains('/' . SLUG . '/?action=lostpassword', get(login_url(SLUG))->body, 'the login page keeps its own link');
     contains('/' . SLUG . '/?action=logout', wp_eval('wp_set_current_user(' . $GLOBALS['admin']['id'] . '); echo wp_logout_url();'));
 });
 
@@ -231,8 +233,10 @@ t('SEC2-01: login-page flows still redirect within the slug (lost password, logo
     $res = get(login_url(SLUG) . '?action=logout&_wpnonce=' . $s['nonces']['log-out'], array('cookies' => $s['cookies']));
     eq(302, $res->code);
     contains('/' . SLUG . '/?loggedout=true', $res->location, 'logout lands on the slug');
-    // A logged-in user is still sent to the slug (they can see it anyway).
-    eq(login_url(SLUG), wp_eval('wp_set_current_user(' . $u['id'] . '); echo \Authlify\Login\Router::filter_redirect(get_option("siteurl") . "/wp-login.php");'));
+    // Logged-in staff are still sent to the slug; a member who cannot edit anything is not (C3-05).
+    $staff = http_user('editor');
+    eq(login_url(SLUG), wp_eval('wp_set_current_user(' . $staff['id'] . '); echo \Authlify\Login\Router::filter_redirect(get_option("siteurl") . "/wp-login.php");'));
+    not_contains(SLUG, wp_eval('wp_set_current_user(' . $u['id'] . '); echo \Authlify\Login\Router::filter_redirect(get_option("siteurl") . "/wp-login.php");'));
 });
 
 after_all(function () {

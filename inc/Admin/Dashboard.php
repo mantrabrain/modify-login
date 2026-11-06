@@ -125,6 +125,11 @@ final class Dashboard
                 ?>
             </div>
 
+            <?php
+            self::impact();
+            Nudges::render('dashboard', array('week' => $counts));
+            ?>
+
             <div class="authlify-dash__grid">
                 <div class="authlify-dash__main">
                     <?php
@@ -162,6 +167,8 @@ final class Dashboard
                      */
                     do_action('authlify_dashboard');
                     ?>
+
+                    <?php self::week_chart(); ?>
 
                     <?php self::recent(); ?>
                 </div>
@@ -219,18 +226,113 @@ final class Dashboard
     }
 
     /**
-     * The one Authlify Pro card (only while Pro is not active).
+     * What Authlify recorded here in the last 30 days (no Pro mention, also
+     * shown with Pro). "Recorded", not "blocked": not every failed login is an attack.
+     */
+    private static function impact()
+    {
+        $phrase = Facts::phrase(Facts::get()['month']);
+        if ('' === $phrase) {
+            return;
+        }
+        $retention = (int) Settings::get('log_retention_days', 90);
+        $days = $retention > 0 ? min(30, $retention) : 30;
+        ?>
+        <p class="authlify-impact">
+            <?php
+            echo wp_kses(
+                sprintf(
+                    /* translators: 1: number of days, 2: "184 failed logins and 9 lockouts" (bold) */
+                    __('In the last %1$s days Authlify recorded %2$s on this site.', 'modify-login'),
+                    number_format_i18n($days),
+                    '<strong>' . esc_html($phrase) . '</strong>'
+                ),
+                array('strong' => array())
+            );
+            ?>
+        </p>
+        <?php
+    }
+
+    /**
+     * Failed logins for each of the last 7 days: bars with the numbers in text,
+     * so it reads the same without the bars. Hidden while there is nothing to show.
+     */
+    private static function week_chart()
+    {
+        $days = Facts::get()['days'];
+        $most = $days ? max($days) : 0;
+        if ($most < 1) {
+            return;
+        }
+
+        UI::panel_start(__('Failed logins, last 7 days', 'modify-login'));
+        echo '<ol class="authlify-week">';
+        foreach ($days as $date => $count) {
+            $time = strtotime($date . ' 12:00:00 UTC');
+            printf(
+                '<li%1$s><span class="authlify-week__value" aria-hidden="true">%2$s</span><span class="authlify-week__track" aria-hidden="true"><span class="authlify-week__bar" style="height:%3$d%%"></span></span><span aria-hidden="true">%4$s</span><span class="screen-reader-text">%5$s</span></li>',
+                $count ? '' : ' class="is-zero"',
+                esc_html(self::short_number($count)),
+                (int) round($count / $most * 100),
+                esc_html(wp_date('D', $time, new \DateTimeZone('UTC'))),
+                esc_html(sprintf(
+                    /* translators: 1: date, 2: number of failed logins */
+                    _n('%1$s: %2$s failed login', '%1$s: %2$s failed logins', $count, 'modify-login'),
+                    wp_date(get_option('date_format'), $time, new \DateTimeZone('UTC')),
+                    number_format_i18n($count)
+                ))
+            );
+        }
+        echo '</ol>';
+        UI::panel_end();
+    }
+
+    /**
+     * A number short enough for a chart column on a phone. The exact number is
+     * in the screen-reader text beside it.
+     *
+     * @param int $number Number.
+     * @return string
+     */
+    private static function short_number($number)
+    {
+        if ($number >= 999500) {
+            /* translators: %s: number of millions, as in "1.3M" */
+            return sprintf(__('%sM', 'modify-login'), number_format_i18n($number / 1000000, 1));
+        }
+        if ($number >= 10000) {
+            /* translators: %s: number of thousands, as in "94K" */
+            return sprintf(__('%sK', 'modify-login'), number_format_i18n($number / 1000));
+        }
+
+        return number_format_i18n($number);
+    }
+
+    /**
+     * The one Authlify Pro card (only while Pro is not active, until hidden,
+     * and not beside an inline card: at most one on a screen).
      */
     private static function pro_card()
     {
-        if (!Upsell::active()) {
+        $id = 'dashboard-card';
+        if (Nudges::shown() || !Nudges::can_show($id, false)) {
             return;
         }
+        $coverage = self::twofa_coverage();
+        if (!empty($coverage['total']) && $coverage['total'] >= 2) {
+            $title = __('Make two-factor a rule, not a request', 'modify-login');
+        } elseif (class_exists('WooCommerce')) {
+            $title = __('Protect your customers\' accounts too', 'modify-login');
+        } else {
+            $title = __('Protect every account on the site', 'modify-login');
+        }
+        $plans = ProPage::plans();
         ?>
-        <section class="authlify-panel authlify-upsell-card" data-authlify-upsell="dashboard">
+        <section class="authlify-panel authlify-upsell-card" data-authlify-upsell="dashboard" data-authlify-nudge="<?php echo esc_attr($id); ?>">
             <div class="authlify-panel__body">
                 <span class="authlify-badge authlify-badge--pro"><?php esc_html_e('Authlify Pro', 'modify-login'); ?></span>
-                <h2 class="authlify-upsell-card__title"><?php esc_html_e('Protect every account on the site', 'modify-login'); ?></h2>
+                <h2 class="authlify-upsell-card__title"><?php echo esc_html($title); ?></h2>
                 <ul class="authlify-checks-list">
                     <?php
                     foreach (array(
@@ -238,13 +340,23 @@ final class Dashboard
                         __('Alerts for new devices and countries', 'modify-login'),
                         __('Social sign-in and login links', 'modify-login'),
                         __('Sessions, password policy and access rules', 'modify-login'),
-                        __('White-label and agency tools', 'modify-login'),
                     ) as $point) {
                         echo '<li>' . UI::icon('check', 16) . esc_html($point) . '</li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
                     }
                     ?>
                 </ul>
-                <a class="button authlify-button-pro" href="<?php echo esc_url(Menu::slug_url('authlify-pro')); ?>"><?php esc_html_e('Compare Free and Pro', 'modify-login'); ?></a>
+                <?php if (isset($plans[0]['yearly'][0], $plans[0]['lifetime'][0])) : ?>
+                    <p class="authlify-upsell-card__price">
+                        <?php
+                        /* translators: 1: yearly price, 2: one-time price */
+                        echo esc_html(sprintf(__('From $%1$s a year, or $%2$s once. 14-day refund.', 'modify-login'), $plans[0]['yearly'][0], $plans[0]['lifetime'][0]));
+                        ?>
+                    </p>
+                <?php endif; ?>
+                <p class="authlify-upsell-card__actions">
+                    <a class="button authlify-button-pro" href="<?php echo esc_url(Menu::slug_url('authlify-pro')); ?>"><?php esc_html_e('See what\'s in Pro', 'modify-login'); ?></a>
+                    <button type="button" class="button-link authlify-upsell-card__hide" data-authlify-nudge-done><?php esc_html_e('Hide', 'modify-login'); ?></button>
+                </p>
             </div>
         </section>
         <?php
@@ -264,7 +376,7 @@ final class Dashboard
         echo '<li><a href="' . esc_url(Docs::url()) . '">' . UI::icon('book', 18) . '<span>' . esc_html__('Documentation', 'modify-login') . '</span></a></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
         foreach (array(
             array('https://wordpress.org/support/plugin/modify-login/', __('Support forum', 'modify-login'), 'help'),
-            array('https://wordpress.org/support/plugin/modify-login/reviews/#new-post', __('Leave a review', 'modify-login'), 'spark'),
+            array(Nudges::REVIEW_URL, __('Leave a review', 'modify-login'), 'spark'),
         ) as $link) {
             echo '<li><a href="' . esc_url($link[0]) . '" target="_blank" rel="noopener">' . UI::icon($link[2], 18) . '<span>' . esc_html($link[1]) . '</span>' . UI::icon('external', 14) . '<span class="screen-reader-text">' . esc_html__('(opens in a new tab)', 'modify-login') . '</span></a></li>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
         }

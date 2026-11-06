@@ -121,6 +121,12 @@ final class Cli
             return;
         }
 
+        if (0 === $n) {
+            \WP_CLI::warning('Nothing matched: no address or network in that range has a lockout or failed attempts.');
+
+            return;
+        }
+
         \WP_CLI::success(sprintf('%d lockout record(s) cleared.', $n));
     }
 

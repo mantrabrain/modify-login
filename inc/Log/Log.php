@@ -41,6 +41,9 @@ final class Log
             'lockout' => __('Locked out', 'modify-login'),
             'unlock' => __('Unlocked', 'modify-login'),
             'denied' => __('Blocked IP', 'modify-login'),
+            'username_refused' => __('Refused username', 'modify-login'),
+            'altcha_limited' => __('Many ALTCHA requests from one address', 'modify-login'),
+            'lost_limited' => __('Many password-reset requests from one address', 'modify-login'),
             'captcha_failed' => __('CAPTCHA failed', 'modify-login'),
             'logout' => __('Logged out', 'modify-login'),
             'password_reset' => __('Password reset', 'modify-login'),
@@ -225,6 +228,16 @@ final class Log
         $agent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
         $username = isset($args['username']) ? sanitize_text_field((string) $args['username']) : '';
         $context = isset($args['context']) && is_array($args['context']) ? $args['context'] : array();
+
+        /**
+         * Filters what an event stores as context (for example where the request came from).
+         *
+         * @param array  $context Context.
+         * @param string $event   Event key.
+         * @param array  $args    What was passed to Log::add().
+         * @since 3.2.0
+         */
+        $context = (array) apply_filters('authlify_log_context', $context, $event, $args);
         if (Settings::get('log_anonymize_ip', false) && isset($context['subject']) && Ip::valid((string) $context['subject'])) {
             $context['subject'] = Ip::anonymize((string) $context['subject']);
         }

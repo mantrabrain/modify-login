@@ -333,9 +333,15 @@
 }
 
 @media (max-width: 1100px) {
+    /* Visually hidden, still the link's accessible name. */
     .authlify-top__icon span,
     .authlify-top__action span:not(.screen-reader-text) {
-        display: none;
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
     }
 
     .authlify-top .authlify-top__action.button-primary {

@@ -116,7 +116,7 @@ export function Gallery( { design, applyTemplate, matchSite, matching } ) {
 				<Button variant="secondary" icon="admin-appearance" onClick={ matchSite } isBusy={ matching } disabled={ matching } __next40pxDefaultSize>
 					{ __( 'Match my site', 'modify-login' ) }
 				</Button>
-				<Help>{ __( "Builds a design from your theme's colours, font and logo.", 'modify-login' ) }</Help>
+				<Help>{ __( "Builds a design from your theme's colors, font and logo.", 'modify-login' ) }</Help>
 			</div>
 			{ categories.length > 1 ? (
 				<div className="al-chips" role="group" aria-label={ __( 'Template categories', 'modify-login' ) }>
@@ -208,11 +208,11 @@ export function coreSections() {
 	return [
 		{
 			name: 'colours',
-			title: __( 'Colours', 'modify-login' ),
+			title: __( 'Colors', 'modify-login' ),
 			order: 10,
 			render: ( p ) => (
 				<>
-					<ColorGroup help={ __( 'The base palette. Every section below uses these unless you set its own colour.', 'modify-login' ) }>
+					<ColorGroup help={ __( 'The base palette. Every section below uses these unless you set its own color.', 'modify-login' ) }>
 						<ColorField label={ __( 'Accent', 'modify-login' ) } path="tokens.primary" fallback="#2271b1" { ...p } />
 						<ColorField label={ __( 'Text on accent', 'modify-login' ) } path="tokens.on_primary" fallback="#ffffff" { ...p } />
 						<ColorField label={ __( 'Page background', 'modify-login' ) } path="tokens.background" fallback="#f0f0f1" { ...p } />
@@ -279,14 +279,14 @@ export function coreSections() {
 							label={ __( 'Type', 'modify-login' ) }
 							path="background.type"
 							options={ [
-								{ value: 'color', label: __( 'Colour', 'modify-login' ) },
+								{ value: 'color', label: __( 'Color', 'modify-login' ) },
 								{ value: 'gradient', label: __( 'Gradient', 'modify-login' ) },
 								{ value: 'image', label: __( 'Image', 'modify-login' ) },
 							] }
 							{ ...p }
 						/>
 						<ColorGroup>
-							<ColorField label={ bgType === 'color' ? __( 'Colour', 'modify-login' ) : __( 'Base colour', 'modify-login' ) } path="background.color" fallback={ d.tokens.background || '#f0f0f1' } { ...p } />
+							<ColorField label={ bgType === 'color' ? __( 'Color', 'modify-login' ) : __( 'Base color', 'modify-login' ) } path="background.color" fallback={ d.tokens.background || '#f0f0f1' } { ...p } />
 							{ bgType === 'gradient' ? (
 								<>
 									<ColorField label={ __( 'Gradient from', 'modify-login' ) } path="background.gradient_from" { ...p } />
@@ -294,11 +294,11 @@ export function coreSections() {
 								</>
 							) : null }
 							{ split || sidebar ? (
-								<ColorField label={ split ? __( 'Form side colour', 'modify-login' ) : __( 'Sidebar colour', 'modify-login' ) } path="background.panel" fallback={ split ? d.tokens.background : d.tokens.surface } { ...p } />
+								<ColorField label={ split ? __( 'Form side color', 'modify-login' ) : __( 'Sidebar color', 'modify-login' ) } path="background.panel" fallback={ split ? d.tokens.background : d.tokens.surface } { ...p } />
 							) : null }
 							<ColorField label={ __( 'Text on the page', 'modify-login' ) } path="background.text" fallback={ d.tokens.muted || d.tokens.text } { ...p } />
 						</ColorGroup>
-						<Help>{ __( '"Text on the page" colours the footer text, the language switcher and, for "Form only" cards, the links under the form.', 'modify-login' ) }</Help>
+						<Help>{ __( '"Text on the page" colors the footer text, the language switcher and, for "Form only" cards, the links under the form.', 'modify-login' ) }</Help>
 						{ bgType === 'gradient' ? (
 							<NumberField label={ __( 'Angle', 'modify-login' ) } path="background.gradient_angle" min={ 0 } max={ 360 } unit="°" fallback={ 135 } { ...p } />
 						) : null }
@@ -335,7 +335,7 @@ export function coreSections() {
 									{ ...p }
 								/>
 								<ColorGroup>
-									<ColorField label={ __( 'Overlay colour', 'modify-login' ) } path="background.overlay" { ...p } />
+									<ColorField label={ __( 'Overlay color', 'modify-login' ) } path="background.overlay" { ...p } />
 								</ColorGroup>
 								<NumberField label={ __( 'Overlay opacity', 'modify-login' ) } path="background.overlay_opacity" min={ 0 } max={ 100 } unit="%" fallback={ 0 } { ...p } />
 							</>
@@ -381,7 +381,7 @@ export function coreSections() {
 									<>
 										<Text label={ __( 'Text', 'modify-login' ) } path="logo.text" placeholder={ data().siteName } { ...p } />
 										<ColorGroup>
-											<ColorField label={ __( 'Text colour', 'modify-login' ) } path="logo.text_color" fallback={ p.design.form.text || p.design.tokens.text } { ...p } />
+											<ColorField label={ __( 'Text color', 'modify-login' ) } path="logo.text_color" fallback={ p.design.form.text || p.design.tokens.text } { ...p } />
 										</ColorGroup>
 										<NumberField label={ __( 'Text size', 'modify-login' ) } path="logo.text_size" min={ 12 } max={ 72 } fallback={ 28 } { ...p } />
 									</>
@@ -413,7 +413,7 @@ export function coreSections() {
 							<ColorField label={ __( 'Background', 'modify-login' ) } path="form.background" fallback={ d.tokens.surface || '#ffffff' } { ...p } />
 							<ColorField label={ __( 'Text', 'modify-login' ) } path="form.text" fallback={ d.tokens.text || '#3c434a' } { ...p } />
 							<ColorField label={ __( 'Labels', 'modify-login' ) } path="form.label" fallback={ d.form.text || d.tokens.text || '#3c434a' } { ...p } />
-							<ColorField label={ __( 'Border colour', 'modify-login' ) } path="form.border_color" fallback={ d.tokens.border || '#c3c4c7' } { ...p } />
+							<ColorField label={ __( 'Border color', 'modify-login' ) } path="form.border_color" fallback={ d.tokens.border || '#c3c4c7' } { ...p } />
 						</ColorGroup>
 						<NumberField label={ __( 'Glass blur', 'modify-login' ) } path="form.blur" min={ 0 } max={ 40 } fallback={ 0 } { ...p } />
 						<NumberField label={ __( 'Padding', 'modify-login' ) } path="form.padding" min={ 0 } max={ 80 } fallback={ f.padding } { ...p } />
@@ -483,8 +483,8 @@ export function coreSections() {
 			render: ( p ) => (
 				<>
 					<ColorGroup>
-						<ColorField label={ __( 'Link colour', 'modify-login' ) } path="links.color" { ...p } />
-						<ColorField label={ __( 'Link hover colour', 'modify-login' ) } path="links.hover" fallback={ p.design.links.color } { ...p } />
+						<ColorField label={ __( 'Link color', 'modify-login' ) } path="links.color" { ...p } />
+						<ColorField label={ __( 'Link hover color', 'modify-login' ) } path="links.hover" fallback={ p.design.links.color } { ...p } />
 					</ColorGroup>
 					<div className="al-toggles">
 						<Toggle label={ __( 'Hide "Go to site" link', 'modify-login' ) } path="links.hide_backtoblog" { ...p } />

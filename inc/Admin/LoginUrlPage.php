@@ -98,7 +98,7 @@ final class LoginUrlPage
                         <code><?php echo esc_html(self::url_prefix()); ?></code>
                         <input type="text" id="authlify-login_slug" name="authlify[login_slug]" value="<?php echo esc_attr(self::field_value($slug, $pending)); ?>" class="regular-text" pattern="[A-Za-z0-9_\-]{3,64}" title="<?php esc_attr_e('3 to 64 letters, numbers, hyphens or underscores', 'modify-login'); ?>" placeholder="<?php /* translators: %s: example login address */ echo esc_attr(sprintf(__('e.g. %s', 'modify-login'), self::suggestion())); ?>" autocomplete="off" spellcheck="false"<?php echo UI::describedby('authlify-login_slug-note'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in describedby(). ?> <?php disabled($forced); ?>>
                     </span>
-                    <p class="description" id="authlify-login_slug-note"><?php printf(esc_html__('Need an idea? %s', 'modify-login'), '<code>' . esc_html(self::suggestion()) . '</code>'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
+                    <p class="description" id="authlify-login_slug-note"><?php $suggestion = self::suggestion(); printf(esc_html__('Need an idea? %s', 'modify-login'), '<code>' . esc_html($suggestion) . '</code> <button type="button" class="button button-small" data-slug="' . esc_attr($suggestion) . '" onclick="var f=document.getElementById(\'authlify-login_slug\');f.value=this.getAttribute(\'data-slug\');f.dispatchEvent(new Event(\'input\',{bubbles:true}));f.focus();">' . esc_html__('Use this', 'modify-login') . '</button>'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></p>
                 <?php UI::field_end(); ?>
 
             <?php UI::panel_end(); ?>
@@ -361,8 +361,8 @@ final class LoginUrlPage
             wp_die(esc_html__('You are not allowed to do that.', 'modify-login'), 403);
         }
 
-        Recovery::email_login_url(Router::slug(), true);
-        wp_safe_redirect(add_query_arg('authlify_notice', 'emailed', Menu::url('login-url')));
+        $sent = Recovery::email_login_url(Router::slug(), true);
+        wp_safe_redirect(add_query_arg('authlify_notice', $sent ? 'emailed' : 'email_failed', Menu::url('login-url')));
         exit;
     }
 }

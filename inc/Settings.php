@@ -61,6 +61,10 @@ final class Settings
             'ip_denylist' => array('text', ''),
             // Lockouts of one address within 24 hours that add it to the block list (0 = off).
             'auto_block_lockouts' => array('int', 0),
+            // Usernames nobody may register; attempts on them can be refused and lock the address out (all off by default).
+            'username_denylist' => array('text', ''),
+            'username_deny_login' => array('bool', false),
+            'username_deny_lockout' => array('bool', false),
 
             // CAPTCHA (inc/Captcha).
             'captcha_provider' => array('choice', 'none', array('none', 'turnstile', 'hcaptcha', 'recaptcha_v2', 'recaptcha_v3', 'altcha')),

@@ -321,7 +321,10 @@ t('FQA-09: a WooCommerce customer who is locked out can ask for an unlock link w
     contains('/my-account/?authlify_unlock=1', $msg, 'link to My Account');
     not_contains('fqa09-hidden-door', $msg, 'never the login URL');
     $_POST = array();
-    eq('Too many failed login attempts.', \Authlify\Login\Recovery::lockout_message_link('Too many failed login attempts.', time() + 600), 'other front-end forms: no link');
+    // Other front-end forms get the public unlock screen, never the login URL (F3-03).
+    $msg = \Authlify\Login\Recovery::lockout_message_link('Too many failed login attempts.', time() + 600);
+    contains('authlify_unlock_public=1', $msg, 'other front-end forms: public unlock screen');
+    not_contains('fqa09-hidden-door', $msg, 'other front-end forms: never the login URL');
 
     $_GET = array('authlify_unlock' => '1');
     ob_start();

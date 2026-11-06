@@ -5,6 +5,37 @@
  * @since   3.0.0
  */
 
+/* Hero */
+
+.authlify-compare-hero .authlify-panel__body,
+.authlify-compare-close .authlify-panel__body {
+    padding-top: 20px;
+}
+
+.authlify-page .authlify-compare-hero h2 {
+    margin: 0 0 6px;
+    padding: 0;
+    color: var(--al-text);
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.authlify-page .authlify-compare-hero p {
+    max-width: 720px;
+    margin: 0 0 10px;
+    color: var(--al-text-2);
+    font-size: 14px;
+}
+
+.authlify-page a.authlify-compare-hero__video {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--al-accent);
+    font-weight: 500;
+}
+
 /* Plans */
 
 .authlify-plans {
@@ -12,6 +43,8 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     margin: 0 0 20px;
+    /* "Choose your plan" jumps here: clear of the sticky bars. */
+    scroll-margin-top: 108px;
 }
 
 .authlify-plan {
@@ -46,7 +79,7 @@
 }
 
 .authlify-plan__tag {
-    margin-left: auto;
+    margin-inline-start: auto;
     padding: 2px 8px;
     border-radius: 999px;
     background: var(--al-accent-soft);
@@ -61,14 +94,28 @@
     font-size: 13px;
 }
 
+.authlify-page .authlify-plan__line {
+    /* Takes up the slack, so prices and buttons line up across the plans. */
+    flex: 1 0 auto;
+    margin: 8px 0 0;
+    color: var(--al-text-2);
+    font-size: 13px;
+}
+
+.authlify-page .authlify-plan__renews {
+    margin: 0 0 14px;
+    color: var(--al-muted);
+    font-size: 12px;
+}
+
 .authlify-page .authlify-plan__price {
-    margin: 14px 0 16px;
+    margin: 14px 0 4px;
     color: var(--al-muted);
     font-size: 13px;
 }
 
 .authlify-plan__price strong {
-    margin-right: 2px;
+    margin-inline-end: 2px;
     color: var(--al-text);
     font-size: 30px;
     font-weight: 700;
@@ -84,15 +131,66 @@
 
 .authlify-plan__alt {
     margin-top: 10px;
-    color: var(--al-muted);
+    color: var(--al-text-2);
     font-size: 12px;
-    text-decoration: none;
+    text-decoration: underline;
 }
 
 .authlify-plan__alt:hover,
 .authlify-plan__alt:focus {
     color: var(--al-accent);
     text-decoration: underline;
+}
+
+.authlify-page .authlify-plans-note {
+    margin: -6px 0 16px;
+    color: var(--al-muted);
+    font-size: 13px;
+}
+
+/* Screens */
+
+.authlify-shots {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 16px 0 20px;
+}
+
+.authlify-page .authlify-shot {
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid var(--al-border);
+    border-radius: var(--al-radius);
+    background: var(--al-card);
+}
+
+.authlify-shot a {
+    display: block;
+}
+
+/* One shape for all three, cropped from the top, so the captions line up. The link opens the whole image. */
+.authlify-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 960 / 484;
+    object-fit: cover;
+    object-position: top;
+    border-bottom: 1px solid var(--al-border);
+}
+
+.authlify-shot figcaption {
+    padding: 10px 14px 12px;
+    color: var(--al-text-2);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.authlify-shot figcaption strong {
+    display: block;
+    color: var(--al-text);
+    font-weight: 600;
 }
 
 /* Comparison table */
@@ -107,13 +205,18 @@
 }
 
 .authlify-page .authlify-compare__table thead th:first-child {
-    text-align: left;
+    text-align: start;
 }
 
 .authlify-page .authlify-compare__table tbody th[scope="row"] {
     color: var(--al-text-2);
     font-weight: 400;
-    text-align: left;
+    text-align: start;
+}
+
+.authlify-page .authlify-compare__table tbody th[scope="row"] strong {
+    color: var(--al-text);
+    font-weight: 600;
 }
 
 .authlify-page .authlify-compare__col {
@@ -138,12 +241,12 @@
     font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.04em;
-    text-align: left;
+    text-align: start;
     text-transform: uppercase;
 }
 
 .authlify-compare__group svg {
-    margin-right: 6px;
+    margin-inline-end: 6px;
     color: var(--al-accent);
     vertical-align: -3px;
 }
@@ -168,8 +271,66 @@
     font-size: 12px;
 }
 
+.authlify-compare__all {
+    margin-top: 16px;
+}
+
+/* Already bought, questions, closing */
+
+.authlify-page .authlify-compare__steps {
+    margin: 0 0 14px;
+    padding-inline-start: 22px;
+    color: var(--al-text-2);
+}
+
+.authlify-page .authlify-compare__steps li {
+    margin: 0 0 6px;
+}
+
+.authlify-page .authlify-compare__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+}
+
+.authlify-compare__faq .authlify-details {
+    margin: 0 0 8px;
+}
+
+.authlify-page .authlify-compare__faq .authlify-details p {
+    margin: 0;
+    color: var(--al-text-2);
+}
+
+.authlify-page .authlify-compare__refunds {
+    margin: 12px 0 0;
+    font-size: 13px;
+}
+
+.authlify-compare-close .authlify-panel__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+}
+
+.authlify-page .authlify-compare-close p {
+    margin: 0;
+    color: var(--al-text);
+    font-weight: 500;
+}
+
+@media (max-width: 1200px) {
+    .authlify-page .authlify-compare__col {
+        width: 130px;
+    }
+}
+
 @media (max-width: 960px) {
-    .authlify-plans {
+    .authlify-plans,
+    .authlify-shots {
         grid-template-columns: 1fr;
     }
 
@@ -179,13 +340,27 @@
 }
 
 @media (max-width: 600px) {
+    /* Fixed layout: the benefit text gets the width, not the short Free and Pro cells. */
+    .authlify-page .authlify-compare__table {
+        table-layout: fixed;
+    }
+
     .authlify-page .authlify-compare__col {
+        box-sizing: border-box;
         width: 72px;
     }
 
     .authlify-page .authlify-compare__table td,
+    .authlify-page .authlify-compare__table thead th {
+        padding-inline: 6px;
+    }
+
+    .authlify-page .authlify-compare__table thead th:first-child,
     .authlify-page .authlify-compare__table tbody th {
-        padding-right: 8px;
-        padding-left: 8px;
+        padding-inline: 10px 8px;
+    }
+
+    .authlify-page .authlify-compare__text {
+        overflow-wrap: anywhere;
     }
 }

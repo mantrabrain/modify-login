@@ -87,8 +87,12 @@ final class ToolsPage
                 },
             ),
             'limit-login-attempts-reloaded' => array(
-                __('Limit Login Attempts Reloaded: attempts, lockout length, allow and block lists', 'modify-login'),
+                __('Limit Login Attempts Reloaded: attempts, lockout length, retry window, allow and block lists', 'modify-login'),
                 function () {
+                    // The original plugin stores the same option names and has its own row below.
+                    if (ToolsPage::lla_found() && !ToolsPage::plugin_active('limit-login-attempts-reloaded/limit-login-attempts-reloaded.php')) {
+                        return false;
+                    }
                     if (false !== get_option('limit_login_allowed_retries', false)) {
                         return true;
                     }
@@ -101,16 +105,31 @@ final class ToolsPage
 
                         return is_array($v) ? implode("\n", array_filter(array_map('trim', $v))) : '';
                     };
-                    Settings::update(array(
+                    $values = array(
                         'limit_enabled' => true,
                         'limit_attempts' => (int) get_option('limit_login_allowed_retries', 4),
                         'lockout_minutes' => max(1, (int) round((int) get_option('limit_login_lockout_duration', 1200) / 60)),
+                        'limit_window' => min(1440, max(1, (int) round((int) get_option('limit_login_valid_duration', 43200) / 60))),
                         'ip_allowlist' => $lines('limit_login_whitelist'),
                         'ip_denylist' => $lines('limit_login_blacklist'),
-                    ));
+                    );
+                    // Its username block list refuses those names at login; real accounts are skipped here.
+                    $denied = $lines('limit_login_blacklist_usernames');
+                    if ('' !== $denied) {
+                        $values['username_denylist'] = $denied;
+                        $values['username_deny_login'] = true;
+                    }
+                    Settings::update($values);
 
-                    return __('Brute-force settings imported.', 'modify-login');
+                    $note = '' !== $lines('limit_login_whitelist_usernames') ? ' ' . __('Its username allow list was not copied: Authlify has no equivalent.', 'modify-login') : '';
+
+                    return __('Brute-force settings imported.', 'modify-login') . $note;
                 },
+            ),
+            'limit-login-attempts' => array(
+                __('Limit Login Attempts: attempts, lockout length, time window', 'modify-login'),
+                array(__CLASS__, 'lla_found'),
+                array(__CLASS__, 'lla_import'),
             ),
             'admin-site-enhancements' => array(
                 __('Admin and Site Enhancements: custom login URL', 'modify-login'),
@@ -131,6 +150,56 @@ final class ToolsPage
                 },
             ),
         ));
+    }
+
+    /**
+     * Whether the original Limit Login Attempts is on this site: active, its
+     * files are there with saved settings, or its 2.0 beta's option exists.
+     *
+     * @return bool
+     * @since 3.2.0
+     */
+    public static function lla_found()
+    {
+        if (self::plugin_active('limit-login-attempts/limit-login-attempts.php') || is_array(get_option('limit_login_options', false))) {
+            return true;
+        }
+
+        return false !== get_option('limit_login_allowed_retries', false) && is_file(WP_PLUGIN_DIR . '/limit-login-attempts/limit-login-attempts.php');
+    }
+
+    /**
+     * Copy the original Limit Login Attempts settings. Release 1.7 keeps one
+     * option per setting and saves them only when its screen is saved; the 2.0
+     * beta keeps one array. Unsaved settings are its defaults.
+     *
+     * @return string Summary.
+     * @since 3.2.0
+     */
+    public static function lla_import()
+    {
+        $beta = get_option('limit_login_options', array());
+        $read = function ($key, $default) use ($beta) {
+            if (is_array($beta) && isset($beta[$key])) {
+                return (int) $beta[$key];
+            }
+
+            return (int) get_option('limit_login_' . $key, $default);
+        };
+
+        $attempts = min(100, max(1, $read('allowed_retries', 4)));
+        $minutes = min(10080, max(1, (int) round($read('lockout_duration', 1200) / 60)));
+        $window = min(1440, max(1, (int) round($read('valid_duration', 43200) / 60)));
+
+        Settings::update(array(
+            'limit_enabled' => true,
+            'limit_attempts' => $attempts,
+            'lockout_minutes' => $minutes,
+            'limit_window' => $window,
+        ));
+
+        /* translators: 1: attempts, 2: minutes, 3: minutes */
+        return sprintf(__('Copied: %1$d attempts within %3$d minutes, then a %2$d minute lockout. Authlify\'s escalating lockouts replace its long lockout. Deactivate Limit Login Attempts now; two plugins counting the same failures lock people out sooner.', 'modify-login'), $attempts, $minutes, $window);
     }
 
     /**
@@ -191,7 +260,7 @@ final class ToolsPage
                 }
                 echo '</ul>';
                 if (!$found) {
-                    echo '<p class="authlify-empty">' . esc_html__('No other login plugin was found. Settings from WPS Hide Login, Limit Login Attempts Reloaded, Admin and Site Enhancements and LoginPress can be copied when they are installed.', 'modify-login') . '</p>';
+                    echo '<p class="authlify-empty">' . esc_html__('No other login plugin was found. Settings from WPS Hide Login, Limit Login Attempts, Limit Login Attempts Reloaded, Admin and Site Enhancements and LoginPress can be copied when they are installed.', 'modify-login') . '</p>';
                 }
                 ?>
             <?php UI::panel_end(); ?>
@@ -236,14 +305,15 @@ final class ToolsPage
     }
 
     /**
-     * "Two-factor secrets" card: import authenticator apps from Two Factor
-     * and WP 2FA (shown only when one of them left data on this site).
+     * "Two-factor secrets" card: import authenticator apps from Two Factor,
+     * WP 2FA and Wordfence Login Security (shown only when one of them left
+     * data on this site).
      *
      * @since 3.1.0
      */
     private static function twofactor_panel()
     {
-        if (!class_exists(\Authlify\TwoFactor\Import::class)) {
+        if (!class_exists(\Authlify\TwoFactor\Import::class) || (is_multisite() && !is_super_admin())) {
             return;
         }
 
@@ -254,8 +324,7 @@ final class ToolsPage
                 $rows[$key] = array($label, $count);
             }
         }
-        $wordfence = \Authlify\TwoFactor\Import::wordfence_found();
-        if (!$rows && !$wordfence) {
+        if (!$rows) {
             return;
         }
 
@@ -270,6 +339,9 @@ final class ToolsPage
                         /* translators: %d: number of users */
                         echo esc_html(sprintf(_n('%d user has an authenticator app saved. Preview first: nothing changes until you import.', '%d users have an authenticator app saved. Preview first: nothing changes until you import.', $row[1], 'modify-login'), $row[1]));
                     ?></span>
+                    <?php if ('wordfence' === $key && \Authlify\TwoFactor\Import::wordfence_full_active()) : ?>
+                        <span class="authlify-sublabel"><?php esc_html_e('The full Wordfence plugin is active and keeps handling two-factor login. Importing changes nothing for your users until it is deactivated.', 'modify-login'); ?></span>
+                    <?php endif; ?>
                 </div>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="authlify-row__actions">
                     <input type="hidden" name="action" value="authlify_2fa_import">
@@ -281,19 +353,8 @@ final class ToolsPage
             </li>
             <?php
         }
-        if ($wordfence) {
-            ?>
-            <li class="authlify-row">
-                <div class="authlify-row__main">
-                    <strong><?php esc_html_e('Wordfence Login Security', 'modify-login'); ?></strong>
-                    <span class="authlify-sublabel"><?php esc_html_e('Its secrets are stored in a format Wordfence does not document, so they cannot be copied. Users set up their app again in their profile after you switch.', 'modify-login'); ?></span>
-                </div>
-                <?php echo UI::pill(__('Not supported', 'modify-login'), 'info'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-            </li>
-            <?php
-        }
         echo '</ul>';
-        echo '<p class="description">' . esc_html__('Backup codes and email codes are not copied. Every import is written to the activity log.', 'modify-login') . '</p>';
+        echo '<p class="description">' . esc_html__('Wordfence recovery codes are copied too. Backup codes from the other plugins and email codes are not. Every import is written to the activity log.', 'modify-login') . '</p>';
         UI::panel_end();
     }
 
@@ -376,7 +437,7 @@ final class ToolsPage
     private static function validate_import(array $values)
     {
         $groups = array(
-            'protection|limits' => array('limit_enabled', 'limit_attempts', 'limit_window', 'lockout_minutes', 'lockout_escalate', 'limit_network', 'user_attempts', 'limit_user_lock', 'ip_source', 'trusted_proxies', 'ip_allowlist', 'ip_denylist', 'auto_block_lockouts'),
+            'protection|limits' => array('limit_enabled', 'limit_attempts', 'limit_window', 'lockout_minutes', 'lockout_escalate', 'limit_network', 'user_attempts', 'limit_user_lock', 'ip_source', 'trusted_proxies', 'ip_allowlist', 'ip_denylist', 'auto_block_lockouts', 'username_denylist', 'username_deny_login', 'username_deny_lockout'),
             'protection|captcha' => array('captcha_provider', 'captcha_site_key', 'captcha_secret_key', 'captcha_v3_threshold', 'captcha_forms', 'captcha_mode', 'captcha_after', 'captcha_test_mode', 'captcha_fail', 'honeypot'),
             'protection|hardening' => array('xmlrpc', 'block_user_enumeration', 'app_passwords', 'generic_errors', 'force_login', 'force_login_exclude'),
             'protection|passwords' => array('hibp_enabled', 'hibp_roles'),

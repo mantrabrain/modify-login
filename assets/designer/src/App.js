@@ -271,7 +271,7 @@ export default function App() {
 					parts.push( sprintf( __( 'Not found, so neutral defaults are used: %s.', 'modify-login' ), missing.join( ', ' ) ) );
 				}
 				if ( ! found.length ) {
-					parts.push( __( 'Your theme does not describe its colours or font.', 'modify-login' ) );
+					parts.push( __( 'Your theme does not describe its colors or font.', 'modify-login' ) );
 				}
 				parts.push( __( 'Review it, then save.', 'modify-login' ) );
 				showNotice( {

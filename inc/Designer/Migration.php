@@ -303,7 +303,8 @@ final class Migration
 
         $d['links']['color'] = Color::sanitize($v('login_footer_color'));
         $d['links']['hover'] = Color::sanitize($v('login_footer_color_hover'));
-        if ($off('login_back_display_bool') || $off('login_back_display')) {
+        // Current LoginPress keeps this as back_display_text (on or off); the other two are older keys.
+        if ($off('back_display_text') || $off('login_back_display_bool') || $off('login_back_display')) {
             $d['links']['hide_backtoblog'] = true;
         }
 
@@ -370,7 +371,7 @@ final class Migration
         // Two columns: the form column becomes the split panel.
         if ((int) $v('columns') === 2) {
             $d['layout'] = 'left' === $v('form-column-align') ? 'split-right' : 'split-left';
-            $d['background']['panel'] = Color::sanitize($v('form-column-background-color'));
+            $d['background']['panel'] = Color::sanitize('' !== $v('custom-background-color-form') ? $v('custom-background-color-form') : $v('form-column-background-color'));
         }
 
         $d['form']['background'] = Color::sanitize($v('form-background-color'));
@@ -384,7 +385,10 @@ final class Migration
 
         $d['inputs']['background'] = Color::sanitize($v('form-field-background'));
         $d['inputs']['text'] = Color::sanitize($v('form-field-color'));
-        $d['inputs']['border'] = Color::sanitize($v('form-field-border-color'));
+        // Colorlib keeps a CSS shorthand here, such as "1px solid #ddd": the color is its last part.
+        $border = trim((string) $v('form-field-border'));
+        $border = '' !== $border ? (string) preg_replace('/^.*\s/', '', $border) : '';
+        $d['inputs']['border'] = Color::sanitize('' !== $v('form-field-border-color') ? $v('form-field-border-color') : $border);
         $d['inputs']['radius'] = $n('form-field-border-radius');
 
         $d['button']['background'] = Color::sanitize($v('button-background'));

@@ -121,6 +121,8 @@ final class ActivityPage
      */
     private static function render_log()
     {
+        Nudges::render('activity');
+
         $filters = self::filters();
         $result = Log::query($filters);
         $events = Log::events();
@@ -374,7 +376,7 @@ final class ActivityPage
         if (in_array($event, array('login_success', 'unlock', 'passkey_added', 'twofa_enabled'), true)) {
             return 'ok';
         }
-        if (in_array($event, array('lockout', 'denied', 'captcha_failed', 'twofa_failed', 'ip_blocked'), true)) {
+        if (in_array($event, array('lockout', 'denied', 'username_refused', 'captcha_failed', 'twofa_failed', 'ip_blocked'), true)) {
             return 'error';
         }
         if (in_array($event, array('login_failed', 'hidden_probe'), true)) {

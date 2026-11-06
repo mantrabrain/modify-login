@@ -12,11 +12,13 @@ use Authlify\Plugin;
 defined('ABSPATH') || exit;
 
 /**
- * Quiet, contextual pointers to Authlify Pro, shown only while Pro is not
- * active and only where a Pro feature extends what is on screen: at most one
- * per screen, never a banner, popup or notice, and never in place of a free
- * feature. Pro features do not exist in the free plugin; these only link to
- * their documentation and to the Pro page.
+ * Quiet pointers to Authlify Pro, only while Pro is not active: a link on the
+ * Plugins screen and small rows on the few screens Pro extends. Rows follow
+ * the rules in Nudges (own screens only, at most one per screen, nothing in
+ * the first 7 days, dismissed per user) and give way to a card about this
+ * site's own data. Never a banner, popup or notice, and never in place of a
+ * free feature. Pro features do not exist in the free plugin; these only link
+ * to their documentation and to the product page.
  *
  * @since 3.0.0
  */
@@ -32,9 +34,8 @@ final class Upsell
         add_filter('plugin_action_links_' . AUTHLIFY_BASENAME, array(__CLASS__, 'action_links'), 20);
         add_filter('network_admin_plugin_action_links_' . AUTHLIFY_BASENAME, array(__CLASS__, 'action_links'), 20);
         add_filter('plugin_row_meta', array(__CLASS__, 'row_meta'), 10, 2);
-        add_action('admin_enqueue_scripts', array(__CLASS__, 'styles'), 20);
 
-        // The Dashboard shows its own Authlify Pro card (Dashboard::pro_card()).
+        Nudges::init();
     }
 
     /**
@@ -47,7 +48,7 @@ final class Upsell
     {
         /**
          * Filters whether Authlify shows its contextual Pro pointers
-         * (the Plugins-screen link, and the small Pro rows on a few screens).
+         * (the Plugins-screen link, the small Pro rows, the inline cards, the Dashboard card and the review request).
          *
          * @param bool $show Default true while Authlify Pro is not active.
          * @since 3.0.0
@@ -98,20 +99,6 @@ final class Upsell
     }
 
     /**
-     * Styles for the "Learn more" links and the Pro rows, on Authlify screens.
-     *
-     * @since 3.0.0
-     */
-    public static function styles()
-    {
-        if (!Menu::is_screen()) {
-            return;
-        }
-
-        // The styles now live in assets/admin/admin.css (.authlify-upsell, .authlify-learn-more).
-    }
-
-    /**
      * Where each pointer appears, and what it says.
      *
      * @return array key => array( title, text, doc, items (label => doc) ).
@@ -146,12 +133,6 @@ final class Upsell
                 'pro-alerts',
                 array(),
             ),
-            'dashboard' => array(
-                __('Need more?', 'modify-login'),
-                __('Authlify Pro adds two-factor rules for roles, login alerts, social sign-in and agency tools.', 'modify-login'),
-                '',
-                array(),
-            ),
         );
     }
 
@@ -164,42 +145,38 @@ final class Upsell
     public static function render($spot)
     {
         $spots = self::spots();
-        if (!self::active() || !isset($spots[$spot])) {
+        $id = 'row-' . $spot;
+        // Whoever said no to the card on this screen does not get a second pitch below it.
+        $cards = array('security' => 'moment-lockouts', 'two-factor' => 'moment-2fa-coverage', 'alerts' => 'moment-insights');
+        if (isset($cards[$spot]) && Nudges::is_dismissed($cards[$spot])) {
+            return;
+        }
+        if (!isset($spots[$spot]) || !Nudges::claim($id)) {
             return;
         }
         list($title, $text, $doc, $items) = $spots[$spot];
         ?>
-        <div class="authlify-upsell" data-authlify-upsell="<?php echo esc_attr($spot); ?>">
+        <div class="authlify-upsell" data-authlify-upsell="<?php echo esc_attr($spot); ?>" data-authlify-nudge="<?php echo esc_attr($id); ?>">
             <span class="authlify-pro-tag">Pro</span>
             <p class="authlify-upsell__text">
                 <strong><?php echo esc_html($title); ?></strong>
                 <?php echo esc_html($text); ?>
                 <?php if ($items) : ?>
-                    <?php $last = count($items) - 1; $i = 0; ?>
+                    <?php $i = 0; ?>
                     <?php foreach ($items as $label => $article) : ?>
                         <?php echo $i > 0 ? ' · ' : ''; ?><a href="<?php echo esc_url(Docs::url($article)); ?>"><?php echo esc_html($label); ?></a><?php ++$i; ?>
                     <?php endforeach; ?>
                 <?php endif; ?>
             </p>
             <span class="authlify-upsell__links">
-                <?php if ('' !== $doc && !$items) : ?>
-                    <a href="<?php echo esc_url(Docs::url($doc)); ?>"><?php esc_html_e('Learn more', 'modify-login'); ?><span class="screen-reader-text"> <?php echo esc_html(sprintf(/* translators: %s: feature */ __('about %s', 'modify-login'), $title)); ?></span></a>
-                <?php elseif ('' === $doc) : ?>
-                    <a href="<?php echo esc_url(Menu::slug_url('authlify-pro')); ?>"><?php esc_html_e('Compare Free and Pro', 'modify-login'); ?></a>
+                <?php if (!$items) : ?>
+                    <a href="<?php echo esc_url(Docs::feature_url($spot, $id)); ?>" target="_blank" rel="noopener"><?php esc_html_e('Learn more', 'modify-login'); ?><span class="screen-reader-text"> <?php echo esc_html(sprintf(/* translators: %s: feature */ __('about %s (opens in a new tab)', 'modify-login'), $title)); ?></span></a>
                 <?php endif; ?>
-                <a href="<?php echo esc_url(Docs::upgrade_url($spot)); ?>" target="_blank" rel="noopener"><?php esc_html_e('Upgrade', 'modify-login'); ?><span class="screen-reader-text"> <?php esc_html_e('to Authlify Pro (opens in a new tab)', 'modify-login'); ?></span></a>
+                <a href="<?php echo esc_url(Docs::upgrade_url($id)); ?>" target="_blank" rel="noopener"><?php esc_html_e('Upgrade', 'modify-login'); ?><span class="screen-reader-text"> <?php esc_html_e('to Authlify Pro (opens in a new tab)', 'modify-login'); ?></span></a>
+                <button type="button" class="button-link authlify-upsell__hide" data-authlify-nudge-done><?php esc_html_e('Don\'t show again', 'modify-login'); ?></button>
             </span>
         </div>
         <?php
     }
 
-    /**
-     * Dashboard: one compact line.
-     *
-     * @since 3.0.0
-     */
-    public static function dashboard()
-    {
-        self::render('dashboard');
-    }
 }

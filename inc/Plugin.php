@@ -65,6 +65,7 @@ final class Plugin
             Diagnostics\LeakCheck::class,
             Diagnostics\SiteHealth::class,
             Diagnostics\Conflicts::class,
+            Abilities::class,
         );
 
         if (is_admin()) {

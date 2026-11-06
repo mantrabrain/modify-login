@@ -142,6 +142,7 @@ final class Admin
             <h1 class="screen-reader-text"><?php esc_html_e('Designer', 'modify-login'); ?></h1>
             <?php UI::notices(); ?>
             <?php UI::family_tabs(); ?>
+            <?php \Authlify\Admin\Nudges::render('designer'); ?>
             <div id="authlify-designer-root" class="authlify-designer-root">
                 <?php if (!is_readable(AUTHLIFY_DIR . 'assets/designer/build/index.js')) : ?>
                     <div class="notice notice-error"><p><?php esc_html_e('The designer app is missing. Run "npm run build:designer" in the plugin folder.', 'modify-login'); ?></p></div>

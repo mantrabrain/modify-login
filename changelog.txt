@@ -1,3 +1,47 @@
+= 3.2.0 - 2026-11-06 =
+New
+* Import authenticator apps and recovery codes from Wordfence Login Security and the full Wordfence plugin. People keep the same app entry. The old screen text saying this could not be done was wrong.
+* Refused usernames. Nobody can register names you list (admin, test...), and you can choose to refuse login attempts with them and lock the address at once. Off by default. Real accounts on the list are skipped and named on the screen.
+* CAPTCHA on Paid Memberships Pro checkout and lost password, with its login page showing why a login was refused, and on LearnDash registration. LearnDash is written against its documentation and was not run against the plugin itself.
+* Import settings from the original Limit Login Attempts, and a conflict notice while it runs.
+* Read-only abilities for the WordPress Abilities API (6.9 and later): status, recent lockout counts and the Leak Check result. Administrators only, private by default, no login address or keys in the output.
+* A Docs guide for moving from Wordfence Login Security and Limit Login Attempts.
+* The Dashboard shows what Authlify recorded in the last 30 days, and failed logins for each of the last 7 days.
+* Small inline cards on Authlify's own screens, based on this site's own numbers (administrators without two-factor login, repeated failed logins, a WooCommerce store, a network). Nothing in the first 7 days, at most one per screen, per-user "Don't show again". Never an admin notice or popup, and none with Authlify Pro active.
+* One request for an honest review on WordPress.org, on the Dashboard after 14 days and only once Authlify has recorded something or is hiding your login. "Maybe later" waits 30 days; "Don't ask again" is final.
+* The Pro rows and the Dashboard's Pro card can be hidden per user.
+
+Security
+* The public "Lost your password?" screen sends at most 3 emails an hour for one account and takes 30 requests an hour from one address (filter `authlify_lost_public_limits`). A blocked address sends none.
+* On a network, importing authenticator apps needs a super admin.
+
+Fixed
+* Importing from WP 2FA failed on WP 2FA 4.2 and later ("secret could not be read"). Its current format is now read, and an import of nobody now says so instead of "imported 0".
+* "We emailed it to you" appeared even when the email failed. The screen now says so and shows the address to save.
+* Unlock emails asked for on a public form no longer contain the hidden login address. Ultimate Member and Easy Digital Downloads customers now get an unlock link too, on a page that names no login address, and the attempt that locks them out says so on WooCommerce, EDD and Ultimate Member.
+* "Lost your password?" links on public pages, such as Easy Digital Downloads' login form, no longer show the hidden login address.
+* `wp authlify unlock <range>` clears every address inside the range and warns when nothing matched.
+* "Nothing is hidden yet" no longer appears after the login address was set with WP-CLI, and the conflict notice names the right screen.
+* On a site with a hidden login, subscribers and customers were shown the login address in their log-out link, on wp-admin screens and by /login. They now log out through a nonce-checked link on the home page and land there, unless a redirect is set. Staff are unchanged.
+* The review line in the footer of Authlify's screens stops once the person has answered the review card, for "Maybe later" until it asks again and for "Don't ask again" for good.
+* Saying no to the lockouts card on the Security screen no longer brings up the "More security controls" row for that person.
+* The Refused usernames example shows one name per line, as the help text says.
+
+Improved
+* An ALTCHA visitor behind a busy shared address no longer loses public forms at 30 requests in 10 minutes. The limit is 120, past it the puzzle gets harder, and at ten times that it is refused for the rest of the 10 minutes.
+* "Use this" button next to the suggested login address. Limit Login Attempts Reloaded's retry window and username block list, LoginPress's "Back to" switch and Colorlib's field border and form column color are now imported.
+* Free vs Pro leads with what Pro adds, with screenshots, a video link, plain answers on refunds, site limits, renewal and what stops when you stop paying, and install steps for people who have already bought. "Priority email" now says email support, with priority on Agency. The "Most popular" label is gone.
+* "Upgrade" links go straight to the plans, and "Learn more" links to the section about that feature.
+* The "Nothing is hidden yet" setup notice can be dismissed, and the License article in Docs has the steps to install Pro.
+
+Docs
+* Corrected wrong labels and steps, and the two articles that said the WooCommerce block checkout was not covered. They now also say that customers cannot set up two-factor in the free plugin.
+* With Ultimate Member active, its "Can access wp-admin" rule decides where a role without that access lands after a plain sign-in, with or without Authlify. The Pro WooCommerce article says so and how to choose the page.
+* MemberPress, BuddyBoss and LearnDash CAPTCHA support is labelled beta: built from documented hooks, not run against those plugins.
+
+Developers
+* New hooks: authlify_register_abilities, authlify_abilities, authlify_abilities_public, authlify_ability_output, authlify_log_context, authlify_hide_login_from_member, authlify_lost_public_limits, authlify_altcha_rate_limit, authlify_2fa_import_seconds, authlify_unlock_by_email.
+
 = 3.1.0 - 2026-10-06 =
 New
 * CAPTCHA on the WooCommerce block checkout (guest orders, or only orders that create an account), Easy Digital Downloads (login, registration, lost password), Ultimate Member (login, registration, password reset), MemberPress (login) and BuddyPress/BuddyBoss (registration). Each follows the existing form switches; nothing new turns on by itself.
@@ -96,6 +140,9 @@ Fixed
 * Initial Version released
 
 == Upgrade Notice ==
+
+= 3.2.0 =
+Wordfence Login Security import, Refused usernames, more CAPTCHA forms and security fixes. On sites with a hidden login, subscribers and customers now log out through the home page. Authlify Pro users: update Pro to 1.1.0.
 
 = 3.1.0 =
 Security hardening and new integrations: CAPTCHA on WooCommerce block checkout, EDD, Ultimate Member, MemberPress and BuddyPress, one-click IP blocking and two-factor import. Recommended for everyone. Authlify Pro users: update Pro to 1.0.1.

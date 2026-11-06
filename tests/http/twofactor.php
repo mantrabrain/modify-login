@@ -97,7 +97,7 @@ t('forged step posts: wrong nonce, other user, unknown method, GET with the nonc
     $f = tf_begin('203.0.113.122');
     $code = totp_now($GLOBALS['secret']);
 
-    $res = tf_step_post(array('authlify_uid' => $f['authlify_uid'], 'authlify_nonce' => 'x' . substr($f['authlify_nonce'], 1)), array('authlify_method' => 'totp', 'authlify_code' => $code), '203.0.113.122');
+    $res = tf_step_post(array('authlify_uid' => $f['authlify_uid'], 'authlify_nonce' => ('x' === $f['authlify_nonce'][0] ? 'y' : 'x') . substr($f['authlify_nonce'], 1)), array('authlify_method' => 'totp', 'authlify_code' => $code), '203.0.113.122');
     no(tf_logged_in($res), 'wrong nonce');
     contains('authlify_2fa=expired', $res->location);
 

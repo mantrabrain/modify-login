@@ -69,6 +69,10 @@ final class Conflicts
             $add('llar', 'Limit Login Attempts Reloaded', true, false);
         }
 
+        if (is_plugin_active('limit-login-attempts/limit-login-attempts.php')) {
+            $add('lla', 'Limit Login Attempts', true, false);
+        }
+
         if (is_plugin_active('loginizer/loginizer.php')) {
             $add('loginizer', 'Loginizer', true, false);
         }
@@ -150,7 +154,7 @@ final class Conflicts
             if ($plugin['limits'] && $ours['limits']) {
                 $parts[] = sprintf(
                     /* translators: %s: plugin name */
-                    __('%s also limits failed logins. With two limiters, a person can be locked out by either one, and Authlify\'s Unlock button and "wp authlify unlock" cannot clear the other plugin\'s lockout. Keep one limiter: turn off Authlify\'s brute-force limits (Protection → Limits) or the other plugin\'s.', 'modify-login'),
+                    __('%s also limits failed logins. With two limiters, a person can be locked out by either one, and Authlify\'s Unlock button and "wp authlify unlock" cannot clear the other plugin\'s lockout. Keep one limiter: turn off Authlify\'s brute-force limits (Security → Brute force) or the other plugin\'s.', 'modify-login'),
                     $plugin['name']
                 );
             }

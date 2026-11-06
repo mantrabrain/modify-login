@@ -5,7 +5,7 @@ Tags: hide login, limit login attempts, two factor, passkeys, login customizer
 Requires at least: 6.4
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 3.1.0
+Stable tag: 3.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,24 +15,24 @@ Hide your login URL, stop brute-force attacks, add CAPTCHA, 2FA and passkeys, an
 
 **Authlify** (formerly Modify Login) is an all-in-one WordPress login security plugin. It hides your login page properly, stops brute-force attacks, adds CAPTCHA, two-factor login and passkeys, and lets you design every login screen. All of that is free, on as many sites as you like.
 
-[Website](https://matrixaddons.com/plugins/authlify/) | [All features](https://matrixaddons.com/plugins/authlify/#features) | [Free vs Pro](https://matrixaddons.com/plugins/authlify/#compare) | [Documentation](https://matrixaddons.com/plugins/authlify/docs/) | [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) | [Support](https://wordpress.org/support/plugin/modify-login/)
+[Website](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-website) | [All features](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-features#features) | [Free vs Pro](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-compare#compare) | [Documentation](https://matrixaddons.com/plugins/authlify/docs/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=docs) | [Authlify Pro](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro#pro) | [Support](https://wordpress.org/support/plugin/modify-login/)
 
 https://www.youtube.com/watch?v=IeHvFHwVACk
 
 = Why Authlify =
 
 * **One plugin instead of four.** A custom login URL (like WPS Hide Login), login lockouts (like Limit Login Attempts Reloaded), two-factor login (like Two Factor or WP 2FA) and a login page designer (like LoginPress), all built to work together.
-* **A hidden login that is actually hidden.** Most hide-login setups leak the secret address through /wp-admin/, /login, password-reset links or emails. Authlify closes those routes, and its built-in **Leak Check** proves it on your own site.
+* **A hidden login you can check.** Most hide-login setups give the secret address away to visitors through /wp-admin/, /login, a redirect or a link on a public page. Authlify closes those routes for logged-out visitors, and its built-in **Leak Check** tests them on your own site. The address is not a secret from people with an account: password-reset emails link to it.
 * **Built so you never lock yourself out.** A new login URL must be confirmed before it applies, the address is emailed to you, and there are wp-config.php and WP-CLI recovery options for every setting.
 * **Modern sign-in, free.** Passkeys (Face ID, Touch ID, Windows Hello, security keys), authenticator apps and backup codes, with a two-factor step that matches your login design.
 * **Private by design.** The activity log stays on your server, the self-hosted ALTCHA CAPTCHA needs no third party, and nothing is sent anywhere unless you switch on a service that needs it.
-* **Calm to use.** A clear dashboard checklist, built-in documentation, no nag banners, and no features switched on behind your back by an update.
+* **Calm to use.** A clear dashboard checklist, built-in documentation, no site-wide nag banners, and no new features switched on by an update. A security fix can change behaviour, and the changelog names it when it does.
 
 = Custom login URL and hide wp-admin =
 
 * **Change the WordPress login URL** to something like yoursite.com/my-door. It works on Apache, Nginx and managed hosts, with no .htaccess edits.
 * **Hide wp-login.php and wp-admin** from logged-out visitors: they see your theme's "page not found" page, an "access denied" message, or a redirect of your choice.
-* **Leak Check** requests your own site about 40 times, the way a visitor would, and tells you exactly what, if anything, gives the address away. It can re-check weekly and after every change.
+* **Leak Check** requests your own site 50 or more times, the way a visitor would, and tells you exactly what, if anything, gives the address away. It can re-check weekly and after every change.
 * **Confirm before it applies.** A new login URL works alongside the old one until you open it once, so a typo can't lock you out.
 * Safe with page caches: the login page is never cached, and WP Rocket, LiteSpeed, SiteGround and Breeze exclusions are added automatically.
 * Links to the login page from WooCommerce, membership and LMS plugins are rewritten to your custom address.
@@ -40,7 +40,7 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 = Limit login attempts and brute-force protection =
 
 * **Lockouts after too many failed logins**, per IP address and optionally per network. Repeat lockouts get longer: 15 minutes, 1 hour, 4 hours, 1 day.
-* **Attackers can't lock out the real admin.** A targeted account is never locked for everyone: it can ask for a CAPTCHA, and if the attack goes on it is paused only for addresses it has never logged in from. Its owner keeps logging in as usual and can always use an email unlock link.
+* **Attackers can't lock out the real admin.** A targeted account is never locked for everyone: it can ask for a CAPTCHA, and if the attack goes on it is paused only for addresses it has never logged in from. Its owner keeps logging in as usual and can ask for an unlock link by email from the login page, WooCommerce, Easy Digital Downloads or Ultimate Member forms, or the unlock screen.
 * Lockouts also cover **XML-RPC, the REST API and application passwords**, not just the login form.
 * **Correct visitor IPs behind Cloudflare or your own proxy.** Faked forwarding headers are ignored, so lockouts can't be dodged or pinned on someone else. Authlify detects your setup and suggests the right option.
 * Allow and block lists (IP addresses and CIDR ranges). **Block an address in one click** from the activity log or the lockout list, and optionally block repeat offenders automatically after a number of lockouts (off by default; addresses an administrator has logged in from are never blocked).
@@ -50,7 +50,7 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 
 * **Cloudflare Turnstile, hCaptcha, Google reCAPTCHA v2 and v3**, and **ALTCHA**, a self-hosted, privacy-friendly CAPTCHA with no third party at all. Plus an invisible honeypot.
 * On login, registration, lost password, comments, WooCommerce login, registration and lost-password forms, and WooCommerce checkout (classic and block checkout).
-* Also on the login, registration and lost-password forms of **Easy Digital Downloads, Ultimate Member, MemberPress and BuddyPress/BuddyBoss** when those plugins are active. They follow the same form switches, and are checked before the password, so bots cost your server almost nothing.
+* Also on the forms of **Easy Digital Downloads, Ultimate Member, BuddyPress and Paid Memberships Pro** when those plugins are active, with **MemberPress, BuddyBoss and LearnDash in beta** (built from their documented hooks, not yet run against those plugins). They follow the same form switches, and are checked before the password, so bots cost your server almost nothing.
 * Show it always, or only after failed logins.
 * Key checks before you switch it on, and a test mode that logs instead of blocking.
 
@@ -59,7 +59,7 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 * **Authenticator apps** (Google Authenticator, Microsoft Authenticator, 1Password, Authy and others) with one-time **backup codes**.
 * **Passkeys:** sign in with Face ID, Touch ID, Windows Hello or a security key, plus a "Sign in with a passkey" button on the login page (PHP 8.0 or later with OpenSSL).
 * Each user sets up two-factor login on their own profile. Admins can reset it, and users can recover by email.
-* **Switching from Two Factor or WP 2FA?** Import your users' authenticator apps, with a preview first, so nobody has to set their app up again.
+* **Switching from Two Factor, WP 2FA or Wordfence Login Security?** Import your users' authenticator apps, with a preview first, so nobody has to set their app up again.
 * The two-factor step uses your login page design.
 * **Breached-password check:** optionally refuse passwords found in known data breaches, using the privacy-preserving Have I Been Pwned range API.
 
@@ -91,29 +91,37 @@ https://www.youtube.com/watch?v=IeHvFHwVACk
 
 = Our promise =
 
-No free feature will ever move into Pro. No nag banners. No emails switched on by an update. Upgraded Modify Login sites keep their login URL and settings, and new protections stay off until you turn them on.
+No free feature will ever move into Pro. No nag banners or popups: after the first week, Authlify's own screens may show one small card at a time about what Pro adds, and later one request for an honest review. Each can be dismissed for good, and none appears on other admin screens or once Pro is active. No emails switched on by an update. Upgraded Modify Login sites keep their login URL and settings, and new protections stay off until you turn them on.
 
 = Authlify Pro =
 
-Authlify is complete on its own. [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) is an add-on for sites with staff, customers or clients: rules instead of requests, more ways to sign in, and a warning when something looks wrong. It needs the free plugin, and every plan includes every Pro feature.
+Authlify is complete on its own. [Authlify Pro](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro#pro) is an add-on for sites with staff, customers or clients: rules instead of requests, more ways to sign in, and a warning when something looks wrong. It needs the free plugin, and every plan includes every Pro feature.
 
 https://www.youtube.com/watch?v=wNZVy6q90B8
 
-* **[Require two-factor login by role](https://matrixaddons.com/plugins/authlify/#pro-2fa-rules):** a grace period and setup wizard, email codes, trusted devices, passkey-only roles and a coverage report for each role.
-* **[Social login and single sign-on](https://matrixaddons.com/plugins/authlify/#pro-social-login):** Google, Microsoft, Apple, GitHub and any OpenID Connect provider (Okta, Auth0, Keycloak, Entra ID), limited to your email domains if you like.
-* **[Passwordless and temporary access](https://matrixaddons.com/plugins/authlify/#pro-passwordless):** magic login links and sign-in codes by role, and temporary logins for support staff and clients that expire on their own.
-* **[Login alerts](https://matrixaddons.com/plugins/authlify/#pro-alerts):** new-device and new-country emails with a "This wasn't me" link, and admin alerts by email, Slack, Discord, Telegram, Microsoft Teams or signed webhooks.
-* **[Login by country, hours and a honeypot](https://matrixaddons.com/plugins/authlify/#pro-access-rules):** allow or refuse logins by country (with a local country database), limit roles to set days and hours, and ban IPs that keep trying the old login addresses.
-* **[22 premium login designs](https://matrixaddons.com/plugins/authlify/#pro-designs):** animated, video and seasonal backgrounds, branded emails, login and registration blocks, a popup login, a Site Editor login page and a WooCommerce My Account skin.
-* **[Session control](https://matrixaddons.com/plugins/authlify/#pro-sessions):** maximum session length and devices per role, idle logout with a warning, and "log out everywhere".
-* **[Password policy](https://matrixaddons.com/plugins/authlify/#pro-password-policy):** length, character rules, no reuse and expiry for chosen roles, plus a breached-password check at login.
-* **[Sudo mode](https://matrixaddons.com/plugins/authlify/#pro-sudo-mode):** people confirm it is them before plugin, theme, user and security changes.
-* **[WooCommerce](https://matrixaddons.com/plugins/authlify/#pro-woocommerce):** the two-factor step inside My Account, and a Security tab where customers manage two-factor login, passkeys and devices.
-* **[Insights and scheduled exports](https://matrixaddons.com/plugins/authlify/#pro-insights):** failed attempts by country, top IP addresses and targeted usernames, a weekly digest and scheduled CSV exports of the log.
-* **[Agency and multisite](https://matrixaddons.com/plugins/authlify/#pro-agency):** white-label, client handoff, network settings with per-site locks, and design sync between sites.
-* **[REST API and WP-CLI](https://matrixaddons.com/plugins/authlify/#pro-api-cli):** settings, the activity log, lockouts and the design over `/wp-json/authlify-pro/v1/`, plus bulk WP-CLI commands.
+* **[Require two-factor login by role](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-2fa-rules#pro-2fa-rules):** a grace period and setup wizard, email codes, trusted devices, passkey-only roles and a coverage report for each role.
+* **[Social login and single sign-on](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-social-login#pro-social-login):** Google, Microsoft, Apple, GitHub and any OpenID Connect provider (Okta, Auth0, Keycloak, Entra ID), limited to your email domains if you like.
+* **[Passwordless and temporary access](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-passwordless#pro-passwordless):** magic login links and sign-in codes by role, and temporary logins for support staff and clients that expire on their own.
+* **[Login alerts](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-alerts#pro-alerts):** new-device and new-country emails with a "This wasn't me" link, and admin alerts by email, Slack, Discord, Telegram, Microsoft Teams or signed webhooks.
+* **[Login by country, hours and a honeypot](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-access-rules#pro-access-rules):** allow or refuse logins by country (with a local country database), limit roles to set days and hours, and ban IPs that keep trying the old login addresses.
+* **[22 premium login designs](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-designs#pro-designs):** animated, video and seasonal backgrounds, branded emails, login and registration blocks, a popup login, a Site Editor login page and a WooCommerce My Account skin.
+* **[Session control](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-sessions#pro-sessions):** maximum session length and devices per role, idle logout with a warning, and "log out everywhere".
+* **[Password policy](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-password-policy#pro-password-policy):** length, character rules, no reuse and expiry for chosen roles, plus a breached-password check at login.
+* **[Sudo mode](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-sudo-mode#pro-sudo-mode):** people confirm it is them before plugin, theme, user and security changes.
+* **[WooCommerce](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-woocommerce#pro-woocommerce):** the two-factor step inside My Account, and a Security tab where customers manage two-factor login, passkeys and devices.
+* **[Insights and scheduled exports](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-insights#pro-insights):** failed attempts by country, top IP addresses and targeted usernames, a weekly digest and scheduled CSV exports of the log.
+* **[Agency and multisite](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-agency#pro-agency):** white-label, client handoff, network settings with per-site locks, and design sync between sites.
+* **[REST API and WP-CLI](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-api-cli#pro-api-cli):** settings, the activity log, lockouts and the design over `/wp-json/authlify-pro/v1/`, plus bulk WP-CLI commands.
+* **[More sign-in providers](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-social-login#pro-social-login):** Facebook, LinkedIn and Discord, with your domain and role rules still in charge. Their callback address never contains your hidden login URL.
+* **[Country rules that tell you when they can't work](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro-access-rules#pro-access-rules):** a warning, and one click to the local country database.
+* **Sign-in options on store and membership forms:** social buttons, login links and the second step on Easy Digital Downloads and Ultimate Member, with MemberPress and LearnDash support in beta.
+* **Access review report:** a printable page and CSV showing who has privileged access, how they sign in and when they last did. It helps with evidence for your own reviews.
+* **Settings change log:** see who changed which security setting, and how, without any secret being written down.
+* **Inactive-account policy:** flag unused accounts, warn their owners, then ask for a new password or block sign-in, with a preview first.
+* **Abilities for tools and AI agents:** let an approved tool lift a lockout, block an address or end sessions, with permission checks (WordPress 6.9 or later; private by default, and a developer enables them with a one-line filter). The log names the source when an application password or agent acts.
+* **Getting started card:** see what Pro added and where it lives, right after you activate.
 
-Plans: Personal (1 site), Plus (5 sites) and Agency (25 sites), yearly or lifetime, with a 14-day money-back guarantee. If a licence lapses, Pro keeps working; the licence brings updates and support. [Compare Free and Pro](https://matrixaddons.com/plugins/authlify/#compare) · [See pricing](https://matrixaddons.com/plugins/authlify/#pricing)
+Plans: Personal (1 site), Plus (5 sites) and Agency (25 sites), yearly or lifetime, with a 14-day money-back guarantee. If a licence lapses, Pro keeps working; the licence brings updates and support. [Compare Free and Pro](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-compare#compare) · [See pricing](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pricing#pricing)
 
 == External services ==
 
@@ -142,7 +150,7 @@ ALTCHA and the honeypot run entirely on your own server. Leak Check only request
 
 = Is Authlify free? =
 
-Yes. Everything described above, including the custom login URL, lockouts, every CAPTCHA provider, two-factor login, passkeys, the designer and the activity log, is free with no limits and no expiry. [Authlify Pro](https://matrixaddons.com/plugins/authlify/#pro) is an optional add-on for teams, stores and agencies.
+Yes. Everything described above, including the custom login URL, lockouts, every CAPTCHA provider, two-factor login, passkeys, the designer and the activity log, is free with no limits and no expiry. [Authlify Pro](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-pro#pro) is an optional add-on for teams, stores and agencies.
 
 = I forgot my custom login URL. How do I get in? =
 
@@ -154,7 +162,7 @@ Wait for the lockout to end, or use the "email me an unlock link" option on the 
 
 = How is this different from WPS Hide Login? =
 
-Both change the login URL without touching .htaccess. Authlify also closes the routes that commonly leak the secret address (such as /wp-admin/, /login, password-reset and signup links, the Customizer and privacy emails), proves it with Leak Check, asks you to confirm a new address before it applies, and adds lockouts, CAPTCHA, two-factor login, passkeys and a login designer. It can import your WPS Hide Login address in one click.
+Both change the login URL without touching .htaccess. Authlify also closes the routes that commonly give the secret address away to visitors (such as /wp-admin/, /login, lost-password and signup links on public pages, the Customizer and privacy emails), tests them with Leak Check, asks you to confirm a new address before it applies, and adds lockouts, CAPTCHA, two-factor login, passkeys and a login designer. It can import your WPS Hide Login address in one click.
 
 = Can it replace Limit Login Attempts Reloaded? =
 
@@ -174,11 +182,11 @@ They can. Once a user adds a passkey on their profile, they can sign in with the
 
 = Does it work with WooCommerce, membership and LMS plugins? =
 
-Yes. Lockouts, the block list and two-factor login apply to every login that goes through WordPress, whichever form it comes from. The CAPTCHA covers WooCommerce (My Account and checkout, classic and block), Easy Digital Downloads, Ultimate Member, MemberPress and BuddyPress/BuddyBoss forms; Ultimate Member and Easy Digital Downloads also show Authlify's lockout message instead of "wrong password". Links to the login page from other plugins are rewritten to your custom address automatically.
+Yes. Lockouts, the block list and two-factor login apply to every login that goes through WordPress, whichever form it comes from. The CAPTCHA covers WooCommerce (My Account and checkout, classic and block), Easy Digital Downloads, Ultimate Member, BuddyPress and Paid Memberships Pro forms, with MemberPress, BuddyBoss and LearnDash in beta (built from their documented hooks, not yet run against those plugins); Ultimate Member and Easy Digital Downloads also show Authlify's lockout message instead of "wrong password". Customers who cannot open wp-admin set up two-factor in Pro, on My Account; in the free plugin they use the two-factor step only if they are already enrolled. Links to the login page from other plugins are rewritten to your custom address automatically.
 
 = Can I keep my users' authenticator apps when I switch from another 2FA plugin? =
 
-Yes, from Two Factor and WP 2FA. Go to Authlify → Settings → Switch plugins, click Preview to see how many users would be imported, then Import, and deactivate the other plugin. Users keep the same entry in their app. Wordfence Login Security secrets cannot be copied (Wordfence does not document their format), so those users set up their app again.
+Yes, from Two Factor, WP 2FA and Wordfence Login Security. Go to Authlify → Settings → Switch plugins, click Preview to see how many users would be imported, then Import, and deactivate the other plugin. Users keep the same entry in their app, and Wordfence recovery codes keep working. Settings such as two-factor required by role are not copied. The full Wordfence plugin keeps handling two-factor login while it is active.
 
 = Can users get an email when someone signs in to their account? =
 
@@ -210,16 +218,16 @@ Your login URL, redirect settings, reCAPTCHA keys and login log carry over uncha
 
 = What is the difference between Authlify and Authlify Pro? =
 
-Free covers everything one site needs to protect its login. Pro adds two-factor rules by role, social login and single sign-on, passwordless and temporary access, login alerts, country and hours rules, session and password policies, 22 premium designs and agency tools. See the [full comparison](https://matrixaddons.com/plugins/authlify/#compare), or **Authlify → Free vs Pro** in your dashboard.
+Free covers everything one site needs to protect its login. Pro adds two-factor rules by role, social login and single sign-on, passwordless and temporary access, login alerts, country and hours rules, session and password policies, 22 premium designs and agency tools. See the [full comparison](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-compare#compare), or **Authlify → Free vs Pro** in your dashboard.
 
 = Where do I get help? =
 
-Start with **Authlify → Docs** in your dashboard. For free support, open a topic in the [support forum](https://wordpress.org/support/plugin/modify-login/). Authlify Pro customers get email support; see [the Authlify page](https://matrixaddons.com/plugins/authlify/) for details.
+Start with **Authlify → Docs** in your dashboard. For free support, open a topic in the [support forum](https://wordpress.org/support/plugin/modify-login/). Authlify Pro customers get email support; see [the Authlify page](https://matrixaddons.com/plugins/authlify/?utm_source=wporg&utm_medium=readme&utm_campaign=upgrade&utm_content=readme-website) for details.
 
 == Screenshots ==
 
 1. Dashboard with the protection checklist and this week's logins, failed attempts and lockouts.
-2. Custom login URL with Leak Check, which proves the hidden address is not revealed anywhere.
+2. Custom login URL with Leak Check, which tests whether visitors can find the hidden address.
 3. Brute-force protection with escalating lockouts and real visitor IP detection behind Cloudflare or a proxy.
 4. CAPTCHA providers: Cloudflare Turnstile, hCaptcha, reCAPTCHA and self-hosted ALTCHA.
 5. Two-factor login on each user's profile: authenticator app, passkeys and backup codes.
@@ -232,6 +240,20 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 12. Free vs Pro: every core protection is free. Authlify Pro adds team, store and agency features.
 
 == Changelog ==
+
+= 3.2.0 - 2026/11/06 =
+* New: import authenticator apps and recovery codes from Wordfence Login Security and the full Wordfence plugin. People keep the same app entry.
+* New: Refused usernames. Nobody can register the names you list, and you can choose to refuse logins with them. Off by default; real accounts are skipped.
+* New: CAPTCHA on Paid Memberships Pro checkout and lost password, and on LearnDash registration (beta, not yet run against LearnDash itself).
+* New: import settings from the original Limit Login Attempts, and a Docs guide for moving from Wordfence or Limit Login Attempts.
+* New: read-only abilities for the WordPress Abilities API (6.9 and later). Administrators only, private by default.
+* New: the Dashboard shows what Authlify recorded in the last 30 days and failed logins for each of the last 7 days.
+* New: small cards on Authlify's own screens based on this site's numbers, and one request for a review. Nothing in the first 7 days, at most one per screen, dismissed per person. Never an admin notice or popup, and none with Authlify Pro active.
+* Changed: on a site with a hidden login, subscribers and customers no longer see the address in their log-out link, on wp-admin screens or through /login. They log out from the home page and land there, unless a redirect is set. Staff are unchanged. Password-reset emails still link to the login address.
+* Security: stricter limits and fewer places showing the login address on public lost-password and unlock screens, plus multisite and CAPTCHA hardening.
+* Fixed: import from WP 2FA 4.2 and later; a false "We emailed it to you" when the email failed; `wp authlify unlock` with a range; "Nothing is hidden yet" after setting the address with WP-CLI.
+* Improved: ALTCHA for visitors behind a busy shared address, and more settings imported from Limit Login Attempts Reloaded, LoginPress and Colorlib.
+* Improved: the Free vs Pro page, with plain answers on refunds, renewal and what stops when you stop paying. Docs corrected throughout.
 
 = 3.1.0 - 2026/10/06 =
 * New: CAPTCHA and lockout messages on the WooCommerce block checkout and on Easy Digital Downloads, Ultimate Member, MemberPress and BuddyPress/BuddyBoss forms. They follow your existing form switches.
@@ -288,6 +310,9 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 * Fixed: Plain permalink issue resolved
 
 == Upgrade Notice ==
+
+= 3.2.0 =
+Wordfence Login Security import, Refused usernames, more CAPTCHA forms and security fixes. On sites with a hidden login, subscribers and customers now log out through the home page. Authlify Pro users: update Pro to 1.1.0.
 
 = 3.1.0 =
 Security hardening and new integrations: CAPTCHA on WooCommerce block checkout, EDD, Ultimate Member, MemberPress and BuddyPress, one-click IP blocking and two-factor import. Recommended for everyone. Authlify Pro users: update Pro to 1.0.1.

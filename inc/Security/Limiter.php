@@ -70,7 +70,13 @@ final class Limiter
         add_action('wp_login', array(__CLASS__, 'record_success'), 10, 2);
         add_filter('shake_error_codes', array(__CLASS__, 'shake_codes'));
         add_filter('wp_login_errors', array(__CLASS__, 'attempts_left_hint'));
+        add_filter('login_errors', array(__CLASS__, 'front_end_lockout_notice'));
         add_action('authlify_daily', array(__CLASS__, 'prune'));
+
+        // Usernames bots try first: nobody can register them (any form that
+        // goes through wp_insert_user()), and an attempt can lock the address.
+        add_filter('illegal_user_logins', array(__CLASS__, 'illegal_logins'));
+        add_filter('registration_errors', array(__CLASS__, 'log_refused_registration'), 99, 3);
 
         // Application-password logins (REST, XML-RPC) skip the authenticate
         // chain, so they get the same gate and failure counting here.
@@ -151,7 +157,7 @@ final class Limiter
         }
 
         if (!self::enabled()) {
-            return null;
+            return self::username_refusal($username, $ip);
         }
 
         $until = self::locked_until($ip);
@@ -164,6 +170,11 @@ final class Limiter
             return new \WP_Error('authlify_locked', self::lockout_message($until));
         }
 
+        $refused = self::username_refusal($username, $ip);
+        if ($refused) {
+            return $refused;
+        }
+
         // A paused account: refused from addresses it has never logged in from.
         if ('' !== $username) {
             $until = self::account_paused_until($username);
@@ -173,6 +184,128 @@ final class Limiter
         }
 
         return null;
+    }
+
+    /**
+     * Names on the username denylist, lowercase.
+     *
+     * @return string[]
+     * @since 3.2.0
+     */
+    public static function denied_usernames()
+    {
+        return array_values(array_unique(array_map('strtolower', Settings::lines('username_denylist'))));
+    }
+
+    /**
+     * Listed names that belong to a real account. They are skipped everywhere
+     * and the settings screen warns about them.
+     *
+     * @return string[]
+     * @since 3.2.0
+     */
+    public static function denied_usernames_in_use()
+    {
+        return array_values(array_filter(self::denied_usernames(), 'username_exists'));
+    }
+
+    /**
+     * Whether a submitted login name is on the denylist and is not a real
+     * account. An email address never matches, so a real person signing in
+     * with theirs is never affected.
+     *
+     * @param string $username Submitted name.
+     * @return bool
+     * @since 3.2.0
+     */
+    public static function is_denied_username($username)
+    {
+        $name = strtolower(trim((string) $username));
+
+        return '' !== $name && !is_email($name) && in_array($name, self::denied_usernames(), true) && !username_exists($name);
+    }
+
+    /**
+     * Login attempts already handled on this request (the gate runs several
+     * times per login): one log line and at most one lockout.
+     *
+     * @var array
+     */
+    private static $refused_names = array();
+
+    /**
+     * Refuse a login with a listed username, when that option is on.
+     *
+     * The error looks like any unknown username: nothing tells a bot which
+     * names are listed. The lockout is optional and never starts for a private
+     * address (a proxy that is not set up makes every visitor look like one)
+     * or an address an administrator has logged in from.
+     *
+     * @param string $username Submitted name.
+     * @param string $ip       Client address.
+     * @return \WP_Error|null
+     * @since 3.2.0
+     */
+    private static function username_refusal($username, $ip)
+    {
+        if (!Settings::get('username_deny_login', false) || !self::is_denied_username($username)) {
+            return null;
+        }
+
+        $key = strtolower(trim((string) $username));
+        if (!isset(self::$refused_names[$key])) {
+            self::$refused_names[$key] = true;
+            Log::add('username_refused', array('username' => (string) $username, 'context' => array('form' => 'login')));
+
+            if (Settings::get('username_deny_lockout', false) && self::enabled() && Ip::valid($ip) && !Ip::is_private($ip) && !self::admin_used_address($ip, self::ip_key($ip))) {
+                self::touch('ip', self::ip_key($ip));
+                self::lock('ip', self::ip_key($ip), (string) $username);
+            }
+        }
+
+        return new \WP_Error('invalid_username', __('<strong>Error:</strong> Unknown username, or the password is incorrect.', 'modify-login'));
+    }
+
+    /**
+     * Listed names cannot be registered, except by someone who may create users.
+     *
+     * @param array $logins Names core refuses.
+     * @return array
+     * @since 3.2.0
+     */
+    public static function illegal_logins($logins)
+    {
+        $names = self::denied_usernames();
+        if (!$names || current_user_can('create_users') || (defined('WP_CLI') && WP_CLI)) {
+            return $logins;
+        }
+
+        // Core checks this list on updates too, so a real account must never be on it.
+        foreach ($names as $name) {
+            if (!username_exists($name)) {
+                $logins[] = $name;
+            }
+        }
+
+        return $logins;
+    }
+
+    /**
+     * Log a refused sign-up on the core registration form.
+     *
+     * @param \WP_Error $errors Errors.
+     * @param string    $login  Sanitized login.
+     * @param string    $email  Email.
+     * @return \WP_Error
+     * @since 3.2.0
+     */
+    public static function log_refused_registration($errors, $login = '', $email = '')
+    {
+        if ($errors instanceof \WP_Error && $errors->get_error_message('invalid_username') && self::is_denied_username($login)) {
+            Log::add('username_refused', array('username' => (string) $login, 'context' => array('form' => 'register')));
+        }
+
+        return $errors;
     }
 
     /**
@@ -395,6 +528,30 @@ final class Limiter
         }
 
         return $errors;
+    }
+
+    /**
+     * The lockout message when this very request started a lockout, or ''.
+     *
+     * @return string
+     * @since 3.2.0
+     */
+    public static function just_locked_message()
+    {
+        return self::$locked_now > time() ? self::lockout_message(self::$locked_now) : '';
+    }
+
+    /**
+     * WooCommerce prints login failures through this core filter: the attempt
+     * that locks the address says so at once. The login page has its own hint.
+     *
+     * @param string $message Error HTML.
+     * @return string
+     * @since 3.2.0
+     */
+    public static function front_end_lockout_notice($message)
+    {
+        return did_action('login_init') || '' === self::just_locked_message() ? $message : self::just_locked_message();
     }
 
     /**
@@ -652,6 +809,20 @@ final class Limiter
         ));
 
         return (int) $wpdb->get_var($wpdb->prepare("SELECT failures FROM {$table} WHERE scope = %s AND subject = %s", $scope, $subject)); // phpcs:ignore
+    }
+
+    /**
+     * Make sure a counter row exists, so lock() has something to update.
+     *
+     * @param string $scope   Scope.
+     * @param string $subject Value.
+     * @since 3.2.0
+     */
+    private static function touch($scope, $subject)
+    {
+        global $wpdb;
+
+        $wpdb->query($wpdb->prepare('INSERT IGNORE INTO ' . self::table() . ' (scope, subject, failures, last_failure, locked_until, lockouts) VALUES (%s, %s, 0, %d, 0, 0)', $scope, $subject, time())); // phpcs:ignore
     }
 
     /**
@@ -944,6 +1115,9 @@ final class Limiter
         if ('' === $ip) {
             $n = (int) $wpdb->query("UPDATE {$table} SET locked_until = 0, failures = 0, lockouts = 0 WHERE locked_until > 0 OR failures > 0"); // phpcs:ignore
         } else {
+            if (false !== strpos($ip, '/')) {
+                return self::unlock_range($ip);
+            }
             $valid = Ip::valid(Ip::normalize($ip));
             $subjects = $valid ? array($ip, self::ip_key($ip), Ip::subnet($ip), Ip::network($ip)) : array($ip, self::ip_key($ip));
             $n = (int) $wpdb->query($wpdb->prepare("UPDATE {$table} SET locked_until = 0, failures = 0, lockouts = 0 WHERE subject IN (%s, %s, %s, %s)", array_pad($subjects, 4, $ip))); // phpcs:ignore
@@ -951,6 +1125,34 @@ final class Limiter
 
         if ($n) {
             Log::add('unlock', array('context' => array('subject' => '' === $ip ? 'all' : $ip)));
+        }
+
+        return $n;
+    }
+
+    /**
+     * Lift the lockouts of every address and network inside a CIDR range.
+     *
+     * @param string $range CIDR range.
+     * @return int Rows unlocked.
+     * @since 3.2.0
+     */
+    private static function unlock_range($range)
+    {
+        global $wpdb;
+        $table = self::table();
+
+        $rows = (array) $wpdb->get_results("SELECT scope, subject FROM {$table} WHERE scope IN ('ip', 'net') AND (locked_until > 0 OR failures > 0)"); // phpcs:ignore
+        $n = 0;
+        foreach ($rows as $row) {
+            $base = false !== strpos((string) $row->subject, '/') ? strstr((string) $row->subject, '/', true) : (string) $row->subject;
+            if ($row->subject === $range || Ip::in_range($base, $range)) {
+                $n += (int) $wpdb->query($wpdb->prepare("UPDATE {$table} SET locked_until = 0, failures = 0, lockouts = 0 WHERE scope = %s AND subject = %s", $row->scope, $row->subject)); // phpcs:ignore
+            }
+        }
+
+        if ($n) {
+            Log::add('unlock', array('context' => array('subject' => $range)));
         }
 
         return $n;

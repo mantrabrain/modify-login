@@ -21,6 +21,11 @@ defined('ABSPATH') || exit;
 final class Onboarding
 {
     /**
+     * User meta: this user dismissed the "Nothing is hidden yet" notice.
+     */
+    const SETUP_DISMISSED = 'authlify_dismissed_setup';
+
+    /**
      * Wire up.
      */
     public static function init()
@@ -57,12 +62,13 @@ final class Onboarding
         $where = $screen ? $screen->id : '';
         $on_plugins = in_array($where, array('plugins', 'plugins-network', 'dashboard', 'dashboard-network'), true);
 
-        if (!Settings::get('onboarding_done') && ($on_plugins || 'toplevel_page_modify-login' === $where)) {
+        if (!Settings::get('onboarding_done') && '' === (string) Settings::get('login_slug', '') && '' === (string) Settings::get('pending_slug', '') && !get_user_meta(get_current_user_id(), self::SETUP_DISMISSED, true) && ($on_plugins || 'toplevel_page_modify-login' === $where)) {
             ?>
             <div class="notice notice-info authlify-notice">
                 <p><strong><?php esc_html_e('Authlify is active. Nothing is hidden yet.', 'modify-login'); ?></strong>
                 <?php esc_html_e('Choose a private login address to stop bots hammering wp-login.php. It takes a minute, and you confirm the new address before it applies.', 'modify-login'); ?></p>
-                <p class="authlify-notice__actions"><a class="button button-primary" href="<?php echo esc_url(Menu::url('login-url')); ?>"><?php esc_html_e('Choose my login URL', 'modify-login'); ?></a></p>
+                <p class="authlify-notice__actions"><a class="button button-primary" href="<?php echo esc_url(Menu::url('login-url')); ?>"><?php esc_html_e('Choose my login URL', 'modify-login'); ?></a>
+                <a class="button-link" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=authlify_dismiss_notice&notice=setup'), 'authlify_dismiss_notice')); ?>"><?php esc_html_e('Dismiss', 'modify-login'); ?></a></p>
             </div>
             <?php
             return;
@@ -86,12 +92,13 @@ final class Onboarding
     }
 
     /**
-     * Dismiss the welcome notice.
+     * Dismiss the setup or the welcome notice, for this user.
      */
     public static function dismiss()
     {
         check_admin_referer('authlify_dismiss_notice');
-        update_user_meta(get_current_user_id(), 'authlify_seen_welcome', 1);
+        $notice = isset($_GET['notice']) ? sanitize_key(wp_unslash($_GET['notice'])) : ''; // phpcs:ignore WordPress.Security.NonceVerification -- checked above.
+        update_user_meta(get_current_user_id(), 'setup' === $notice ? self::SETUP_DISMISSED : 'authlify_seen_welcome', 1);
         wp_safe_redirect(wp_get_referer() ? wp_get_referer() : admin_url());
         exit;
     }

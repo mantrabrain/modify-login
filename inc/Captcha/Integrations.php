@@ -14,7 +14,7 @@ defined('ABSPATH') || exit;
 /**
  * Loads one small integration per plugin, only while that plugin is active:
  * WooCommerce block checkout, Easy Digital Downloads, MemberPress, Ultimate
- * Member and BuddyPress/BuddyBoss.
+ * Member, BuddyPress/BuddyBoss, Paid Memberships Pro and LearnDash.
  *
  * The integrations add no settings of their own. Their forms follow the
  * existing form switches: a login form is covered when "Login" is ticked,
@@ -51,6 +51,12 @@ final class Integrations
             }),
             'buddypress' => array(Integrations\BuddyPress::class, function () {
                 return function_exists('buddypress') || function_exists('bp_core_screen_signup');
+            }),
+            'pmpro' => array(Integrations\PaidMembershipsPro::class, function () {
+                return defined('PMPRO_VERSION');
+            }),
+            'learndash' => array(Integrations\LearnDash::class, function () {
+                return defined('LEARNDASH_VERSION') || class_exists('SFWD_LMS');
             }),
         );
 
@@ -125,6 +131,8 @@ final class Integrations
             'memberpress' => __('MemberPress', 'modify-login'),
             'ultimate_member' => __('Ultimate Member', 'modify-login'),
             'buddypress' => function_exists('buddypress') && defined('BP_PLATFORM_VERSION') ? __('BuddyBoss', 'modify-login') : __('BuddyPress', 'modify-login'),
+            'pmpro' => __('Paid Memberships Pro', 'modify-login'),
+            'learndash' => __('LearnDash', 'modify-login'),
         );
 
         $out = array();
@@ -179,6 +187,34 @@ final class Integrations
         $text = wp_strip_all_tags(str_replace(array('<br>', '<br/>', '<br />'), ' ', $text));
 
         return trim(preg_replace('/\s+/', ' ', $text));
+    }
+
+    /**
+     * An error for a plugin that prints simple HTML: plain text, plus the
+     * unlock link when it is a lockout. That link names no login address.
+     *
+     * @param \WP_Error $error Error.
+     * @return string
+     * @since 3.2.0
+     */
+    public static function with_unlock(\WP_Error $error)
+    {
+        return self::plain($error) . ('authlify_locked' === $error->get_error_code() ? self::unlock_link() : '');
+    }
+
+    /**
+     * The unlock link for a front-end form.
+     *
+     * @return string HTML, '' when unlock emails are off.
+     * @since 3.2.0
+     */
+    public static function unlock_link()
+    {
+        if (!apply_filters('authlify_unlock_by_email', true)) {
+            return '';
+        }
+
+        return ' <a href="' . esc_url(\Authlify\Login\Recovery::public_url(\Authlify\Login\Recovery::PUBLIC_UNLOCK)) . '">' . esc_html__('Is this your account? Email me an unlock link.', 'modify-login') . '</a>';
     }
 
     /**

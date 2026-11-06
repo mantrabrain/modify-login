@@ -29,6 +29,12 @@ final class Altcha extends Provider
     const MAX_NUMBER = 1000000;
 
     /**
+     * Search range past the soft rate limit: a few seconds in a person's
+     * browser, and an expensive way for a script to collect challenges.
+     */
+    const HARD_MAX = 5000000;
+
+    /**
      * Challenge lifetime in seconds.
      */
     const TTL = 1200;
@@ -170,12 +176,13 @@ final class Altcha extends Provider
     /**
      * Create a challenge.
      *
+     * @param int|null $max Search range (default: the normal one).
      * @return array { algorithm, challenge, maxnumber, salt, signature }
      */
-    public static function challenge()
+    public static function challenge($max = null)
     {
         $salt = bin2hex(random_bytes(12)) . '?expires=' . (time() + self::TTL);
-        $max = self::max_number();
+        $max = null === $max ? self::max_number() : max(self::max_number(), (int) $max);
         $number = random_int(0, $max);
         $challenge = hash('sha256', $salt . $number);
 
@@ -262,22 +269,28 @@ final class Altcha extends Provider
     {
         nocache_headers();
 
-        // Rate limit per address: enough for real visitors (page loads and
-        // retries), not a free supply of challenges for a script.
+        // A shared office or carrier address must not lose its forms: past the
+        // soft limit a script pays with a much harder puzzle (one that a person's
+        // browser still finishes in seconds), and only far past it is it refused.
         $key = 'authlify_altcha_rate_' . md5(\Authlify\Net\Ip::client() . '|' . (int) floor(time() / (10 * MINUTE_IN_SECONDS)));
         $count = (int) get_transient($key);
 
         /**
          * Filters how many ALTCHA challenges one address may fetch per 10 minutes.
          *
-         * @param int $limit Limit.
+         * @param int $limit Soft limit; ten times this is refused. Default 120.
          * @since 3.0.0
          */
-        if ($count >= max(1, (int) apply_filters('authlify_altcha_rate_limit', 30))) {
+        $limit = max(1, (int) apply_filters('authlify_altcha_rate_limit', 120));
+        if ($count >= 10 * $limit) {
             wp_send_json(array('error' => 'rate_limited'), 429);
         }
         set_transient($key, $count + 1, 10 * MINUTE_IN_SECONDS);
 
-        wp_send_json(self::challenge());
+        if ($count === $limit) {
+            \Authlify\Log\Log::add('altcha_limited', array('context' => array('limit' => $limit)));
+        }
+
+        wp_send_json($count >= $limit ? self::challenge(self::HARD_MAX) : self::challenge());
     }
 }

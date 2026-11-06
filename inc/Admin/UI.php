@@ -1174,7 +1174,13 @@ final class UI
                 'pending_cancelled' => __('Change canceled. Your login URL stays as it was.', 'modify-login'),
             ));
             $key = sanitize_key(wp_unslash($_GET['authlify_notice']));
-            if (isset($messages[$key])) {
+
+            // The email did not go out: this screen is the only copy of the address.
+            if (in_array($key, array('slug_confirmed_nomail', 'email_failed'), true)) {
+                echo '<div class="notice notice-warning"><p><strong>' . esc_html('email_failed' === $key ? __('The email could not be sent.', 'modify-login') : __('Your new login URL is confirmed and active, but the email could not be sent.', 'modify-login')) . '</strong> '
+                    . esc_html__('Save this address now:', 'modify-login') . ' <code>' . esc_html(\Authlify\Login\Router::login_url()) . '</code></p><p>'
+                    . esc_html__('If you ever lose it, add this line to wp-config.php to restore wp-login.php:', 'modify-login') . ' <code>' . esc_html("define( 'AUTHLIFY_DISABLE_HIDE', true );") . '</code></p></div>';
+            } elseif (isset($messages[$key])) {
                 echo '<div class="notice notice-success is-dismissible"><p>' . esc_html($messages[$key]) . '</p></div>';
             }
         }
@@ -1240,7 +1246,8 @@ final class UI
         if (!Menu::is_screen()) {
             return $text;
         }
-        if (!self::own_brand()) {
+        // Whoever answered the review card ("Maybe later", "Don't ask again") is not asked here either.
+        if (!self::own_brand() || Nudges::is_dismissed('review')) {
             return '';
         }
 

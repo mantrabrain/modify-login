@@ -22,6 +22,12 @@ final class BackupCodes
 {
     const COUNT = 10;
     const LENGTH = 8;
+
+    /**
+     * Length of a code imported from Wordfence Login Security (16 hex characters).
+     */
+    const IMPORTED_LENGTH = 16;
+
     const WARN_AT = 2;
 
     const META = 'authlify_backup_codes';
@@ -59,6 +65,33 @@ final class BackupCodes
         update_user_meta($user_id, self::META_CREATED, time());
 
         return $plain;
+    }
+
+    /**
+     * Store codes another plugin issued, so the ones a user saved keep working.
+     * Replaces any codes the user has (the caller checks first).
+     *
+     * @param int      $user_id User ID.
+     * @param string[] $codes   Plain codes.
+     * @return int Codes stored.
+     * @since 3.2.0
+     */
+    public static function import_codes($user_id, array $codes)
+    {
+        $hashes = array();
+        foreach ($codes as $code) {
+            $code = self::normalize($code);
+            if (in_array(strlen($code), array(self::LENGTH, self::IMPORTED_LENGTH), true)) {
+                $hashes[] = wp_hash_password($code);
+            }
+        }
+
+        if ($hashes) {
+            update_user_meta((int) $user_id, self::META, $hashes);
+            update_user_meta((int) $user_id, self::META_CREATED, time());
+        }
+
+        return count($hashes);
     }
 
     /**
@@ -111,7 +144,7 @@ final class BackupCodes
         $user_id = (int) $user_id;
         $code = self::normalize($code);
 
-        if (self::LENGTH !== strlen($code)) {
+        if (!in_array(strlen($code), array(self::LENGTH, self::IMPORTED_LENGTH), true)) {
             return false;
         }
 
@@ -206,7 +239,7 @@ final class BackupCodes
         <p class="authlify-2fa__intro"><?php esc_html_e('Enter one of the backup codes you saved when you set up two-factor login. Each code works once.', 'modify-login'); ?></p>
         <p>
             <label for="authlify_code"><?php esc_html_e('Backup code', 'modify-login'); ?></label>
-            <input type="text" name="authlify_code" id="authlify_code" class="input authlify-2fa__code" value="" size="20" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="12" required autofocus<?php echo LoginFlow::field_error_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attributes. ?>>
+            <input type="text" name="authlify_code" id="authlify_code" class="input authlify-2fa__code" value="" size="20" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="24" required autofocus<?php echo LoginFlow::field_error_attrs(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed attributes. ?>>
         </p>
         <?php if ($left <= self::WARN_AT) : ?>
             <p class="description"><?php echo esc_html(sprintf(
