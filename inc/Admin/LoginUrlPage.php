@@ -181,11 +181,7 @@ final class LoginUrlPage
             return new \WP_Error('invalid', __('The login address must be 3 to 64 characters of letters, numbers, hyphens and underscores, with at least one letter.', 'modify-login'));
         }
 
-        $reserved = array('wp-admin', 'wp-login', 'wp-login-php', 'login', 'admin', 'dashboard', 'wp-content', 'wp-includes', 'wp-json', 'feed', 'xmlrpc', 'register', 'signup', 'wp-signup', 'wp-activate', 'wp-register', 'page', 'comments', 'search', 'author', 'category', 'tag', 'embed', 'sitemap', 'robots', 'favicon');
-        global $wp;
-        if ($wp instanceof \WP) {
-            $reserved = array_merge($reserved, $wp->public_query_vars, $wp->private_query_vars);
-        }
+        $reserved = \Authlify\Login\Router::reserved_slugs();
         if (in_array($slug, $reserved, true)) {
             return new \WP_Error('reserved', __('That address is used by WordPress itself. Please choose another one.', 'modify-login'));
         }

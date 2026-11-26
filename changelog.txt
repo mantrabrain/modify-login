@@ -1,3 +1,7 @@
+= 3.2.1 - 2026-11-26 =
+* Tested with WordPress 7.2.
+* Fixed: WordPress 7.2 sends /random/ (or the base set under Settings → Permalinks) to a random post, so that address can no longer be chosen as the login URL. The login screen, WP-CLI and settings import now share one list of reserved addresses.
+
 = 3.2.0 - 2026-11-06 =
 New
 * Import authenticator apps and recovery codes from Wordfence Login Security and the full Wordfence plugin. People keep the same app entry. The old screen text saying this could not be done was wrong.
@@ -140,6 +144,9 @@ Fixed
 * Initial Version released
 
 == Upgrade Notice ==
+
+= 3.2.1 =
+Ready for WordPress 7.2. No settings change.
 
 = 3.2.0 =
 Wordfence Login Security import, Refused usernames, more CAPTCHA forms and security fixes. On sites with a hidden login, subscribers and customers now log out through the home page. Authlify Pro users: update Pro to 1.1.0.

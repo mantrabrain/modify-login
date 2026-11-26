@@ -3,9 +3,9 @@ Contributors: MantraBrain
 Donate link: https://mantrabrain.com
 Tags: hide login, limit login attempts, two factor, passkeys, login customizer
 Requires at least: 6.4
-Tested up to: 7.1
+Tested up to: 7.2
 Requires PHP: 7.4
-Stable tag: 3.2.0
+Stable tag: 3.2.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -241,6 +241,10 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 
 == Changelog ==
 
+= 3.2.1 - 2026/11/26 =
+* Tested with WordPress 7.2.
+* Fixed: WordPress 7.2 sends /random/ (or the base set under Settings → Permalinks) to a random post, so that address can no longer be chosen as the login URL.
+
 = 3.2.0 - 2026/11/06 =
 * New: import authenticator apps and recovery codes from Wordfence Login Security and the full Wordfence plugin. People keep the same app entry.
 * New: Refused usernames. Nobody can register the names you list, and you can choose to refuse logins with them. Off by default; real accounts are skipped.
@@ -310,6 +314,9 @@ Start with **Authlify → Docs** in your dashboard. For free support, open a top
 * Fixed: Plain permalink issue resolved
 
 == Upgrade Notice ==
+
+= 3.2.1 =
+Ready for WordPress 7.2. No settings change.
 
 = 3.2.0 =
 Wordfence Login Security import, Refused usernames, more CAPTCHA forms and security fixes. On sites with a hidden login, subscribers and customers now log out through the home page. Authlify Pro users: update Pro to 1.1.0.

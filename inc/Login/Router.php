@@ -224,6 +224,13 @@ final class Router
         if ($wp instanceof \WP) {
             $reserved = array_merge($reserved, $wp->public_query_vars, $wp->private_query_vars);
         }
+        // WordPress 7.2 sends /random/ (or the base set under Settings → Permalinks) to a random post.
+        // Read the option directly: this can run before the rewrite and locale objects exist.
+        $reserved[] = 'random';
+        $random_base = trim(strtolower((string) get_option('wp_random_base', '')), '/');
+        if ('' !== $random_base) {
+            $reserved[] = $random_base;
+        }
 
         return $reserved;
     }

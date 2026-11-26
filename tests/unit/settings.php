@@ -171,3 +171,14 @@ t('AUTHLIFY_DISABLE_HIDE wins over AUTHLIFY_SLUG and the stored slug', function 
     $out = subprocess('define("AUTHLIFY_SLUG", "forced-door"); define("AUTHLIFY_DISABLE_HIDE", true); \Authlify\Settings::flush(); echo "[" . \Authlify\Settings::get("login_slug") . "]";');
     eq('[]', trim($out));
 });
+
+t('WordPress 7.2: the random content base cannot be the login address', function () {
+    is_wp_error(\Authlify\Admin\LoginUrlPage::validate_slug('random')) || fail('random accepted');
+    update_option('wp_random_base', 'surprise');
+    try {
+        ok(is_wp_error(\Authlify\Admin\LoginUrlPage::validate_slug('surprise')), 'custom base');
+        ok(!is_wp_error(\Authlify\Admin\LoginUrlPage::validate_slug('quiet-harbor-47')), 'an ordinary address still works');
+    } finally {
+        delete_option('wp_random_base');
+    }
+});
